@@ -86,6 +86,47 @@ These are sectors of flooded cellars **under a 1910-type scenario**, not evidenc
 that a particular cellar actually flooded in 1910. Full source coverage is kept
 (including areas beyond Paris); `cdep=0` means beyond Paris/petite couronne.
 
+### Application references (verified 2026-10-25)
+
+- DRIEAT, *Synthèse de la crue de janvier 1910 sur le bassin de la Seine*,
+  section 1.3/1.4: maximum **8.62 m at Paris-Austerlitz on 28 January 1910**.
+  https://www.drieat.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/bilan_1910_cle7c8919.pdf
+- DRIEAT, *Stratégie inondation francilienne*, approved December 2023,
+  **page 3, footnote 1** explicitly describes **115% of January 1910 discharges,
+  9.1 m at Paris-Austerlitz**. This verifies the extreme scenario gauge reference,
+  not a local depth in the SDRIF-E footprint. The application returns both this
+  URL and the SDRIF-E source, and never extrudes that footprint.
+  https://www.drieat.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/strategie_inondation_idf_v231121.pdf
+- The 2003 Paris PPRI presentation, **page 4**, also lists 8.62 m for 1910;
+  **page 8** explains the hydraulic/terrain interpolation and ±30 cm vertical,
+  ±25 m horizontal indicative precision. The 2007 regulation and 2003 presentation
+  were downloaded and checked; the presentation text does not explicitly pair
+  the source's qualitative labels with all three requested numeric intervals.
+- Safety wording was checked against https://www.paris.fr/pages/crues-5472,
+  https://www.georisques.gouv.fr/me-preparer-me-proteger/que-faire-en-cas-d-inondation
+  and the Paris DICRIM https://www.georisques.gouv.fr/DICRIM/75056.
+
+### Offline basemap and UI assets
+
+`web/public/data/paris.pmtiles` is a 38 MB OpenStreetMap/Protomaps extract from
+https://build.protomaps.com/20261024.pmtiles, fetched 2026-10-25, WGS84/Web Mercator
+vector tiles, bbox 2.22,48.80,2.48,48.92, maximum zoom 15 (581 tiles). OSM data is
+ODbL: https://www.openstreetmap.org/copyright. Attribution is shown on the map.
+Reproduce with the standalone go-pmtiles 1.31.2 CLI:
+
+```sh
+pmtiles extract https://build.protomaps.com/20261024.pmtiles \
+  web/public/data/paris.pmtiles --bbox=2.22,48.80,2.48,48.92 --maxzoom=15
+```
+
+Local Noto Sans glyph ranges (Latin, Latin extended and punctuation) and v4 dark
+sprites come from https://protomaps.github.io/basemaps-assets/ (Protomaps BSD-3-Clause;
+Noto Sans SIL OFL). The local Manrope Latin variable font comes from Google Fonts
+(SIL OFL). Font license texts are bundled in `web/public/fonts/`.
+The bundled level snapshot is the previously verified 1.021 m observation from
+2026-10-25 09:00 UTC; the server always marks it stale. Geocode fallback points
+are the four previously verified IGN addresses, never a generic search fallback.
+
 ### SDRIF-E zone potentially at flood risk
 
 Attribution: **Région Île-de-France / L'Institut Paris Region**.

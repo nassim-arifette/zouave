@@ -96,7 +96,7 @@
           "1.5": "/photos/230-rue-de-bercy/flood_1.5m.jpg"
         }
       },
-      "credit": "Photo: gaelle.gabriel@paris.fr / Panoramax, Etalab Open Licence 2.0",
+      "credit": "Photo : contributeur Panoramax, Etalab Open Licence 2.0",
       "photo": {
         "source": "Panoramax",
         "item_id": "36b6c9a3-afa5-495b-93f5-f1fba410d144",
@@ -104,7 +104,7 @@
         "page_url": "https://api.panoramax.xyz/#focus=pic&pic=36b6c9a3-afa5-495b-93f5-f1fba410d144",
         "api_url": "https://api.panoramax.xyz/api/collections/3c48a617-0a82-4080-9093-a46b390046ad/items/36b6c9a3-afa5-495b-93f5-f1fba410d144",
         "image_url": "https://panoramax-storage-public-fast.s3.gra.perf.cloud.ovh.net/main-pictures/36/b6/c9/a3/afa5-495b-93f5-f1fba410d144.jpg",
-        "author": "gaelle.gabriel@paris.fr",
+        "author": "contributeur Panoramax",
         "license": "Etalab Open Licence 2.0",
         "license_spdx": "etalab-2.0",
         "license_url": "https://www.etalab.gouv.fr/licence-ouverte-open-licence/",

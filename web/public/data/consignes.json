@@ -1,0 +1,15 @@
+{
+  "sources": [
+    {"label":"Ville de Paris · Que faire en cas de crue ?","url":"https://www.paris.fr/pages/crues-5472"},
+    {"label":"Géorisques · Que faire en cas d’inondation ?","url":"https://www.georisques.gouv.fr/me-preparer-me-proteger/que-faire-en-cas-d-inondation"},
+    {"label":"Préfecture de Police · DICRIM de Paris","url":"https://www.georisques.gouv.fr/DICRIM/75056"}
+  ],
+  "instructions": [
+    {"id":"refuge","condition":"rez_de_chaussee","title":"Prévoyez un refuge en hauteur","text":"Identifiez un étage ou un lieu de refuge proche. En cas d’inondation, mettez-vous en hauteur et n’évacuez que sur ordre des autorités.","source":1},
+    {"id":"cave","condition":"cave","title":"N’entrez pas dans la cave","text":"Anticipez la mise à l’abri des objets avant la crue. Quand l’eau monte, ne descendez jamais dans les sous-sols ni les parkings.","source":0},
+    {"id":"enfants","condition":"enfants","title":"Vos enfants restent à l’école","text":"Pendant l’alerte, n’allez pas chercher les enfants à l’école ou à la crèche : les équipes appliquent leur plan de mise en sûreté.","source":2},
+    {"id":"informer","condition":"always","title":"Suivez les autorités","text":"Consultez Vigicrues et les consignes de la mairie et de la préfecture. Reportez vos déplacements.","source":1},
+    {"id":"kit","condition":"always","title":"Préparez votre kit d’urgence","text":"Rassemblez eau, nourriture, médicaments, radio, lampe et documents essentiels dans un sac accessible.","source":1},
+    {"id":"reseaux","condition":"always","title":"Protégez-vous sans vous exposer","text":"Coupez le gaz et l’électricité uniquement si vous pouvez le faire sans danger. Ne vous engagez jamais dans une voie inondée.","source":1}
+  ]
+}

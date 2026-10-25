@@ -30,7 +30,7 @@ VARIANTS = {
     2: ("living-stone", "cutout", (300, 10, 780, 490)),
     4: ("bronze-flood", "round", (310, 30, 770, 490)),
 }
-DEFAULT = 1
+DEFAULT = 2
 
 
 def mouth_boxes():

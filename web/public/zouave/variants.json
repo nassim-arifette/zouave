@@ -1,5 +1,5 @@
 {
-  "default": "stone",
+  "default": "living-stone",
   "variants": {
     "stone": {
       "option": 1,
