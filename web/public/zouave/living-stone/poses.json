@@ -1,0 +1,12 @@
+{
+  "poses": {
+    "facing": "poses/facing@2x.webp",
+    "thinking": "poses/thinking@2x.webp",
+    "worried": "poses/worried@2x.webp",
+    "reassure": "poses/reassure@2x.webp",
+    "soaked": "poses/soaked@2x.webp",
+    "wave": "poses/wave@2x.webp"
+  },
+  "model": "gpt-image-2.5-sunburst",
+  "generated": "2026-10-25T22:06:52.988Z"
+}
