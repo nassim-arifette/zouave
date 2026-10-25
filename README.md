@@ -9,6 +9,7 @@ generations. In January 1910, the water reached his shoulders. Now he talks.
 ▶ **[Watch the 2-minute video](video/zouave-pitch.mp4)** · built for the Paris DevDay Community Hackathon
 (Impact → Climate action) · the interface is in English, and the data is French open data.
 
+The website: https://zouave.vercel.app/
 ---
 
 ## Why
