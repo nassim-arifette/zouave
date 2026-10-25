@@ -7,7 +7,6 @@ try {
   await page.goto('http://127.0.0.1:3000', { waitUntil: 'networkidle' });
   await page.getByRole('button', { name: /Et chez moi/ }).click();
   await page.locator('#exposure-card').waitFor({ state: 'visible' });
-  await page.getByRole('button', { name: /Voir ma rue en simulation/ }).click();
   await page.locator('#photo-dialog').waitFor({ state: 'visible' });
   await page.waitForFunction(() => document.querySelector('#photo-image').naturalWidth > 0);
   assert.match(await page.locator('#photo-label').innerText(), /4 Rue Traversière.*1.5 m simulés/);

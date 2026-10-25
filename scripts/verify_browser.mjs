@@ -21,6 +21,7 @@ try {
   await page.getByRole('button', { name: /Et chez moi/ }).click();
   await page.locator('#exposure-card').waitFor({ state: 'visible' });
   await page.waitForTimeout(3500);
+  if (await page.locator('#photo-dialog').isVisible()) await page.getByRole('button', { name: 'Fermer la photo' }).click();
   assert.match(await page.locator('#exposure-card').innerText(), /1 à 2 m/);
   assert.match(await page.locator('#exposure-card').innerText(), /Traversière/);
   assert.match(await page.locator('#exposure-card').innerText(), /Secteur exposé/);
