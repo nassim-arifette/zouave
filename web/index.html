@@ -18,6 +18,7 @@
     </main>
     <div id="toast" role="status" hidden></div>
     <dialog id="photo-dialog"><div class="photo-header"><button id="photo-close" aria-label="Fermer la photo">×</button></div><img id="photo-image" alt="Vue de la rue"><div class="photo-footer"><strong id="photo-label"></strong><p id="photo-credit"></p></div></dialog>
+    <dialog id="hero-dialog"><div class="photo-header"><button id="hero-close" aria-label="Fermer la simulation">×</button></div><div id="hero-view"></div><div class="hero-controls"><strong id="hero-level">0,00 m</strong><label class="sr-only" for="hero-slider">Hauteur d’eau</label><input id="hero-slider" type="range" min="0" max="3" step="0.01" value="0"><button id="hero-replay" type="button">Revoir la montée</button></div><div class="photo-footer"><strong id="hero-label"></strong><p id="hero-credit"></p></div></dialog>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

@@ -55,6 +55,7 @@ test('photo supports the street-photo locations/files schema and nested license'
   assert.equal(result?.hauteur_m, 1.5);
   assert.equal(result?.url, '/photos/demo/one-half.jpg');
   assert.equal(result?.url_clean, '/photos/demo/original.jpg');
+  assert.equal(result?.url_depth, null); assert.deepEqual(result?.view, { fov: 80, pitch: 0, camera_height_m: 2 });
   assert.equal(result?.license, 'CC BY-SA 4.0');
   assert.equal(result?.address_label, '4 Rue Traversière, 75012 Paris');
   assert.equal(selectPhoto({ locations: [] }, 48.84, 2.37, 1.5), null);
