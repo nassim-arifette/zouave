@@ -10,17 +10,31 @@ import { loadGoogleStatus } from './tools.ts';
 import { initializeVoice, isVoiceSessionActive, toggleVoice } from './voice.ts';
 import { browserVoice, setSpeakEnabled, speak, speakEnabled, stopSpeaking } from './speech.ts';
 import { initializeAvatar, animateAnswer, setSpeaking } from './avatar.ts';
+import { formatArgs, type ToolTrace } from './trace.ts';
 let running = false;
 /** Moves the Zouave's previous reply into the conversation thread and adds the visitor's message. */
 function pushHistory(message: string) {
-  const thread = $('thread');
+  const thread = $('thread'), trace = $('trace');
   const bubble = (who: 'user' | 'zouave', text: string) => { const p = document.createElement('p'); p.className = `bubble bubble-${who}`; p.textContent = text; thread.append(p); };
+  // The previous answer keeps its tool calls above it in the history: question → tools → answer.
+  if (trace.childElementCount) { const calls = document.createElement('div'); calls.className = 'trace trace-past'; calls.append(...trace.children); thread.append(calls); }
   const previous = $('caption').textContent?.trim();
   if (previous) bubble('zouave', previous);
   bubble('user', message);
-  while (thread.children.length > 12) thread.firstElementChild!.remove();
+  while (thread.children.length > 16) thread.firstElementChild!.remove();
   $('input-caption').hidden = true;
 }
+/** Shows each tool call behind the current answer: function, arguments, and the official figure it returned. */
+function showTrace({ name, args, ok, summary, ms, via }: ToolTrace) {
+  const row = document.createElement('div'); row.className = `trace-call${ok ? '' : ' trace-failed'}`;
+  row.title = `${name}(${JSON.stringify(args)}) · ${ms} ms${via === 'voice' ? ' · called by the OpenAI voice agent' : ''}`;
+  const part = (className: string, text: string) => { const span = document.createElement('span'); span.className = className; span.textContent = text; row.append(span); };
+  part('trace-fn', `ƒ ${name}`); part('trace-args', `(${formatArgs(args)})`); part('trace-out', `→ ${summary}`);
+  if (via === 'voice') part('trace-via', 'Realtime');
+  const trace = $('trace'); trace.append(row);
+  while (trace.childElementCount > 6) trace.firstElementChild!.remove();
+}
+window.addEventListener('zouave:trace', event => showTrace((event as CustomEvent<ToolTrace>).detail));
 function reply(text: string) {
   $('caption').textContent = text;
   if (isVoiceSessionActive() || !speak(text)) animateAnswer(text);

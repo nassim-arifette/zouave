@@ -1,6 +1,7 @@
 import { $, api, executeTool, notify } from './tools.ts';
 import { setSpeaking } from './avatar.ts';
 import { browserVoice, isListening, listen, stopListening } from './speech.ts';
+import { announce, summarize } from './trace.ts';
 type ToolCall = { type: string; call_id: string; name: string; arguments: string };
 let pc: RTCPeerConnection | undefined;
 let stream: MediaStream | undefined;
@@ -26,8 +27,11 @@ async function runCalls(calls: ToolCall[]) {
     if (seen.has(call.call_id)) continue;
     seen.add(call.call_id);
     let result: unknown;
-    try { result = await executeTool(call.name, JSON.parse(call.arguments)); }
+    const started = performance.now();
+    let args: unknown = {};
+    try { args = JSON.parse(call.arguments); result = await executeTool(call.name, args); }
     catch (error) { result = { error: error instanceof Error ? error.message : 'Tool failed.' }; }
+    announce({ name: call.name, args, ok: !(result as { error?: string }).error, summary: summarize(call.name, result), ms: Math.round(performance.now() - started), via: 'voice' });
     send({ type: mode === 'live' ? 'response.item.create' : 'conversation.item.create', item: { type: 'function_call_output', call_id: call.call_id, output: JSON.stringify(result) } });
     window.dispatchEvent(new CustomEvent('zouave:tool', { detail: { name: call.name, call_id: call.call_id, result, mode } }));
   }

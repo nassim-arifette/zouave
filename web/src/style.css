@@ -121,6 +121,15 @@ body:not(.engaged) .legend{opacity:0;transform:translateY(-10px);visibility:hidd
 .bubble{margin:0;font-size:11px;line-height:1.6;padding:7px 11px;border-radius:12px;max-width:88%;animation:card-in .35s var(--ease) both}
 .bubble-zouave{align-self:flex-start;color:#aebfc0;background:rgba(255,255,255,.035);border-bottom-left-radius:4px}
 .bubble-user{align-self:flex-end;color:#10241f;background:#a4d6bcd9;border-bottom-right-radius:4px;font-weight:500}
+.trace{display:flex;flex-direction:column;gap:3px;margin:8px 0 0}
+.trace:empty{display:none}
+.trace-call{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 6px;font:500 9.5px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#9fc4bd;background:rgba(143,211,226,.06);border-left:2px solid #8fd3e266;border-radius:0 6px 6px 0;padding:4px 8px;animation:card-in .35s var(--ease) both}
+.trace-fn{color:var(--water);font-weight:700}
+.trace-args{color:#7f9da0;word-break:break-word}
+.trace-out{color:#dfeee6}
+.trace-via{margin-left:auto;font-size:8px;letter-spacing:.6px;text-transform:uppercase;color:var(--amber);border:1px solid #edce9d55;border-radius:3px;padding:0 4px}
+.trace-failed{border-left-color:#e7a19a88}.trace-failed .trace-out{color:#e7b2ab}
+.trace-past{opacity:.6;margin:0}
 .input-caption{align-self:flex-end;font-size:11px;color:#8dadaa;line-height:1.5;margin:6px 0 0;text-align:right;font-style:italic}
 .caption{font-size:13px;line-height:1.7;color:#e6eee9;margin:8px 0 2px}
 .console{border-radius:20px;padding:10px 12px 9px}

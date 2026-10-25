@@ -1,5 +1,10 @@
 import { config } from './config.ts';
-import { state, afficher_scenario, afficher_crue, aller_a, exposition, niveau_seine, photo_inondee, consignes } from './tools.ts';
+import * as tools from './tools.ts';
+import { traced } from './trace.ts';
+
+const { state } = tools;
+// Typed questions go through the same announced tool calls as the voice agent, so the conversation shows its sources.
+const { afficher_scenario, afficher_crue, aller_a, exposition, niveau_seine, photo_inondee, consignes } = traced({ afficher_scenario: tools.afficher_scenario, afficher_crue: tools.afficher_crue, aller_a: tools.aller_a, exposition: tools.exposition, niveau_seine: tools.niveau_seine, photo_inondee: tools.photo_inondee, consignes: tools.consignes }, 'local');
 
 // English first (the demo language), French keywords kept so Parisian visitors can still type naturally.
 export async function routeIntent(message: string) {
