@@ -56,3 +56,10 @@ export const REFERENCES = [
   { title: "File:Un zouave à Paris.JPG", license: "CC0", author: "Brigitte Alliot" },
   { title: "File:Le zouave au pont de l'Alma à Paris.JPG", license: "CC BY-SA 3.0", author: "Thesupermat" },
 ];
+
+// Mouth region (x0, y0, x1, y1) in the 1024x1024 option images, used for the speaking frame.
+export const MOUTH_BOXES = {
+  1: [430, 272, 600, 380],
+  2: [440, 282, 630, 392],
+  4: [445, 276, 605, 382],
+};
