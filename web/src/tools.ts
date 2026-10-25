@@ -109,7 +109,8 @@ async function showHero(result: { url_clean: string; url_depth: string; address_
   const format = (level: number) => `${level.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m`;
   try {
     hero ??= createHero($('hero-view'));
-    await hero.show({ photoUrl: result.url_clean, depthUrl: result.url_depth, fov: result.view.fov, pitch: result.view.pitch, cameraHeight: result.view.camera_height_m, target: result.hauteur_m, onLevel: level => { slider.value = String(level); $('hero-level').textContent = format(level); } });
+    const shown = await hero.show({ photoUrl: result.url_clean, depthUrl: result.url_depth, fov: result.view.fov, pitch: result.view.pitch, cameraHeight: result.view.camera_height_m, target: result.hauteur_m, onLevel: level => { slider.value = String(level); $('hero-level').textContent = format(level); } });
+    if (!shown) return true; // superseded by a newer opening, which owns the dialog
   } catch (error) { console.warn('3D street scene unavailable, falling back to the photo:', error); hero?.stop(); return false; }
   $('hero-label').textContent = `${result.address_label} · jusqu’à ${format(result.hauteur_m)} simulés`;
   $('hero-credit').innerHTML = credit;

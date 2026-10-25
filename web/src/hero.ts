@@ -37,20 +37,35 @@ function roadColour(image: HTMLImageElement) {
   return new THREE.Color(sum[0] / n / 255, sum[1] / n / 255, sum[2] / n / 255).convertSRGBToLinear().multiplyScalar(0.85);
 }
 
+/** Serialises scene openings: a newer `begin()` or a `stop()` invalidates every load still in flight. */
+export function createLifecycle() {
+  let generation = 0;
+  let active: { stop: () => void } | undefined;
+  const release = () => { active?.stop(); active = undefined; };
+  return {
+    begin() { generation++; release(); return generation; },
+    isCurrent(ticket: number) { return ticket === generation; },
+    commit(ticket: number, handle: { stop: () => void }) { if (ticket !== generation) { handle.stop(); return false; } active = handle; return true; },
+    stop() { generation++; release(); },
+    get running() { return active !== undefined; },
+  };
+}
+
 export function createHero(container: HTMLElement) {
   let renderer: THREE.WebGLRenderer | undefined;
-  let frame = 0;
-  let dispose = () => {};
+  const lifecycle = createLifecycle();
   const state = { level: 0, target: 0, start: 0, from: 0 };
-  const stop = () => { cancelAnimationFrame(frame); dispose(); dispose = () => {}; };
+  const stop = () => lifecycle.stop();
   const setLevel = (level: number) => { state.level = Math.max(0, Math.min(MAX_LEVEL, level)); state.target = state.level; };
 
-  async function show(options: HeroOptions) {
-    stop();
+  /** Resolves to `false` when a newer `show()` or `stop()` superseded this one while its assets were loading. */
+  async function show(options: HeroOptions): Promise<boolean> {
+    const ticket = lifecycle.begin();
     renderer ??= new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
     container.replaceChildren(renderer.domElement);
     const [texture, depth] = await Promise.all([new THREE.TextureLoader().loadAsync(options.photoUrl), loadDepth(options.depthUrl)]);
+    if (!lifecycle.isCurrent(ticket)) { texture.dispose(); return false; }
     texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = 8;
     const aspect = depth.width / depth.height;
     const tanX = Math.tan(THREE.MathUtils.degToRad(options.fov / 2)), tanY = tanX / aspect;
@@ -173,6 +188,7 @@ export function createHero(container: HTMLElement) {
     state.level = 0; state.from = 0; state.target = options.target; state.start = performance.now();
     const duration = reduceMotion ? 0 : 3000 + options.target * 2400;
     let shownLevel = -1;
+    let frame = 0;
     const tick = (now: number) => {
       frame = requestAnimationFrame(tick);
       if (state.level !== state.target) {
@@ -192,12 +208,15 @@ export function createHero(container: HTMLElement) {
       water.visible = wet;
       renderer!.render(scene, camera);
     };
-    frame = requestAnimationFrame(tick);
-    dispose = () => {
+    const dispose = () => {
+      cancelAnimationFrame(frame);
       observer.disconnect();
       relief.dispose(); photoMaterial.dispose(); bed.geometry.dispose(); (bed.material as THREE.Material).dispose(); backdrop.geometry.dispose(); (backdrop.material as THREE.Material).dispose();
       water.dispose(); prepass.dispose(); texture.dispose();
     };
+    if (!lifecycle.commit(ticket, { stop: dispose })) return false;
+    frame = requestAnimationFrame(tick);
+    return true;
   }
 
   return {
