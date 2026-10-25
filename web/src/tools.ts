@@ -83,25 +83,31 @@ export async function niveau_seine() {
   $('level-source').setAttribute('href', result.source_url);
   return result;
 }
-let heroReload = 0;
-/** Bumped by every photo_inondee call and by closing the dialog: answers for an older request are dropped before anything is shown. */
+/**
+ * One counter owns every step of opening the street scene (HTTP, textures, render install, fallback). A new request,
+ * closing the dialog or animating the current scene bumps it; anything older is dropped, and a scene load still in
+ * flight is invalidated so it can never install itself or open its fallback later.
+ */
 let heroRequest = 0;
+const supersede = () => { heroRequest++; hero?.cancelPending(); liveAbort?.abort(); return heroRequest; };
 let liveAbort: AbortController | undefined;
-/** `origin` pins the request to an address and a reload ticket so a late answer for an older address can never replace or close a newer scene. */
-export async function photo_inondee({ hauteur }: { hauteur: number }, origin: { lat: number; lon: number; ticket?: number } = state.address) {
+const superseded = () => ({ affichee: false, remplacee: true, error: 'Demande remplacée par une nouvelle sélection.', source: 'Catalogue local de simulations' });
+/** `origin` pins the request to an address so a late answer for an older address is never shown as the current one. */
+export async function photo_inondee({ hauteur }: { hauteur: number }, origin: { lat: number; lon: number } = state.address) {
   if (!Number.isFinite(hauteur) || hauteur < 0 || hauteur > 10) throw new Error('Hauteur de simulation invalide.');
+  const request = supersede();
+  const stale = () => request !== heroRequest;
   try {
-    const request = ++heroRequest;
-    const stale = () => request !== heroRequest || (origin.ticket !== undefined && origin.ticket !== heroReload);
-    const superseded = { affichee: false, error: 'Demande remplacée par une nouvelle sélection.', source: 'Catalogue local de simulations' };
-    const catalogue = () => api(`/api/photo?${new URLSearchParams({ lat: String(origin.lat), lon: String(origin.lon), h: String(hauteur) })}`);
     const live = await liveStreet(origin.lat, origin.lon, request);
-    if (stale()) return superseded;
-    const result = live ?? await catalogue();
-    if (stale()) return superseded;
+    if (stale()) return superseded();
+    const result = live ?? await api(`/api/photo?${new URLSearchParams({ lat: String(origin.lat), lon: String(origin.lon), h: String(hauteur) })}`);
+    if (stale()) return superseded();
     const credit = `${escape(result.credit)}${result.credit.includes(result.license) ? '' : ` · ${escape(result.license)}`}${result.source_url ? ` · ${source('Photo originale · Panoramax', result.source_url)}` : ''}`;
-    if (result.url_depth && await showHero({ ...result, hauteur_m: hauteur }, credit, origin)) return { affichee: true, ...result, hauteur_m: hauteur, rendu: 'relief-3d' };
-    if (stale()) return superseded;
+    if (result.url_depth) {
+      const shown = await showHero({ ...result, hauteur_m: hauteur }, credit, origin, request);
+      if (stale()) return superseded();
+      if (shown) return { affichee: true, ...result, hauteur_m: hauteur, rendu: 'relief-3d' };
+    }
     // Flat photo fallback (no depth or no WebGL). A live answer has no flooded rendering: show its original view.
     const fallback = result.url ? result : { ...result, url: result.url_clean, hauteur_m: 0, address_label: result.address_label ?? state.address.label };
     const flooded = hauteur !== 0 && fallback.url !== fallback.url_clean;
@@ -113,7 +119,7 @@ export async function photo_inondee({ hauteur }: { hauteur: number }, origin: { 
     image.onerror = () => { $<HTMLDialogElement>('photo-dialog').close(); notify('Image indisponible. La simulation ne peut pas être affichée.'); };
     $<HTMLDialogElement>('photo-dialog').showModal();
     return { affichee: true, ...result };
-  } catch (error) { return { affichee: false, error: error instanceof Error ? error.message : 'Photo indisponible.', source: 'Catalogue local de simulations (absent ou indisponible)' }; }
+  } catch (error) { if (stale()) return superseded(); return { affichee: false, error: error instanceof Error ? error.message : 'Photo indisponible.', source: 'Catalogue local de simulations (absent ou indisponible)' }; }
 }
 export async function consignes(args: { rez_de_chaussee: boolean; cave: boolean; enfants: boolean }) {
   if (!['rez_de_chaussee', 'cave', 'enfants'].every(key => typeof args[key as keyof typeof args] === 'boolean')) throw new Error('Précisez le profil du foyer.');
@@ -125,13 +131,14 @@ export async function consignes(args: { rez_de_chaussee: boolean; cave: boolean;
   return { consignes: selected, profil: args, source: 'Consignes officielles de prévention' };
 }
 let hero: ReturnType<typeof createHero> | undefined;
+/** The scene actually rendering (set once its textures are installed, cleared while a load is in flight or after closing). */
 let heroScene: { lat: number; lon: number; url_depth: string } | undefined;
 /** Nearest Panoramax panorama of the address, reprojected and depth-mapped by the server (≤ 10 s, cached). `null` → use the curated catalogue. */
 async function liveStreet(lat: number, lon: number, request: number) {
   const dialog = $<HTMLDialogElement>('hero-dialog'), status = $('hero-status');
-  liveAbort?.abort(); const controller = new AbortController(); liveAbort = controller;
+  const controller = new AbortController(); liveAbort = controller;
   status.textContent = 'Recherche d’une photo de votre rue…'; status.hidden = false;
-  dialog.onclose = () => { heroRequest++; controller.abort(); hero?.stop(); };
+  dialog.onclose = () => { heroRequest++; heroScene = undefined; controller.abort(); hero?.stop(); };
   if (!dialog.open) dialog.showModal();
   try {
     const response = await fetch(`/api/rue?${new URLSearchParams({ lat: String(lat), lon: String(lon) })}`, { signal: AbortSignal.any([controller.signal, AbortSignal.timeout(10_000)]) });
@@ -142,22 +149,23 @@ async function liveStreet(lat: number, lon: number, request: number) {
     return data as { url?: string; url_clean: string; url_depth: string; address_label?: string; hauteur_m?: number; credit: string; license: string; source_url: string | null; view: { fov: number; pitch: number; camera_height_m: number }; live: boolean; distance_m?: number };
   } catch { if (request === heroRequest) status.textContent = 'Photo de rue indisponible (délai dépassé).'; return null; }
 }
-async function showHero(result: { url_clean: string; url_depth: string; address_label?: string; hauteur_m: number; view: { fov: number; pitch: number; camera_height_m: number }; live?: boolean; distance_m?: number }, credit: string, origin: { lat: number; lon: number } = state.address) {
+async function showHero(result: { url_clean: string; url_depth: string; address_label?: string; hauteur_m: number; view: { fov: number; pitch: number; camera_height_m: number }; live?: boolean; distance_m?: number }, credit: string, origin: { lat: number; lon: number }, request: number) {
   const dialog = $<HTMLDialogElement>('hero-dialog');
   const slider = $<HTMLInputElement>('hero-slider');
   const format = (level: number) => `${level.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m`;
+  heroScene = undefined;
   try {
     hero ??= createHero($('hero-view'));
     const shown = await hero.show({ photoUrl: result.url_clean, depthUrl: result.url_depth, fov: result.view.fov, pitch: result.view.pitch, cameraHeight: result.view.camera_height_m, target: result.hauteur_m, onLevel: level => { slider.value = String(level); $('hero-level').textContent = format(level); } });
-    if (!shown) return true; // superseded by a newer opening, which owns the dialog
-  } catch (error) { console.warn('3D street scene unavailable, falling back to the photo:', error); hero?.stop(); return false; }
+    if (!shown || request !== heroRequest) return true; // superseded by a newer request, which owns the dialog
+  } catch (error) { if (request !== heroRequest) return true; console.warn('3D street scene unavailable, falling back to the photo:', error); hero?.stop(); return false; }
   heroScene = { lat: origin.lat, lon: origin.lon, url_depth: result.url_depth };
   $('hero-status').hidden = true;
   $('hero-label').innerHTML = `${escape(result.address_label || state.address.label)}${result.live ? ` · photo à ${result.distance_m} m` : ''} · Eau à ${format(result.hauteur_m)} ${badge('Estimé')}`;
   $('hero-credit').innerHTML = credit;
   slider.oninput = () => hero?.setLevel(Number(slider.value));
   $('hero-replay').onclick = () => { hero?.setLevel(0); hero?.animateTo(result.hauteur_m); };
-  dialog.onclose = () => { heroRequest++; hero?.stop(); };
+  dialog.onclose = () => { heroRequest++; heroScene = undefined; hero?.stop(); };
   if (!dialog.open) dialog.showModal();
   return true;
 }
@@ -172,10 +180,10 @@ export async function timelineExposure(lat: number, lon: number) {
   const classe = (hazards[0]?.properties?.classe ?? null) as FloodClass | null;
   const band = classe ? depthAtLevel(classe, selected.level) : outsidePpri(selected.level, contains('sdrife_zone_inondable').length > 0);
   const requestedPhoto = photoHeight(band, selected.level);
-  if (hero && heroScene && $<HTMLDialogElement>('hero-dialog').open) {
-    // Only the scene of this very address may be animated in place; after an address change reload the right photo and relief.
-    if (Math.abs(heroScene.lat - lat) < 1e-6 && Math.abs(heroScene.lon - lon) < 1e-6) { ++heroReload; hero.animateTo(sceneHeight(band)); $('hero-label').innerHTML = `${escape(state.address.label)} · ${escape(selected.label)} · Eau à ${sceneHeight(band).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m ${badge(band.evidence)}`; }
-    else { const ticket = ++heroReload; void photo_inondee({ hauteur: sceneHeight(band) }, { lat, lon, ticket }).then(photo => { if (!photo.affichee && ticket === heroReload) { heroScene = undefined; $<HTMLDialogElement>('hero-dialog').close(); } }); }
+  if (hero && $<HTMLDialogElement>('hero-dialog').open) {
+    // Only the scene actually rendering this very address may be animated in place; otherwise (other address, or a load still in flight) reload the right photo and relief.
+    if (heroScene && Math.abs(heroScene.lat - lat) < 1e-6 && Math.abs(heroScene.lon - lon) < 1e-6) { supersede(); hero.animateTo(sceneHeight(band)); $('hero-label').innerHTML = `${escape(state.address.label)} · ${escape(selected.label)} · Eau à ${sceneHeight(band).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m ${badge(band.evidence)}`; }
+    else void photo_inondee({ hauteur: sceneHeight(band) }, { lat, lon }).then(photo => { if (!photo.affichee && !('remplacee' in photo)) $<HTMLDialogElement>('hero-dialog').close(); });
   }
   let photo;
   try { photo = await api(`/api/photo?${new URLSearchParams({ lat: String(lat), lon: String(lon), h: String(requestedPhoto) })}`); } catch { photo = null; }
