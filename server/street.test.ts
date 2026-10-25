@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import sharp from 'sharp';
 import { createApp } from './api.ts';
-import { bearing, findNearestPicture, metricDepth, reproject, OUT_W, OUT_H } from './street.ts';
+import { bearing, findNearestPicture, metricDepth, reproject, defaultDepthEstimator, OUT_W, OUT_H } from './street.ts';
 
 const address = { lat: 48.845905, lon: 2.382605 };
 const feature = (id: string, lon: number, lat: number, extra: Record<string, unknown> = {}) => ({ id, geometry: { type: 'Point', coordinates: [lon, lat] }, properties: { 'view:azimuth': 187, 'pers:interior_orientation': { field_of_view: 360 }, 'geovisio:producer': 'someone@example.org', license: 'CC-BY-SA-4.0', datetime: '2026-08-05T10:00:00Z', ...extra }, assets: { hd: { href: `https://img.test/${id}.jpg` } }, links: [{ rel: 'license', href: 'https://creativecommons.org/licenses/by-sa/4.0/' }] });
@@ -48,6 +48,10 @@ test('reprojection looks along the requested heading and metric fit puts the roa
   const red = centre(reproject(src, 90, 0, 80, 64, 36)), blue = centre(reproject(src, 270, 0, 80, 64, 36));
   assert.ok(red[0] > red[2], 'heading 90° (u ≈ 0.25) sees the red half');
   assert.ok(blue[2] > blue[0], 'heading 270° (u ≈ 0.75) sees the blue half');
+  // Negative pitch looks down: the centre pixel at -60° lands in the dark ground band (bottom rows of the panorama).
+  const down = centre(reproject(src, 90, -60, 80, 64, 36)), up = centre(reproject(src, 90, 60, 80, 64, 36));
+  assert.ok(down[0] < 60 && down[1] < 60 && down[2] < 60, `pitch -60° must see the ground band, got ${down}`);
+  assert.ok(up[0] > 100, `pitch +60° must see the red upper half, got ${up}`);
   const relative = await fakeDepth();
   const metres = metricDepth(relative);
   const bottom = metres.data[(OUT_H - 1) * OUT_W + Math.floor(OUT_W * 0.3)];
@@ -90,4 +94,20 @@ test('/api/rue prefers the curated demo photo within 30 m and can be switched of
   await withApp({ fetcher, street: { enabled: false, estimateDepth: fakeDepth } }, async url => {
     assert.equal((await fetch(`${url}/api/rue?lat=${address.lat}&lon=${address.lon}`)).status, 404);
   });
+});
+
+test('a failed model initialisation is retried on the next request while an in-flight one is shared', async () => {
+  let attempts = 0;
+  const fakeImage = { width: 2, height: 2 };
+  const load = async () => {
+    attempts++;
+    if (attempts === 1) throw new Error('offline');
+    return { RawImage: class { constructor() { return fakeImage; } }, pipeline: async () => async () => ({ predicted_depth: { data: new Float32Array([1, 2, 3, 4]), dims: [2, 2] } }) } as never;
+  };
+  const estimate = defaultDepthEstimator(load);
+  const png = await sharp({ create: { width: 2, height: 2, channels: 3, background: '#808080' } }).png().toBuffer();
+  await assert.rejects(estimate(png), /offline/);
+  const [a, b] = await Promise.all([estimate(png), estimate(png)]);
+  assert.deepEqual([a.width, a.height, b.width], [2, 2, 2]);
+  assert.equal(attempts, 2, 'the model is loaded again after the failure and only once for concurrent requests');
 });

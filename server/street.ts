@@ -47,8 +47,8 @@ export function reproject(src: { data: Uint8Array; width: number; height: number
   const { data, width: sw, height: sh, channels } = src;
   for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
     const x = i - w / 2 + 0.5, y = -(j - h / 2 + 0.5), z = f;
-    // pitch about X, then yaw about Y (same order as scripts/photo/fetch_sources.py)
-    const y1 = y * cp - z * sp, z1 = y * sp + z * cp;
+    // pitch about X (negative = looking down, as hero.ts and metricDepth assume), then yaw about Y
+    const y1 = y * cp + z * sp, z1 = -y * sp + z * cp;
     const x2 = x * cy + z1 * sy, z2 = -x * sy + z1 * cy;
     const lon = Math.atan2(x2, z2), lat = Math.atan2(y1, Math.hypot(x2, z2));
     const u = ((lon / (2 * Math.PI)) % 1 + 1) % 1 * sw - 0.5, v = (0.5 - lat / Math.PI) * sh - 0.5;
@@ -102,9 +102,11 @@ export function encodeDepth(depth: { data: Float32Array; width: number; height: 
 }
 
 let estimatorPromise: Promise<DepthEstimator> | undefined;
-export function defaultDepthEstimator(): DepthEstimator {
+type Transformers = Pick<typeof import('@huggingface/transformers'), 'pipeline' | 'RawImage'>;
+/** Lazily loads the model once; a failed initialisation (e.g. first download offline) is forgotten so the next request retries. */
+export function defaultDepthEstimator(load: () => Promise<Transformers> = () => import('@huggingface/transformers')): DepthEstimator {
   return async jpeg => {
-    estimatorPromise ??= import('@huggingface/transformers').then(async ({ pipeline, RawImage }) => {
+    estimatorPromise ??= load().then(async ({ pipeline, RawImage }) => {
       const estimator = await pipeline('depth-estimation', DEPTH_MODEL, { dtype: 'fp32' });
       return async (buffer: Buffer) => {
         const sharp = (await import('sharp')).default;
@@ -113,7 +115,7 @@ export function defaultDepthEstimator(): DepthEstimator {
         const out = await estimator(image) as { predicted_depth: { data: Float32Array; dims: number[] } };
         return { data: Float32Array.from(out.predicted_depth.data), width: out.predicted_depth.dims[1], height: out.predicted_depth.dims[0] };
       };
-    });
+    }).catch(error => { estimatorPromise = undefined; throw error; });
     return (await estimatorPromise)(jpeg);
   };
 }
