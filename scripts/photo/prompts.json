@@ -1,0 +1,9 @@
+{
+  "model": "gpt-image-2.5-sunburst",
+  "prompt": "Edit this street photo: add flood water from a major Seine river flood (like the Paris flood of January 1910) up to about {height} m above street level. {calibration} The water is opaque, muddy brown river water covering the entire roadway and both sidewalks with one flat, continuous, level surface, small ripples, realistic reflections of the facades and a few floating leaves and pieces of debris. Overcast grey daylight. Change nothing else: keep exactly the same camera position, framing and perspective, the same buildings, facades, windows, shop fronts, signs (keep every existing word of text exactly as it is), trees, street furniture and parked cars. No people, no boats, no added text. Photorealistic photograph.",
+  "calibration": {
+    "0.5": "Water depth about 0.5 m: it reaches the bottom quarter of the ground-floor doors (knee height of an adult, a ground-floor door is about 2.2 m tall); parked cars are submerged up to the bottom of their doors, wheels hidden.",
+    "1.5": "Water depth about 1.5 m: it reaches two thirds of the height of the ground-floor doors and shop fronts (chest height of an adult, a ground-floor door is about 2.2 m tall); parked cars are submerged up to their windows, only the upper part of the windows and the roofs stick out.",
+    "2.5": "Water depth about 2.5 m: it rises above the top of the ground-floor doors and shop windows (a ground-floor door is about 2.2 m tall): every shop window, door and shutter is completely under water, the waterline runs along the shop sign boards just below the first-floor windows; railings, bollards, street signs' lower poles and parked cars are completely under water."
+  }
+}
