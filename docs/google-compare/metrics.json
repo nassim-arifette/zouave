@@ -1,0 +1,48 @@
+{
+  "generated": "2026-10-25T21:36:02.110Z",
+  "viewport": "1600×900, software WebGL (SwiftShader)",
+  "views": {
+    "home": {
+      "answer": "4 Rue Traversière 75012 Paris: 1 to 2 m of water in the reference scenario. This address is in a cellar sector exposed in the 1910 scenario. Sources: Paris PPRI, City of Paris. Let’s look at the right moves.",
+      "google": {
+        "tileset_ms": 8078,
+        "settled_ms": 39152,
+        "tile_requests": 650,
+        "root_requests": 1,
+        "failed": 0,
+        "megabytes": 32.3,
+        "problem": null
+      }
+    },
+    "street": {
+      "streetview_ms": 10040,
+      "status": "loaded"
+    },
+    "overview": {
+      "tileset_ms": 182290,
+      "settled_ms": 182293,
+      "tile_requests": 283,
+      "root_requests": 0,
+      "failed": 0,
+      "megabytes": 20.3,
+      "problem": "status still \"Loading Google 3D tiles…\" after 180 s"
+    },
+    "alma": {
+      "answer": "Place de l'Alma 75008 Paris: outside the mapped PPRI footprint. This address is in a cellar sector exposed in the 1910 scenario. Sources: Paris PPRI, City of Paris. Let’s look at the right moves.",
+      "google": {
+        "tileset_ms": 181182,
+        "settled_ms": 181186,
+        "tile_requests": 324,
+        "root_requests": 0,
+        "failed": 0,
+        "megabytes": 19.1,
+        "problem": "status still \"Loading Google 3D tiles…\" after 180 s"
+      }
+    }
+  },
+  "errors": [],
+  "google": {
+    "tiles3d": true,
+    "streetview": true
+  }
+}

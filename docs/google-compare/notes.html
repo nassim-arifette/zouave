@@ -1,0 +1,39 @@
+<h2>Verdict: Google as an option, open data by default</h2>
+<p>For the final on Monday 26 October, keep the MapLibre map and the Panoramax street scene as the default path of the Story. If the room network holds, flip to Google Photorealistic 3D once, on the zoomed-out neighbourhood view. Do not show Street View: in this capture its water plane did not appear.</p>
+
+<h2>What the images show</h2>
+<ul>
+  <li><strong>Wow effect.</strong> The Google overview is the strongest image of the set. The Seine, the Austerlitz viaduct and the Gare de Lyon are recognisable at a glance, and the flooded quays stand out in blue against real roofs. The MapLibre version reads as a diagram by comparison.</li>
+  <li><strong>Water legibility.</strong> On Google tiles the 1910 footprint is draped in three shades of blue (0–1 m, 1–2 m, over 2 m) and follows the real streets. At the Alma it shows clearly that the place itself stays dry while the Quai Branly side floods. On MapLibre the water is a dark olive sheet whose edges are harder to read. Framing matches on all three aerial views.</li>
+  <li><strong>Street level.</strong> The Panoramax scene (photo, depth model, water at 1.50 m tagged <em>Estimated</em>) is convincing. The Street View capture found a panorama 5 m from the address, but it shows a dry entrance with no water at all. Its caption still says “Water at 1.50 m”, without the <em>Estimated</em> tag.</li>
+  <li><strong>Honesty.</strong> The interface panels keep their <em>Official</em> / <em>Estimated</em> tags and sources on top of both renderers. Only the Street View caption drops the tag.</li>
+  <li><strong>A bug seen on screen.</strong> After the first switch to Google, switching again (overview, Alma) leaves the “Loading Google 3D tiles…” banner up for the full 180 s timeout. The tiles do load during that time: 283 and 324 tile requests, sharp in the screenshots. The measured times for those two views are therefore the timeout, not real loading times.</li>
+</ul>
+
+<h2>Measured (metrics.json, software WebGL, 1600×900)</h2>
+<ul>
+  <li>First Google view (your street): tileset in 8.1 s, settled in 39.2 s, 650 tile requests, 32.3 MB, no failures.</li>
+  <li>Overview and Alma: 20.3 MB and 19.1 MB more. The three aerial views total about 72 MB, with a single root tileset request for the whole run.</li>
+  <li>Street View: ready in 10.0 s.</li>
+</ul>
+
+<h2>Live risk</h2>
+<p>Google depends on the room network and on two keys. On the first view alone, 32 MB has to arrive in under a minute, and the Story leaves no time to wait. MapLibre works offline. If Google fails, the toggle returns to the map, so the fallback is one click away.</p>
+
+<h2>Cost (official pages, read on 25 October 2026)</h2>
+<ul>
+  <li>Photorealistic 3D Tiles is an Enterprise SKU: 1,000 free events a month, then 6.00 USD per 1,000 up to 100,000 (<a href="https://developers.google.com/maps/billing-and-pricing/pricing">pricing list</a>). Root tileset requests count against a daily quota of 10,000. Tile requests do not count, and one root request opens a session of up to three hours (<a href="https://developers.google.com/maps/documentation/tile/usage-and-billing">Map Tiles usage and billing</a>).</li>
+  <li>Dynamic Street View is a Pro SKU, billed per panorama: 5,000 free a month, then 14.00 USD per 1,000 (<a href="https://developers.google.com/maps/billing-and-pricing/pricing">pricing list</a>, <a href="https://developers.google.com/maps/documentation/javascript/usage-and-billing">Maps JavaScript usage and billing</a>).</li>
+  <li>The former 200 USD monthly credit has been replaced by free calls per SKU (<a href="https://mapsplatform.google.com/pricing/">Google Maps Platform pricing</a>).</li>
+  <li>For a demo, this run used one root request, so a rehearsal and the final fit well inside the free allowance. For public use, each visitor who switches on Google costs at least one root request, which is charged beyond 1,000 a month.</li>
+</ul>
+
+<h2>Terms</h2>
+<ul>
+  <li>Google requires the tile attributions on one line, the Google Maps logo where possible, and nothing overlapping or hiding them. Tiles must not be cached outside the rules, offline use included (<a href="https://developers.google.com/maps/documentation/tile/policies">Map Tiles policies</a>).</li>
+  <li>In the captures, the “Map data ©Google” line sits under the top bar, the loading banner and the “Solid: flooded” label. No Google logo is visible on the 3D views. This has to be fixed before Google is shown in public.</li>
+  <li>The same policy asks a hybrid scene to make clear which parts come from Google. The flood layer is Zouave’s own data, which the legend already says.</li>
+</ul>
+
+<h2>If Google is kept for the final</h2>
+<p>Three app changes, in this order: clear the loading banner when the tileset is reused, move the attribution line and add the Google logo where nothing covers them, then switch the Story to the Google view at the neighbourhood step. Leave the Street View button out until its water plane renders.</p>
