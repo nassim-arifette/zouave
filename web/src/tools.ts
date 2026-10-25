@@ -83,12 +83,15 @@ export async function niveau_seine() {
   $('level-source').setAttribute('href', result.source_url);
   return result;
 }
-export async function photo_inondee({ hauteur }: { hauteur: number }) {
+let heroReload = 0;
+/** `origin` pins the request to an address and a reload ticket so a late answer for an older address can never replace or close a newer scene. */
+export async function photo_inondee({ hauteur }: { hauteur: number }, origin: { lat: number; lon: number; ticket?: number } = state.address) {
   if (!Number.isFinite(hauteur) || hauteur < 0 || hauteur > 10) throw new Error('Hauteur de simulation invalide.');
   try {
-    const result = await api(`/api/photo?${new URLSearchParams({ lat: String(state.address.lat), lon: String(state.address.lon), h: String(hauteur) })}`);
+    const result = await api(`/api/photo?${new URLSearchParams({ lat: String(origin.lat), lon: String(origin.lon), h: String(hauteur) })}`);
+    if (origin.ticket !== undefined && origin.ticket !== heroReload) return { affichee: false, error: 'Adresse remplacée par une nouvelle sélection.', source: 'Catalogue local de simulations' };
     const credit = `${escape(result.credit)}${result.credit.includes(result.license) ? '' : ` · ${escape(result.license)}`}${result.source_url ? ` · ${source('Photo originale · Panoramax', result.source_url)}` : ''}`;
-    if (result.url_depth && await showHero({ ...result, hauteur_m: hauteur }, credit)) return { affichee: true, ...result, hauteur_m: hauteur, rendu: 'relief-3d' };
+    if (result.url_depth && await showHero({ ...result, hauteur_m: hauteur }, credit, origin)) return { affichee: true, ...result, hauteur_m: hauteur, rendu: 'relief-3d' };
     const image = $<HTMLImageElement>('photo-image'); image.src = hauteur === 0 ? result.url_clean ?? result.url : result.url;
     $('photo-label').textContent = hauteur === 0 ? `${result.address_label} · Vue originale` : `${result.address_label} · Eau à ${Number(result.hauteur_m).toLocaleString('fr-FR')} m`;
     if (hauteur !== 0) $('photo-label').insertAdjacentHTML('beforeend', ` ${badge('Estimé')}`);
@@ -109,7 +112,7 @@ export async function consignes(args: { rez_de_chaussee: boolean; cave: boolean;
 }
 let hero: ReturnType<typeof createHero> | undefined;
 let heroScene: { lat: number; lon: number; url_depth: string } | undefined;
-async function showHero(result: { url_clean: string; url_depth: string; address_label: string; hauteur_m: number; view: { fov: number; pitch: number; camera_height_m: number } }, credit: string) {
+async function showHero(result: { url_clean: string; url_depth: string; address_label: string; hauteur_m: number; view: { fov: number; pitch: number; camera_height_m: number } }, credit: string, origin: { lat: number; lon: number } = state.address) {
   const dialog = $<HTMLDialogElement>('hero-dialog');
   const slider = $<HTMLInputElement>('hero-slider');
   const format = (level: number) => `${level.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m`;
@@ -118,7 +121,7 @@ async function showHero(result: { url_clean: string; url_depth: string; address_
     const shown = await hero.show({ photoUrl: result.url_clean, depthUrl: result.url_depth, fov: result.view.fov, pitch: result.view.pitch, cameraHeight: result.view.camera_height_m, target: result.hauteur_m, onLevel: level => { slider.value = String(level); $('hero-level').textContent = format(level); } });
     if (!shown) return true; // superseded by a newer opening, which owns the dialog
   } catch (error) { console.warn('3D street scene unavailable, falling back to the photo:', error); hero?.stop(); return false; }
-  heroScene = { lat: state.address.lat, lon: state.address.lon, url_depth: result.url_depth };
+  heroScene = { lat: origin.lat, lon: origin.lon, url_depth: result.url_depth };
   $('hero-label').innerHTML = `${escape(result.address_label)} · Eau à ${format(result.hauteur_m)} ${badge('Estimé')}`;
   $('hero-credit').innerHTML = credit;
   slider.oninput = () => hero?.setLevel(Number(slider.value));
@@ -141,7 +144,7 @@ export async function timelineExposure(lat: number, lon: number) {
   if (hero && heroScene && $<HTMLDialogElement>('hero-dialog').open) {
     // Only the scene of this very address may be animated in place; after an address change reload the right photo and relief.
     if (Math.abs(heroScene.lat - lat) < 1e-6 && Math.abs(heroScene.lon - lon) < 1e-6) { hero.animateTo(sceneHeight(band)); $('hero-label').innerHTML = `${escape(state.address.label)} · ${escape(selected.label)} · Eau à ${sceneHeight(band).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m ${badge(band.evidence)}`; }
-    else void photo_inondee({ hauteur: sceneHeight(band) }).then(photo => { if (!photo.affichee) { heroScene = undefined; $<HTMLDialogElement>('hero-dialog').close(); } });
+    else { const ticket = ++heroReload; void photo_inondee({ hauteur: sceneHeight(band) }, { lat, lon, ticket }).then(photo => { if (!photo.affichee && ticket === heroReload) { heroScene = undefined; $<HTMLDialogElement>('hero-dialog').close(); } }); }
   }
   let photo;
   try { photo = await api(`/api/photo?${new URLSearchParams({ lat: String(lat), lon: String(lon), h: String(requestedPhoto) })}`); } catch { photo = null; }
