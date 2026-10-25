@@ -1,7 +1,8 @@
 import { chromium } from 'playwright';
 import { homedir } from 'node:os';
-import { writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH ?? `${homedir()}/.local/bin/google-chrome`, headless: true, args: ['--no-sandbox', '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+await mkdir(`${homedir()}/zouave-notes`, { recursive: true });
 try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, permissions: ['microphone'] });
   await page.addInitScript(() => {
@@ -21,7 +22,7 @@ try {
     }
   });
   await page.goto(process.env.ZOUAVE_URL ?? 'http://127.0.0.1:3000', { waitUntil: 'networkidle' });
-  await page.getByRole('button', { name: 'Activer la voix', exact: true }).click();
+  await page.getByRole('button', { name: 'Turn on voice', exact: true }).click();
   await page.waitForFunction(() => window.voiceSession !== null, { timeout: 40000 });
   const session = await page.evaluate(() => window.voiceSession);
   if (!session.sdpAnswer) { console.log('Session failed; no billable connection kept open.'); process.exitCode = 1; }
@@ -30,10 +31,10 @@ try {
     await page.evaluate(mode => {
       const send = event => window.testVoiceChannel.send(JSON.stringify(event));
       if (mode === 'realtime') {
-        send({ type: 'conversation.item.create', item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: 'Appelle maintenant niveau_seine pour me donner le niveau de la Seine.' }] } });
+        send({ type: 'conversation.item.create', item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: 'Call niveau_seine now and tell me the level of the Seine.' }] } });
         send({ type: 'response.create' });
       } else {
-        send({ type: 'session.instructions.append', delegation_id: null, content: 'Le visiteur demande le niveau actuel de la Seine. Délègue immédiatement au backend et appelle niveau_seine pour lui répondre. Ne donne aucun chiffre sans outil.' });
+        send({ type: 'session.instructions.append', delegation_id: null, content: 'The visitor asks for the current level of the Seine. Delegate to the backend right away and call niveau_seine to answer. Give no number without a tool.' });
         send({ type: 'response.create' });
       }
     }, session.mode);
@@ -42,7 +43,7 @@ try {
     const result = await page.evaluate(() => ({ tools: window.toolResults, events: window.voiceEvents }));
     console.log('TOOL ROUND TRIPS:', JSON.stringify(result.tools));
     console.log('VOICE EVENTS:', JSON.stringify(result.events.map(event => event.type === 'error' ? event : { type: event.type, nestedType: event.event?.type })));
-    await page.getByRole('button', { name: 'Arrêter la voix', exact: true }).click();
+    await page.getByRole('button', { name: 'Turn off voice', exact: true }).click();
     await page.waitForTimeout(session.mode === 'live' ? 4200 : 100);
     result.events = await page.evaluate(() => window.voiceEvents);
     await writeFile(`${homedir()}/zouave-notes/voice-events-${session.mode}.json`, JSON.stringify(result, null, 2));
