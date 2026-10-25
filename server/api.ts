@@ -1,6 +1,8 @@
 import express from 'express';
 import OpenAI from 'openai';
-import { readFile } from 'node:fs/promises';
+import { readFile, mkdir, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { networkInterfaces } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { instructions, liveTools, realtimeTools } from './tools.ts';
 import { googleStatus, proxyTile, TilePathError, type GoogleOptions } from './google.ts';
@@ -34,7 +36,15 @@ export function selectPhoto(manifest: Record<string, PhotoEntry> | { photos: Pho
   const credit = author ? `Photo: ${author}${entry.photo?.source && !author.includes(entry.photo.source) ? ` / ${entry.photo.source}` : ''}, ${license}` : anonymize(entry.credit ?? '');
   return { url: photoPath(url), url_clean: photoPath(entry.files?.original ?? entry.url_clean ?? entry.clean), hauteur_m: Number(key), address_label: entry.label ?? entry.address_label ?? entry.address ?? '', credit, license, license_url: entry.photo?.license_url ?? entry.license_url ?? null, source_url: entry.photo?.page_url ?? null, simulation: true, distance_m: Math.round(distance(lat, lon, entry)), url_depth: photoPath(entry.files?.depth), view: { fov: entry.photo?.view?.fov ?? 80, pitch: entry.photo?.view?.pitch ?? 0, camera_height_m: entry.depth?.camera_height_m ?? 2 } };
 }
-export function createApp(options: { fetcher?: typeof fetch; photosPath?: string; apiKey?: string; mode?: string; google?: GoogleOptions; street?: { enabled?: boolean; radius_m?: number; estimateDepth?: DepthEstimator; cache?: string } } = {}) {
+export const ttsURL = 'https://api.openai.com/v1/audio/speech';
+export const ttsInstructions = 'You are the Zouave, the 19th-century stone statue of a French Zouave soldier standing in the Seine under the Pont de l’Alma in Paris. Speak English with a light, warm French accent. Calm, wise storyteller with gentle gravitas and a hint of humour; measured pace, never rushed. Numbers and units are read clearly.';
+/** Address other devices on the same network can open (QR code at the end of the story); ZOUAVE_PUBLIC_URL wins. */
+export function shareURL(port = Number(process.env.PORT ?? 3000)) {
+  if (process.env.ZOUAVE_PUBLIC_URL) return process.env.ZOUAVE_PUBLIC_URL;
+  const lan = Object.values(networkInterfaces()).flat().find(item => item && item.family === 'IPv4' && !item.internal && !item.address.startsWith('169.254.'));
+  return lan ? `http://${lan.address}:${port}` : null;
+}
+export function createApp(options: { fetcher?: typeof fetch; photosPath?: string; apiKey?: string; mode?: string; google?: GoogleOptions; street?: { enabled?: boolean; radius_m?: number; estimateDepth?: DepthEstimator; cache?: string }; tts?: { enabled?: boolean; cache?: string; model?: string; voice?: string } } = {}) {
   const app = express();
   const fetcher = options.fetcher ?? fetch;
   const google = { tilesKey: options.google?.tilesKey ?? (process.env.GOOGLE_MAPS_API_KEY || undefined), browserKey: options.google?.browserKey ?? (process.env.GOOGLE_MAPS_BROWSER_KEY || undefined) };
@@ -60,7 +70,8 @@ export function createApp(options: { fetcher?: typeof fetch; photosPath?: string
   const geocodes = new Map<string, { value: unknown; expires: number }>();
   app.disable('x-powered-by');
   app.use(express.json({ limit: '128kb' }));
-  app.get('/api/config', (_req, res) => { res.json({ voice: Boolean(key), mode }); });
+  const tts = { enabled: Boolean(key) && (options.tts?.enabled ?? process.env.ZOUAVE_TTS !== 'off'), cache: options.tts?.cache ?? fileURLToPath(new URL('../.cache/tts/', import.meta.url)), model: options.tts?.model ?? process.env.ZOUAVE_TTS_MODEL ?? 'gpt-4o-mini-tts', voice: options.tts?.voice ?? process.env.ZOUAVE_TTS_VOICE ?? 'ash' };
+  app.get('/api/config', (_req, res) => { res.json({ voice: Boolean(key), mode, tts: tts.enabled, share_url: shareURL() }); });
   app.get('/api/niveau', async (_req, res) => {
     if (levelCache && levelCache.expires > Date.now()) { res.json(levelCache.value); return; }
     try {
@@ -165,6 +176,31 @@ export function createApp(options: { fetcher?: typeof fetch; photosPath?: string
       console.error(`Voice session failed: ${message}`);
       res.status(502).json({ error: `Voice session unavailable: ${message}` });
     }
+  });
+  // The Zouave's narrated voice (OpenAI text-to-speech), cached on disk by text so rehearsals and the demo replay offline.
+  const speaking = new Map<string, Promise<Buffer>>();
+  app.post('/api/tts', async (req, res) => {
+    const text = typeof req.body?.text === 'string' ? req.body.text.replace(/\s+/g, ' ').trim() : '';
+    if (!text || text.length > 600) { res.status(400).json({ error: 'Text of 1 to 600 characters is required.' }); return; }
+    const id = createHash('sha256').update(`${tts.model}|${tts.voice}|${ttsInstructions}|${text}`).digest('hex').slice(0, 32);
+    const file = `${tts.cache}${id}.mp3`;
+    const send = (audio: Buffer) => { res.type('audio/mpeg').setHeader('cache-control', 'public, max-age=86400'); res.send(audio); };
+    try { send(await readFile(file)); return; } catch { /* not cached yet */ }
+    if (!tts.enabled) { res.status(404).json({ error: 'Narrated voice unavailable: OPENAI_API_KEY is missing on the server.' }); return; }
+    let pending = speaking.get(id);
+    if (!pending) {
+      pending = (async () => {
+        const upstream = await fetcher(ttsURL, { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: tts.model, voice: tts.voice, input: text, instructions: ttsInstructions, response_format: 'mp3' }), signal: AbortSignal.timeout(20_000) });
+        if (!upstream.ok) throw new Error(`OpenAI speech HTTP ${upstream.status}`);
+        const audio = Buffer.from(await upstream.arrayBuffer());
+        await mkdir(tts.cache, { recursive: true });
+        await writeFile(file, audio);
+        return audio;
+      })().finally(() => speaking.delete(id));
+      speaking.set(id, pending);
+    }
+    try { send(await pending); }
+    catch (error) { res.status(502).json({ error: `Narrated voice unavailable: ${error instanceof Error ? error.message : String(error)}` }); }
   });
   app.use('/api', (_req, res) => { res.status(404).json({ error: 'Unknown route.' }); });
   app.use((error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => { res.status(400).json({ error: error instanceof SyntaxError ? 'Invalid JSON.' : 'Invalid request.' }); });

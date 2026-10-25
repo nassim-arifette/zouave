@@ -9,6 +9,8 @@ Scenarios are educational, not forecasts or building-level diagnoses.
 - **Story mode** (button *Watch the story* or key **D**): a 90-second guided demo driven by the real tools.
 - **Tool trace**: every answer shows the function calls behind it (function, arguments, official figure, source).
 - **Immersion** (key **H**): hide the panels and let the camera drift over the city.
+- **Under the hood** (key **U**): the architecture for the jury, with a QR code to open Zouave on a phone (same network).
+- `npm run record-demo`: records the Story mode as a silent backup video (`zouave-story.webm`).
 - Pitch, demo script and Q&A notes: [`docs/PITCH.md`](docs/PITCH.md).
 
 ## Run
@@ -31,10 +33,15 @@ Environment variables (optional gitignored `.env`, see `.env.example`):
 | `ZOUAVE_VOICE` | `live` | `live` or `realtime` |
 | `ZOUAVE_REALTIME_MODEL` | `gpt-realtime-2.1` | Set `gpt-realtime` if the newer model is unavailable |
 | `PORT` | `3000` | Production/Express port; dev proxy targets 3000 |
+| `ZOUAVE_TTS` | on with a key | `off` disables the narrated OpenAI voice (`/api/tts`) |
+| `ZOUAVE_TTS_MODEL` | `gpt-4o-mini-tts` | OpenAI text-to-speech model for the Zouave's narration |
+| `ZOUAVE_TTS_VOICE` | `ash` | OpenAI voice name |
+| `ZOUAVE_PUBLIC_URL` | LAN address | URL encoded in the "try it on your phone" QR code |
 
 Without a key, every map, address, exposure and safety feature works via the four
-demo buttons, text input and shortcuts **1–4**. The Zouave still talks without a key: the browser reads his
-answers aloud (Web Speech synthesis, fr-FR, mutable with the speaker button) and, where the
+demo buttons, text input and shortcuts **1–4**. With a key, the Zouave's answers and the Story narration use OpenAI
+text-to-speech, cached in `.cache/tts/` (a line spoken once replays offline). Without a key he still talks: the
+browser reads his answers aloud (Web Speech synthesis, English, mutable with the speaker button) and, where the
 browser supports speech recognition, the mic turns a spoken sentence into a text intent.
 Press **H** (or the *Immersion* button) to hide the panels and let the camera drift over the city. The demo address is configured in
 `web/src/config.ts`: **4 Rue Traversière, 75012 Paris**. Enter another full address

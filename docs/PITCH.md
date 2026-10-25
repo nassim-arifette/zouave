@@ -28,6 +28,9 @@ Backup: if anything stalls during recording, press **Esc**, reload, and press **
   This is how we check quality: the answer can only repeat what a tool returned.
 - **OpenAI Images (edits)**: the flooded versions of the demo street photos were generated from Panoramax pictures and
   are labelled *Estimated*; the live 3D street scene uses a depth map (Depth Anything V2 Small) instead.
+- **OpenAI text-to-speech** (`gpt-4o-mini-tts`, voice `ash`, with acting instructions: a stone soldier with a light
+  French accent) narrates the answers and the Story mode; every line is cached on disk, so a rehearsed demo replays
+  even if the venue's network fails.
 - **Without a key**, the demo still runs: the browser's speech synthesis gives the Zouave a voice and typed intents
   call the same tools.
 
@@ -49,6 +52,17 @@ Backup: if anything stalls during recording, press **Esc**, reload, and press **
   official layers, and the trace keeps it honest.
 - **Next steps:** every French city with a PPRI (same open data), a phone-first version, alerts when Vigicrues rises.
 - **Limits:** educational scenarios, not forecasts or building surveys; the extreme scenario has no published local depths.
+
+## Live finale (Monday 26 October, Hexa, 18:00–22:00)
+
+- Run `npm start` with `OPENAI_API_KEY` in `.env`, then play the Story mode once before going on stage: every narrated
+  line is cached, so the live run does not wait on the network.
+- Projector: Chrome at 125 % zoom (Ctrl/Cmd +) keeps the text readable from the back of the room.
+- One person talks, one drives: **D** story · **Space** pause · **→** next step · **Esc** stop · **U** under the hood ·
+  **H** immersion · **1–4** demo questions.
+- End on the QR code (end card or **U**): the jury scans it and checks their own address (laptop and phones on the
+  same Wi-Fi; set `ZOUAVE_PUBLIC_URL` if the venue isolates clients).
+- Backup: `npm run record-demo` (silent video of the Story mode), plus your submitted 2-minute video.
 
 ## Submission checklist
 

@@ -10,7 +10,8 @@
     "dev": "concurrently -k \"node --env-file-if-exists=.env --experimental-strip-types server/index.ts\" \"vite --config web/vite.config.ts\"",
     "build": "tsc --noEmit && vite build --config web/vite.config.ts",
     "start": "npm run build && node --env-file-if-exists=.env --experimental-strip-types server/index.ts",
-    "test": "node --experimental-strip-types --test server/api.test.ts server/google.test.ts server/street.test.ts scripts/flood-level.test.mjs && node --experimental-strip-types --experimental-test-module-mocks --test scripts/tools.test.mjs scripts/intent.test.mjs scripts/hero-address.test.mjs scripts/hero-lifecycle.test.mjs scripts/live-street.test.mjs scripts/view3d.test.mjs && node --experimental-strip-types --test scripts/hero.test.mjs && node --experimental-strip-types --test scripts/streetview.test.mjs scripts/water-footprints.test.mjs"
+    "test": "node --experimental-strip-types --test server/api.test.ts server/google.test.ts server/street.test.ts scripts/flood-level.test.mjs && node --experimental-strip-types --experimental-test-module-mocks --test scripts/tools.test.mjs scripts/intent.test.mjs scripts/hero-address.test.mjs scripts/hero-lifecycle.test.mjs scripts/live-street.test.mjs scripts/view3d.test.mjs && node --experimental-strip-types --test scripts/hero.test.mjs && node --experimental-strip-types --test scripts/streetview.test.mjs scripts/water-footprints.test.mjs",
+    "record-demo": "node scripts/record-demo.mjs"
   },
   "dependencies": {
     "@deck.gl/core": "^9.4.0",
@@ -24,6 +25,7 @@
     "maplibre-gl": "^6.15.0",
     "openai": "^7.43.0",
     "pmtiles": "^4.4.0",
+    "qrcode": "^1.5.4",
     "sharp": "^0.35.5",
     "three": "^0.186.1"
   },
@@ -31,6 +33,7 @@
     "@types/express": "^5.0.3",
     "@types/geojson": "^7946.0.16",
     "@types/node": "^24.0.0",
+    "@types/qrcode": "^1.5.6",
     "@types/three": "^0.186.0",
     "concurrently": "^9.2.0",
     "playwright": "^1.56.1",
@@ -38,4 +41,3 @@
     "vite": "^7.1.12"
   }
 }
-

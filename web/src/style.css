@@ -239,6 +239,42 @@ main>*,.river-status,.reference,.view-toggle{transition:opacity .6s var(--ease),
 .immersion-exit kbd{font:inherit;font-size:9px;border:1px solid #a4d6bc44;border-radius:3px;padding:1px 5px;color:var(--mint)}
 body:not(.ui-hidden) .immersion-exit{display:none}
 
+/* ── Under the hood (architecture for the jury) and share QR ───────────── */
+.hood-toggle{display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:999px;background:transparent;border:1px solid var(--line-strong);color:#cfe0da;font-size:10px;letter-spacing:1px;white-space:nowrap;text-transform:uppercase;transition:background .25s,border-color .25s}
+.hood-toggle:hover,.hood-toggle[aria-pressed=true]{background:#a4d6bc14;border-color:#a4d6bc66}
+.hood-toggle kbd{font:inherit;font-size:8px;border:1px solid #a4d6bc44;border-radius:3px;padding:1px 4px;color:#8fb3a6}
+.hood{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at center,#06101acc,#020609f0);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);animation:card-in .35s var(--ease)}
+.hood-panel{position:relative;width:min(1180px,100%);max-height:100%;overflow:auto;border-radius:22px;border:1px solid var(--line-strong);background:var(--glass-strong);box-shadow:0 40px 120px #000a;padding:30px 34px 22px}
+.hood-close{position:absolute;top:14px;right:16px;width:36px;height:36px;border-radius:50%;background:#ffffff0d;font-size:22px;line-height:1;color:#dfe9e4}
+.hood-eyebrow{font-size:9px;letter-spacing:2.4px;color:var(--mint);display:flex;align-items:center;gap:9px;margin:0}
+.hood-eyebrow span{width:24px;height:1px;background:var(--mint)}
+.hood h2{font-family:Georgia,serif;font-weight:400;font-size:clamp(26px,3vw,38px);line-height:1.1;margin:12px 0 22px}
+.hood h2 em{color:#c8decf}
+.hood-flow{display:grid;grid-template-columns:1fr auto 1.25fr auto 1.15fr auto 1.4fr;align-items:stretch;gap:10px}
+.hood-flow>i{align-self:center;font-style:normal;color:var(--mint);font-size:20px}
+.hood article{border:1px solid var(--line);border-radius:14px;padding:14px 15px;background:rgba(255,255,255,.025)}
+.hood .hood-agent{border-color:#edce9d55;background:#edce9d0d}
+.hood h3{margin:0 0 8px;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--water)}
+.hood .hood-agent h3{color:var(--amber)}
+.hood p,.hood li{font-size:11.5px;line-height:1.6;color:#c3d2d0;margin:0 0 6px}
+.hood ul{margin:0;padding-left:16px}
+.hood b{color:#e6efe9;font-weight:600}
+.hood-tools{display:flex;flex-wrap:wrap;gap:4px}
+.hood-tools code{font:600 10px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--water);background:#8fd3e214;border:1px solid #8fd3e233;border-radius:5px;padding:2px 6px}
+.hood-grid{display:grid;grid-template-columns:1.2fr 1.5fr auto;gap:12px;margin-top:12px}
+.hood-badges{display:flex;gap:6px;margin-top:8px}
+.hood-share{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:170px}
+.qr{width:132px;height:132px;border-radius:10px;overflow:hidden;background:#e9f4ef;padding:4px}
+.qr svg{display:block;width:100%;height:100%}
+.hood-share p{font:500 10px/1.4 ui-monospace,Menlo,Consolas,monospace;color:#9fc4bd;margin:8px 0 0}
+.hood-foot{font-size:10px!important;color:#7e969c!important;margin:14px 0 0!important}
+.share-qr{display:flex;align-items:center;gap:14px;margin:18px auto 0;padding:12px 14px;border:1px solid var(--line-strong);border-radius:14px;background:#ffffff08;text-align:left;width:fit-content}
+.share-qr .qr{width:104px;height:104px}
+.share-qr p{margin:0;font-size:13px;color:#dfeee6;line-height:1.5}
+.share-qr small{font:500 10px ui-monospace,Menlo,Consolas,monospace;color:#9fc4bd}
+@media(max-width:1100px){.hood-flow{grid-template-columns:1fr 1fr}.hood-flow>i{display:none}.hood-grid{grid-template-columns:1fr}.hood-toggle span{display:none}}
+@media(max-width:900px){.hood-toggle{display:none}.hood-panel{padding:22px 18px}.hood-flow{grid-template-columns:1fr}}
+
 /* ── Map controls / attribution ─────────────────────────────────────────── */
 .maplibregl-ctrl-top-right{top:calc(var(--top) + 6px);right:calc(var(--gutter) - 10px);transition:right .5s var(--ease),opacity .6s var(--ease),visibility .6s}
 body:has(.card:not([hidden])) .maplibregl-ctrl-top-right{right:calc(var(--gutter)*2 + var(--right-w) - 10px)}

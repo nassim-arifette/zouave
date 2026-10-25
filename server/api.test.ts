@@ -95,3 +95,29 @@ test('realtime upstream errors are not reported as successful SDP', async () => 
   });
 });
 test('malformed JSON and unknown API routes are handled', async () => { await withApp({}, async url => { assert.equal((await fetch(`${url}/api/unknown`)).status, 404); assert.equal((await fetch(`${url}/api/session`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{' })).status, 400); }); });
+test('narrated voice calls OpenAI speech once, then replays from the disk cache, and stays off without a key', async () => {
+  const { mkdtemp } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const cache = `${await mkdtemp(`${tmpdir()}/zouave-tts-`)}/`;
+  let calls = 0;
+  const fetcher = (async (url, init) => {
+    assert.equal(url, 'https://api.openai.com/v1/audio/speech');
+    const body = JSON.parse(String(init?.body));
+    assert.equal(body.input, 'Bonjour, Paris.'); assert.equal(body.model, 'gpt-4o-mini-tts'); assert.equal(body.response_format, 'mp3'); assert.match(body.instructions, /Zouave/);
+    calls++;
+    return new Response(new Uint8Array([73, 68, 51, 1]), { headers: { 'content-type': 'audio/mpeg' } });
+  }) as typeof fetch;
+  const post = (url: string, text: unknown) => fetch(`${url}/api/tts`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
+  await withApp({ apiKey: 'test-not-a-key', fetcher, tts: { cache } }, async url => {
+    assert.equal((await (await fetch(`${url}/api/config`)).json()).tts, true);
+    for (let i = 0; i < 2; i++) { const response = await post(url, ' Bonjour,  Paris. '); assert.equal(response.status, 200); assert.equal(response.headers.get('content-type'), 'audio/mpeg'); assert.deepEqual([...new Uint8Array(await response.arrayBuffer())], [73, 68, 51, 1]); }
+    assert.equal(calls, 1);
+    assert.equal((await post(url, '')).status, 400);
+    assert.equal((await post(url, 'x'.repeat(601))).status, 400);
+  });
+  await withApp({ apiKey: '', fetcher, tts: { cache } }, async url => {
+    assert.equal((await (await fetch(`${url}/api/config`)).json()).tts, false);
+    assert.equal((await post(url, 'Bonjour, Paris.')).status, 200, 'a cached line still plays without a key');
+    assert.equal((await post(url, 'Something new.')).status, 404);
+  });
+});

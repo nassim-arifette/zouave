@@ -1,6 +1,6 @@
 import { $, api, executeTool, notify } from './tools.ts';
 import { setSpeaking } from './avatar.ts';
-import { browserVoice, isListening, listen, stopListening } from './speech.ts';
+import { browserVoice, isListening, listen, stopListening, useServerVoice } from './speech.ts';
 import { announce, summarize } from './trace.ts';
 type ToolCall = { type: string; call_id: string; name: string; arguments: string };
 let pc: RTCPeerConnection | undefined;
@@ -122,6 +122,7 @@ export async function toggleVoice() {
 export async function initializeVoice() {
   try {
     const result = await api('/api/config');
+    if (result.tts) { useServerVoice(true); $('speak-toggle').hidden = false; }
     if (!result.voice && browserVoice.canListen) { browserMode = true; $('mic').setAttribute('aria-label', 'Talk to the Zouave'); $('connection-label').innerHTML = '<i></i> Browser voice · talk or type'; }
     else if (!result.voice) { $('mic').setAttribute('disabled', ''); $('voice-state').textContent = 'Text mode · no microphone'; $('connection-label').textContent = browserVoice.canSpeak ? 'He answers out loud' : 'Text mode · every feature works'; }
   } catch { $('voice-state').textContent = 'Text mode available'; }
