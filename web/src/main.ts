@@ -3,6 +3,7 @@ import { config } from './config.ts';
 import { map, mapReady } from './map.ts';
 import { $, state, afficher_scenario, aller_a, exposition, niveau_seine, photo_inondee, consignes, notify } from './tools.ts';
 import { initializeVoice, toggleVoice } from './voice.ts';
+import { initializeAvatar, animateAnswer, setSpeaking } from './avatar.ts';
 let running = false;
 async function routeIntent(message: string) {
   const intent = message.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -37,9 +38,10 @@ async function routeIntent(message: string) {
 export async function runIntent(message: string) {
   if (running || !message.trim()) return;
   running = true;
+  setSpeaking(false);
   $('caption').textContent = 'Je consulte les données officielles…';
   $('input-caption').textContent = `Vous · ${message}`; $('input-caption').hidden = false;
-  try { $('caption').textContent = await routeIntent(message); }
+  try { const answer = await routeIntent(message); $('caption').textContent = answer; animateAnswer(answer); }
   catch (error) { const text = error instanceof Error ? error.message : 'La donnée est indisponible.'; $('caption').textContent = text; notify(text); }
   finally { running = false; }
 }
@@ -49,8 +51,7 @@ $('chat-form').addEventListener('submit', event => { event.preventDefault(); con
 window.addEventListener('keydown', event => { if ((event.target as HTMLElement)?.matches('input,textarea,[contenteditable]') || event.ctrlKey || event.metaKey || event.altKey || $<HTMLDialogElement>('photo-dialog').open) return; const button = document.querySelectorAll<HTMLButtonElement>('[data-intent]')[Number(event.key) - 1]; if (button) { event.preventDefault(); void runIntent(button.dataset.intent!); } });
 $('mic').addEventListener('click', () => { void toggleVoice(); });
 $('photo-close').addEventListener('click', () => $<HTMLDialogElement>('photo-dialog').close());
-$<HTMLImageElement>('avatar').onerror = () => { $<HTMLImageElement>('avatar').src = '/zouave/placeholder.svg'; };
-const avatar = new Image(); avatar.onload = () => { $<HTMLImageElement>('avatar').src = '/zouave/avatar.png'; }; avatar.src = '/zouave/avatar.png';
+initializeAvatar();
 void initializeVoice();
 void niveau_seine().catch(error => notify(error.message));
 setInterval(() => { void niveau_seine().catch(error => notify(error.message)); }, 15 * 60_000);

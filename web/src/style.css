@@ -10,6 +10,13 @@
 .cards:has(#safety-card:not([hidden])) #exposure-card .card-body>:not(.card-eyebrow):not(h2):not(.address):not(.card-close){display:none}
 .cards:has(#safety-card:not([hidden])) #exposure-card h2{display:none}
 #safety-card{order:-1}
+.avatar-ring{position:relative;isolation:isolate}
+.avatar-ring .avatar-mouth{position:absolute;inset:3px;width:calc(100% - 6px);height:calc(100% - 6px);opacity:0}
+.avatar-ring.speaking .avatar-mouth{animation:mouth-talk .42s steps(1,end) infinite}
+.avatar-ring.listening:not(.speaking){box-shadow:0 0 20px #a4d6bc38;animation:avatar-breathe 3s ease-in-out infinite}
+@keyframes mouth-talk{0%,46%,82%{opacity:0}20%,60%{opacity:1}}
+@keyframes avatar-breathe{50%{transform:scale(1.035);box-shadow:0 0 30px #a4d6bc66}}
+@media(prefers-reduced-motion:reduce){.avatar-ring,.avatar-ring .avatar-mouth{animation:none!important}}
 .photo-header{position:absolute;inset:0 0 auto;background:linear-gradient(#07131bdd,transparent);color:#ecf5ed;z-index:1}
 .photo-header span{background:#b3d2bc;color:#152d2e;border-radius:4px;padding:8px 12px}
 .photo-header button{color:#fff;text-shadow:0 1px 4px #000}

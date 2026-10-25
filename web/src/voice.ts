@@ -1,4 +1,5 @@
 import { $, api, executeTool, notify } from './tools.ts';
+import { setSpeaking } from './avatar.ts';
 type ToolCall = { type: string; call_id: string; name: string; arguments: string };
 let pc: RTCPeerConnection | undefined;
 let stream: MediaStream | undefined;
@@ -9,11 +10,9 @@ let stopped = true;
 let idleTimer: ReturnType<typeof setTimeout>;
 const audio = new Audio();
 audio.autoplay = true;
-let speakingAvatar = false;
-function setSpeaking(speaking: boolean) {
-  $('avatar-ring').classList.toggle('speaking', speaking);
-  if (speakingAvatar !== speaking) { speakingAvatar = speaking; const image = $<HTMLImageElement>('avatar'); image.src = speaking ? '/zouave/avatar-speaking.png' : '/zouave/avatar.png'; }
-}
+audio.addEventListener('playing', () => setSpeaking(true));
+audio.addEventListener('pause', () => setSpeaking(false));
+audio.addEventListener('ended', () => setSpeaking(false));
 function send(event: object) { if (channel?.readyState === 'open') channel.send(JSON.stringify(event)); }
 function resetIdle() { clearTimeout(idleTimer); idleTimer = setTimeout(() => { notify('La session vocale a été fermée après une période d’inactivité.'); void stopVoice(); }, 120_000); }
 const seen = new Set<string>();
