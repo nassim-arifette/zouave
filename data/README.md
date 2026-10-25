@@ -251,8 +251,14 @@ Content" — explicitly including Street View imagery (3.3.2 c) — and attribut
 must stay visible and unmodified (3.2.4). Consequences for Zouave:
 
 - Photorealistic 3D Tiles may be rendered with a third-party renderer (deck.gl);
-  the Google logo/attribution **and** the per-tile data attributions are shown, tiles
+  the Google Maps logo **and** the data credits of the tiles on screen (most frequent
+  first) are shown bottom right, above every panel, tiles
   are never cached or used offline, and the view is exclusive with the MapLibre map.
+  Rules: https://developers.google.com/maps/documentation/tile/policies (logo 16–19 dp,
+  unmodified; credits aggregated, sorted and shown on one line; never covered). The logo
+  is `web/public/google/GoogleMaps_Logo_WithDarkOutline.svg`, unmodified, from Google's
+  attribution assets:
+  https://developers.google.com/static/maps/documentation/images/Google_Maps_Attribution_Assets.zip
   The Map Tiles key stays on the server (`GOOGLE_MAPS_API_KEY`, proxied by
   `/api/google/3d/*`).
 - Street View: the official, unmodified panorama (Maps JavaScript API) may carry

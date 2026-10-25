@@ -310,6 +310,16 @@ body.view-google #map{visibility:hidden}
 #google-3d-hud{position:fixed;left:50%;transform:translateX(-50%);top:calc(var(--top) + 8px);z-index:30;text-align:center;max-width:70vw;font-size:11px;color:#dbe7ea;text-shadow:0 1px 2px rgba(0,0,0,.8);pointer-events:none}
 #google-3d-hud p{margin:0 0 4px}
 #google-3d-status{padding:6px 10px;border-radius:8px;background:rgba(11,26,34,.85);color:var(--mint)}
+/* Google attribution (Map Tiles policy): official logo, unmodified, then the credits of the tiles on screen, bottom right and
+   above every panel. On desktop the bottom-anchored panels and the toggle rise just enough to leave its 28 px strip clear;
+   on phones the page scrolls under it (main keeps 90 px of bottom padding) and only the immersion exit button moves up. */
+#google-3d-attribution{position:fixed;right:8px;bottom:3px;z-index:40;display:none;align-items:center;gap:6px;max-width:calc(100vw - 16px);margin:0;pointer-events:none}
+body.view-google #google-3d-attribution{display:flex}
+#google-3d-attribution img{display:block;flex:none;height:22px;width:auto}
+#google-3d-credits{padding:2px 7px;border-radius:5px;background:rgba(6,14,20,.62);color:#e4eef0;font-size:10px;line-height:1.4}
+#google-3d-credits:empty{display:none}
+@media(min-width:901px){body.view-google main{bottom:max(0px,calc(28px - var(--gutter)))}body.view-google .view-toggle{bottom:max(var(--gutter),28px)}}
+@media(max-width:900px){body.view-google .immersion-exit{bottom:48px}}
 .view-toggle{position:fixed;right:var(--gutter);bottom:var(--gutter);z-index:30;display:flex;align-items:center;gap:7px;padding:9px 15px;border-radius:999px;border:1px solid rgba(164,214,188,.4);background:var(--glass);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);color:var(--mint);font-size:11px;letter-spacing:.4px;cursor:pointer;transition:background .25s}
 .view-toggle:hover{background:#a4d6bc1f}
 .view-toggle[aria-pressed=true]{background:var(--mint);color:#0b1a22}
@@ -457,8 +467,3 @@ dialog::backdrop{background:radial-gradient(ellipse at center,#06101acc,#020609f
 .here-button img{width:30px;height:30px;border-radius:50%;object-fit:cover;object-position:50% 15%;background:#12303a}
 .here-button b{color:var(--water)}
 @media (prefers-reduced-motion:reduce){.avatar-ring>img{animation:none!important;transform:none}.avatar-ring.pose-thinking:after{animation:none}}
-
-/* Google Maps attribution for the photorealistic view: on its own line, above every panel, never covered. */
-.google-attribution{display:none;position:fixed;left:50%;bottom:4px;transform:translateX(-50%);z-index:60;max-width:96vw;margin:0;text-align:center;font-size:10px;line-height:1.3;color:#f2f6f4;text-shadow:0 1px 2px #000,0 0 6px rgba(0,0,0,.85);pointer-events:none}
-body.view-google .google-attribution{display:block}
-@media(max-width:900px){.google-attribution{top:calc(var(--top) + 4px);bottom:auto;left:14px;transform:none;max-width:calc(100vw - 170px);text-align:left}}

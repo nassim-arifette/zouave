@@ -26,13 +26,14 @@ function harness(t) {
     assert.equal(url, '/api/google/status');
     return { json: async () => ({ tiles3d: true }) };
   });
-  const elements = Object.fromEntries(['container', 'toggle', 'status', 'attribution', 'legend', 'body'].map(name => [name, element()]));
+  const elements = Object.fromEntries(['container', 'toggle', 'status', 'credits', 'legend', 'body'].map(name => [name, element()]));
   const view = createView3D(elements);
   let deck;
   return {
     view,
     legend: elements.legend,
     status: elements.status,
+    credits: elements.credits,
     async activate() { await view.toggle(true); deck = decks.at(-1); },
     layer(id) {
       const found = deck.props.layers.find(layer => layer.props.id === id);
@@ -92,6 +93,19 @@ test('clearing the water also clears both layers and hides the 3D legend', async
   }
 });
 
+test('the credits line lists the attributions of the tiles on screen, most frequent first', async t => {
+  const h = harness(t);
+  await h.activate();
+  const tileset = { options: {} };
+  h.layer('google-3d-tiles').onTilesetLoad(tileset);
+  const tile = copyright => ({ content: { gltf: { asset: { copyright } } } });
+  const shown = [tile('Google; Airbus'), tile('Google;Landsat / Copernicus; Airbus'), tile('Google'), {}];
+  assert.equal(tileset.options.onTraversalComplete(shown), shown, 'the selection is handed back untouched');
+  assert.equal(h.credits.textContent, 'Google · Airbus · Landsat / Copernicus');
+  tileset.options.onTraversalComplete([tile('Google; Landsat / Copernicus')]);
+  assert.equal(h.credits.textContent, 'Google · Landsat / Copernicus', 'credits of tiles that left the screen are dropped');
+});
+
 test('the rendered extreme scenario keeps the exact SDRIF geometry and excludes the PPRI-only regression point', async t => {
   const load = name => JSON.parse(readFileSync(new URL(`../web/public/data/${name}.geojson`, import.meta.url), 'utf8')).features;
   const aleas = load('ppri_aleas');
@@ -114,7 +128,7 @@ test('turning the Google view back on clears the loading status (the tileset doe
   const view = harness(t);
   await view.activate();
   assert.equal(view.status.hidden, false, 'loading status while the first tileset loads');
-  view.layer('google-3d-tiles').onTilesetLoad();
+  view.layer('google-3d-tiles').onTilesetLoad({ options: {} });
   assert.equal(view.status.hidden, true);
   await view.view.toggle(false);
   await view.view.toggle(true);
@@ -125,7 +139,7 @@ test('ready() reports whether the Google tileset loaded in time, so the Story ca
   const view = harness(t);
   await view.activate();
   assert.equal(await view.view.ready(20), false);
-  view.layer('google-3d-tiles').onTilesetLoad();
+  view.layer('google-3d-tiles').onTilesetLoad({ options: {} });
   assert.equal(await view.view.ready(20), true);
 });
 
