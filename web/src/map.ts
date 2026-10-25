@@ -65,12 +65,12 @@ map.once('load', async () => {
     map.addLayer({ id: 'timeline-banks', type: 'fill', source: 'timeline-banks', layout: { visibility: 'none' }, paint: { 'fill-color': '#7cd2df', 'fill-opacity': 0.65 } }, before);
     const extra = difference({ type: 'FeatureCollection', features: [...datasets.sdrife_zone_inondable.features, ...datasets.ppri_aleas.features] });
     map.addSource('timeline-extra', { type: 'geojson', data: { type: 'FeatureCollection', features: extra ? [extra] : [] } });
-    footprints = { aleas: datasets.ppri_aleas.features as WaterFeature[], banks: datasets.ppri_zonage.features.filter(f => f.properties?.nom === 'Zone rouge') as WaterFeature[], extra: (extra ? [extra] : []) as WaterFeature[] };
+    footprints = { aleas: datasets.ppri_aleas.features as WaterFeature[], banks: datasets.ppri_zonage.features.filter(f => f.properties?.nom === 'Zone rouge') as WaterFeature[], sdrif: datasets.sdrife_zone_inondable.features as WaterFeature[], extra: (extra ? [extra] : []) as WaterFeature[] };
     map.addLayer({ id: 'timeline-extra', type: 'fill', source: 'timeline-extra', layout: { visibility: 'none' }, paint: { 'fill-pattern': 'timeline-hatching', 'fill-opacity': 0.75 } }, before);
     resolveReady();
   } catch (error) { rejectReady(error instanceof Error ? error : new Error('Carte indisponible')); }
 });
-let footprints: { aleas: WaterFeature[]; banks: WaterFeature[]; extra: WaterFeature[] } = { aleas: [], banks: [], extra: [] };
+let footprints: { aleas: WaterFeature[]; banks: WaterFeature[]; sdrif: WaterFeature[]; extra: WaterFeature[] } = { aleas: [], banks: [], sdrif: [], extra: [] };
 let animation = 0;
 let waterProgress = 0;
 export async function showScenario(scenario: Scenario) {

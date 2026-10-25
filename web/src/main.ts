@@ -34,7 +34,7 @@ setInterval(() => { void niveau_seine().catch(error => notify(error.message)); }
 void mapReady.catch(error => notify(`${error.message} — rechargez la page pour réessayer.`));
 map.on('error', event => { console.warn('Map data error:', event.error.message); });
 
-const view3d = createView3D({ container: $('google-3d'), toggle: $<HTMLButtonElement>('view-3d-toggle'), status: $('google-3d-status'), attribution: $('google-3d-attribution'), body: document.body });
+const view3d = createView3D({ container: $('google-3d'), toggle: $<HTMLButtonElement>('view-3d-toggle'), status: $('google-3d-status'), attribution: $('google-3d-attribution'), legend: $('google-3d-legend'), body: document.body });
 attachView3D(view3d);
 $('view-3d-toggle').addEventListener('click', () => { void view3d.toggle(); });
 void loadGoogleStatus();

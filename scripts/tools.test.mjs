@@ -58,6 +58,9 @@ test('outside all footprints still synchronizes scenario without inventing expos
   assert.equal(result.classe, null);
   assert.equal(state.scenario, '1910');
   assert.equal(showScenario.mock.callCount(), 1);
+  const card = document.getElementById('exposure-card').innerHTML;
+  assert.match(card, /id="show-photo"[^<]*au sec/, 'the Panoramax street button stays available outside the PPRI');
+  assert.doesNotMatch(card, /show-streetview/, 'no Street View button without a browser key');
 });
 test('voice timeline tool returns derived numbers and updates the renderer and exposure', async () => {
   reset();

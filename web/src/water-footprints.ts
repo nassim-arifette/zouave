@@ -6,6 +6,16 @@ import { BANKS_ONLY_BELOW, REFERENCE_LEVEL, type FloodClass } from './flood-leve
 
 export type WaterFeature = Feature<Polygon | MultiPolygon, Record<string, unknown>>;
 export interface WaterPolygon { polygon: Position[][]; properties: Record<string, unknown> }
+export type FootprintStatus = 'flooded' | 'possible';
+
+const classColour: Record<string, [number, number, number]> = { '0-1': [112, 196, 214], '1-2': [58, 141, 190], '2+': [34, 87, 158], possible: [120, 170, 200], banks: [124, 210, 223] };
+
+/** Rendering style of a footprint in the Google view: the status wins over the depth class, so an uncertain PPRI class
+ * (e.g. classe 1-2 at 7.12 m) is drawn as a translucent outlined « peut-être » surface, like the MapLibre hatching. */
+export function footprintStyle(properties: Record<string, unknown>): { status: FootprintStatus; colour: [number, number, number, number] } {
+  if (properties.status === 'possible') return { status: 'possible', colour: [...classColour.possible, 95] };
+  return { status: 'flooded', colour: [...(classColour[String(properties.classe ?? '1-2')] ?? classColour['1-2']), 190] };
+}
 
 export function flattenFootprints(features: WaterFeature[]): WaterPolygon[] {
   const out: WaterPolygon[] = [];
@@ -26,9 +36,10 @@ export function timelineFootprints(level: number, bands: Partial<Record<FloodCla
   return [...aleas, ...banks, ...extra];
 }
 
-/** Scenario without a published local depth (« pire que 1910 »): the SDRIF footprint drawn as a distinct 'possible' surface. */
-export function scenarioFootprints(scenario: string, datasets: { aleas: WaterFeature[]; extra: WaterFeature[] }) {
+/** Classic scenarios: 1910 = PPRI classes; « pire que 1910 » = the exact SDRIF footprint (the same features as the MapLibre
+ * 'extreme' layer and the exposure card, not SDRIF ∪ PPRI) drawn as a distinct 'possible' surface without a local depth. */
+export function scenarioFootprints(scenario: string, datasets: { aleas: WaterFeature[]; sdrif: WaterFeature[] }) {
   if (scenario === '1910') return { features: datasets.aleas, level: REFERENCE_LEVEL };
-  if (scenario === 'pire') return { features: withClass([...datasets.extra, ...datasets.aleas], 'possible'), level: REFERENCE_LEVEL };
+  if (scenario === 'pire') return { features: withClass(datasets.sdrif, 'possible'), level: REFERENCE_LEVEL };
   return { features: [] as WaterFeature[], level: null };
 }
