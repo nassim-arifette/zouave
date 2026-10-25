@@ -1,0 +1,10 @@
+[
+ ["01-hook", "[dramatic] January 1910. The Seine rises to eight point six two metres in Paris. [serious] If it happened today: up to five million people hit. Up to thirty billion euros of damage. [whispers] And most Parisians have no idea what it would mean for their street."],
+ ["02-intro", "[excited] Bonjour! I'm the Zouave, the stone soldier of the Alma bridge. For generations, Parisians have read the floods on my body. [proud] Now, I talk. Ask me about any address, and I show you your flood, with official data only."],
+ ["03-rise", "[playful] Watch. Here is the Seine today. [excited] Now it rises! 2016: the quays close, the trains stop. [dramatic] 1910: thousands of buildings in the flood zone. [laughs] Up to my shoulders!"],
+ ["04-home", "[curious] And your home? Four, rue Traversière: one to two metres of water. [dramatic] This is your street. A simulation, not a forecast."],
+ ["05-memory", "[whispers] And this one is not a simulation. Bercy, a few streets away, in January 1910."],
+ ["06-agent", "[warm] Talk to me, or type. Every answer shows the tools I called: the live gauge, the official flood map, the safety advice. [serious] I never invent a number."],
+ ["07-tech", "[confident] Under the hood: an OpenAI Realtime voice agent with function calling, French open data, a Three.js city, and my French accent by ElevenLabs."],
+ ["08-close", "[proud] Zouave. See your flood, before it comes. [playful] À bientôt!"]
+]

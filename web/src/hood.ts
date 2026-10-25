@@ -24,14 +24,14 @@ function render() {
         <div class="hood-flow">
           <article><h3>You</h3><p>Talk or type, in plain English.</p><ul><li>Microphone (WebRTC)</li><li>Chat and shortcuts</li></ul></article>
           <i aria-hidden="true">→</i>
-          <article class="hood-agent"><h3>The Zouave agent</h3><p><b>OpenAI Realtime</b> voice with function calling. Persona rule: no number unless a tool returned it.</p><ul><li>Narration: OpenAI text-to-speech, cached</li><li>No key? Same tools, browser voice</li></ul></article>
+          <article class="hood-agent"><h3>The Zouave agent</h3><p><b>OpenAI Realtime</b> voice with function calling. Persona rule: no number unless a tool returned it.</p><ul><li>Narration: ElevenLabs French-accented voice (OpenAI text-to-speech as fallback), cached</li><li>No key? Same tools, browser voice</li></ul></article>
           <i aria-hidden="true">→</i>
           <article><h3>7 tools in your browser</h3><p class="hood-tools">${tools.map(name => `<code>${name}</code>`).join('')}</p><p>Every call is shown under the answer.</p></article>
           <i aria-hidden="true">→</i>
           <article><h3>Official open data</h3><ul>${data.map(([name, what]) => `<li><b>${name}</b> · ${what}</li>`).join('')}</ul></article>
         </div>
         <div class="hood-grid">
-          <article><h3>What you see</h3><ul><li>MapLibre 3D city + Three.js water shader</li><li>Street scene: Panoramax photo + Depth Anything V2 depth map</li><li>Flooded photos: OpenAI image edits</li><li>Real 1910 photographs: Wikimedia Commons, public domain</li><li>Story mode: the same tools, scripted</li></ul></article>
+          <article><h3>What you see</h3><ul><li>MapLibre 3D city + Three.js water shader</li><li>Street scene: Panoramax photo + Depth Anything V2 depth map</li><li>Flooded photos: OpenAI image edits</li><li>Real 1910 photographs (when fetched): Wikimedia Commons, public domain</li><li>Story mode: the same tools, scripted</li></ul></article>
           <article><h3>The hard part</h3><p>Turning one number on a river gauge into a depth at your door: the official 1910 depth classes shifted by the gauge difference, riverbanks only below 6.62 m, the extreme footprint beyond 1910 — every figure labelled.</p><p class="hood-badges">${badge('Mesuré')} ${badge('Officiel')} ${badge('Estimé')}</p></article>
           <article class="hood-share" id="hood-share" hidden><h3>Try it on your phone</h3><div class="qr" id="hood-qr"></div><p id="hood-url"></p></article>
         </div>

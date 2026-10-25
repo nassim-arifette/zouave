@@ -9,3 +9,8 @@ web/dist/
 .cache/
 *.webm
 voice-smoke*.mp3
+
+# Pitch video renders and HyperFrames cache
+video/renders/
+video/.hyperframes/
+video/assets/shots/*.png
