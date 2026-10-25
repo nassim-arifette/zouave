@@ -5,9 +5,11 @@ import { layers, namedFlavor } from '@protomaps/basemaps';
 import type { FeatureCollection, Polygon, MultiPolygon } from 'geojson';
 import { config } from './config.ts';
 import { createWaterLayer } from './water.ts';
+import { createView3D, type View3D } from './view3d.ts';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import difference from '@turf/difference';
 import { BANKS_ONLY_BELOW, REFERENCE_LEVEL, timelineBands, type FloodClass } from './flood-level.ts';
+import { scenarioFootprints, timelineFootprints, type WaterFeature } from './water-footprints.ts';
 export type Polygons = FeatureCollection<Polygon | MultiPolygon>;
 export type Scenario = 'aujourdhui' | '1910' | 'pire';
 export const datasets: Record<string, Polygons> = {};
@@ -23,6 +25,12 @@ export const map: Map = new maplibregl.Map({ container: 'map', center: config.in
 map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
 let resolveReady: () => void, rejectReady: (error: Error) => void;
 let waterLayer: ReturnType<typeof createWaterLayer> | undefined;
+/** Optional Google Photorealistic 3D view; mirrors the scenario / timeline water and the camera. */
+export let view3d: View3D | undefined;
+export function attachView3D(view: View3D) {
+  view3d = view;
+  map.on('moveend', () => { const c = map.getCenter(); view.setCamera({ longitude: c.lng, latitude: c.lat, zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing() }); });
+}
 export const mapReady = new Promise<void>((resolve, reject) => { resolveReady = resolve; rejectReady = reject; });
 void mapReady.catch(() => {});
 map.once('load', async () => {
@@ -57,10 +65,12 @@ map.once('load', async () => {
     map.addLayer({ id: 'timeline-banks', type: 'fill', source: 'timeline-banks', layout: { visibility: 'none' }, paint: { 'fill-color': '#7cd2df', 'fill-opacity': 0.65 } }, before);
     const extra = difference({ type: 'FeatureCollection', features: [...datasets.sdrife_zone_inondable.features, ...datasets.ppri_aleas.features] });
     map.addSource('timeline-extra', { type: 'geojson', data: { type: 'FeatureCollection', features: extra ? [extra] : [] } });
+    footprints = { aleas: datasets.ppri_aleas.features as WaterFeature[], banks: datasets.ppri_zonage.features.filter(f => f.properties?.nom === 'Zone rouge') as WaterFeature[], sdrif: datasets.sdrife_zone_inondable.features as WaterFeature[], extra: (extra ? [extra] : []) as WaterFeature[] };
     map.addLayer({ id: 'timeline-extra', type: 'fill', source: 'timeline-extra', layout: { visibility: 'none' }, paint: { 'fill-pattern': 'timeline-hatching', 'fill-opacity': 0.75 } }, before);
     resolveReady();
   } catch (error) { rejectReady(error instanceof Error ? error : new Error('Carte indisponible')); }
 });
+let footprints: { aleas: WaterFeature[]; banks: WaterFeature[]; sdrif: WaterFeature[]; extra: WaterFeature[] } = { aleas: [], banks: [], sdrif: [], extra: [] };
 let animation = 0;
 let waterProgress = 0;
 export async function showScenario(scenario: Scenario) {
@@ -68,6 +78,8 @@ export async function showScenario(scenario: Scenario) {
   for (const id of ['timeline-solid', 'timeline-possible', 'timeline-banks', 'timeline-extra']) map.setLayoutProperty(id, 'visibility', 'none');
   cancelAnimationFrame(animation);
   if (waterLayer) waterLayer.enabled = scenario === '1910';
+  const footprint = scenarioFootprints(scenario, footprints);
+  view3d?.setWater(footprint.features, footprint.level, scenario);
   map.setLayoutProperty('flood-3d', 'visibility', scenario === '1910' && !waterLayer ? 'visible' : 'none');
   for (const id of ['extreme-fill', 'extreme-outline']) map.setLayoutProperty(id, 'visibility', scenario === 'pire' ? 'visible' : 'none');
   if (scenario !== '1910') { waterProgress = 0; map.setLayoutProperty('caves-outline', 'visibility', 'none'); return; }
@@ -89,6 +101,7 @@ export async function goTo(lon: number, lat: number, label: string) {
   marker?.remove();
   const element = document.createElement('div'); element.className = 'home-marker';
   marker = new maplibregl.Marker({ element }).setLngLat([lon, lat]).setPopup(new maplibregl.Popup({ closeButton: false, offset: 18 }).setText(label)).addTo(map);
+  view3d?.setCamera({ longitude: lon, latitude: lat, pitch: 60, zoom: 17.5, bearing: -26 }, true);
   map.flyTo({ center: [lon, lat], pitch: 60, zoom: 17.5, bearing: -26, duration: 2400, padding: { left: 200, right: 300, top: 40, bottom: 70 } });
 }
 export function showCaves(show: boolean) { map.setLayoutProperty('caves-outline', 'visibility', show ? 'visible' : 'none'); }
@@ -97,6 +110,7 @@ export async function showFloodLevel(level: number) {
   const bands = timelineBands(level);
   (map.getSource('timeline-depths') as maplibregl.GeoJSONSource).setData({ type: 'FeatureCollection', features: datasets.ppri_aleas.features.map(feature => ({ ...feature, properties: { ...feature.properties, ...bands[feature.properties?.classe as FloodClass] } })) });
   for (const id of ['timeline-solid', 'timeline-possible']) map.setLayoutProperty(id, 'visibility', 'visible');
+  view3d?.setWater(timelineFootprints(level, bands, footprints), level, 'timeline');
   map.setLayoutProperty('timeline-banks', 'visibility', level >= 3.2 && level < BANKS_ONLY_BELOW ? 'visible' : 'none');
   map.setLayoutProperty('timeline-extra', 'visibility', level > REFERENCE_LEVEL ? 'visible' : 'none');
 }

@@ -41,6 +41,12 @@ test('presets match exactly the eight requested entries, in order', () => {
   for (const preset of floodPresets) if (preset.id !== 'today') assert.ok(preset.source);
 });
 
+test('seineAltitude turns an Austerlitz gauge level into an ellipsoidal altitude for the Google 3D view', async () => {
+  const { seineAltitude } = await import('../web/src/flood-level.ts');
+  assert.equal(seineAltitude(8.62), 26.0 + 8.62 + 44.5);
+  assert.equal(seineAltitude(0, { austerlitzZeroNgf: 26.2, geoidUndulationM: 44.4 }), 70.6);
+});
+
 test('sceneHeight maps an estimated band to a continuous 0–2.5 m water height for the 3D street scene', async () => {
   const { sceneHeight, depthAtLevel, outsidePpri } = await import('../web/src/flood-level.ts');
   assert.equal(sceneHeight(depthAtLevel('1-2', 8.62)), 1.5);

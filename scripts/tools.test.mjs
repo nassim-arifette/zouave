@@ -9,7 +9,9 @@ const { state, aller_a, exposition, afficher_scenario, afficher_crue } = await i
 
 function element(scenario) {
   const classes = new Set();
-  return { hidden: false, textContent: '', innerHTML: '', dataset: { scenario }, attributes: {}, classList: { toggle: (name, enabled) => enabled ? classes.add(name) : classes.delete(name), contains: name => classes.has(name) }, setAttribute(name, value) { this.attributes[name] = value; }, addEventListener() {}, querySelector: () => ({ addEventListener() {} }) };
+  const listeners = new Map();
+  let html = '';
+  return { hidden: false, textContent: '', htmlWrites: [], get innerHTML() { return html; }, set innerHTML(value) { html = value; this.htmlWrites.push(value); }, dataset: { scenario }, attributes: {}, classList: { toggle: (name, enabled) => enabled ? classes.add(name) : classes.delete(name), contains: name => classes.has(name) }, setAttribute(name, value) { this.attributes[name] = value; }, addEventListener(type, listener) { listeners.set(type, listener); }, click() { listeners.get('click')?.(); }, querySelector: () => ({ addEventListener() {} }), open: false, showModal() { this.open = true; }, close() { this.open = false; } };
 }
 function reset() {
   const elements = new Map();
@@ -17,6 +19,7 @@ function reset() {
   globalThis.document = { getElementById: id => { if (!elements.has(id)) elements.set(id, element()); return elements.get(id); }, querySelectorAll: () => buttons };
   globalThis.fetch = async () => ({ ok: true, json: async () => ({ features: [{ geometry: { type: 'Point', coordinates: [2.369632,48.844929] }, properties: { label: '4 Rue Traversière' } }], source_url: 'https://data.geopf.fr/geocodage/search' }) });
   state.scenario = 'aujourdhui'; state.exposureShown = false; state.timeline = null;
+  state.address = { label: '4 Rue Traversière', lat: 48.844929, lon: 2.369632 };
   globalThis.window = { dispatchEvent() {} };
   showFloodLevel.mock.resetCalls();
   showScenario.mock.resetCalls();
@@ -51,13 +54,33 @@ test('invalid exposure arguments do not change scenario or layers', async () => 
   assert.equal(state.scenario, 'aujourdhui');
   assert.equal(showScenario.mock.callCount(), 0);
 });
-test('outside all footprints still synchronizes scenario without inventing exposure', async () => {
+test('outside all footprints keeps one dry-view card whose button opens the original photo at zero metres', async () => {
   reset();
+  state.address = { label: 'Adresse hors PPRI', lat: 0, lon: 0 };
   const result = await exposition({ lat: 0, lon: 0, scenario: '1910' });
   assert.equal(result.en_zone, false);
   assert.equal(result.classe, null);
   assert.equal(state.scenario, '1910');
   assert.equal(showScenario.mock.callCount(), 1);
+  const exposureCard = document.getElementById('exposure-card');
+  assert.equal(exposureCard.htmlWrites.length, 1, 'render the exposure card once so an older variant cannot replace the dry-view button');
+  const card = exposureCard.innerHTML;
+  assert.match(card, /id="show-photo"[^<]*au sec/, 'the Panoramax street button stays available outside the PPRI');
+  assert.doesNotMatch(card, /show-streetview/, 'no Street View button without a browser key');
+  const requestedPhotos = [];
+  globalThis.fetch = async url => {
+    const request = new URL(url, 'http://test');
+    if (request.pathname === '/api/rue') return { ok: false, json: async () => ({ error: 'Live panorama unavailable' }) };
+    assert.equal(request.pathname, '/api/photo');
+    requestedPhotos.push(request.searchParams.get('h'));
+    return { ok: true, json: async () => ({ url: '/photos/flood.jpg', url_clean: '/photos/original.jpg', hauteur_m: 1.5, address_label: 'Adresse hors PPRI', credit: 'Panoramax', license: 'CC BY-SA 4.0' }) };
+  };
+  document.getElementById('show-photo').click();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(requestedPhotos, ['0']);
+  assert.equal(document.getElementById('photo-dialog').open, true);
+  assert.equal(document.getElementById('photo-image').src, '/photos/original.jpg');
+  assert.match(document.getElementById('photo-label').textContent, /Vue originale/);
 });
 test('voice timeline tool returns derived numbers and updates the renderer and exposure', async () => {
   reset();
@@ -82,3 +105,4 @@ test('voice timeline rejects unknown or ambiguous requests without changing laye
   for (const args of [{}, { annee: 'future' }, { annee: '1910', niveau_m: 8.62 }, { niveau_m: NaN }]) await assert.rejects(afficher_crue(args));
   assert.equal(showFloodLevel.mock.callCount(), 0);
 });
+

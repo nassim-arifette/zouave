@@ -241,3 +241,38 @@ These are plausible street-level demo locations, not verified residential
 ground-floor flats: building access, occupancy, floor level, cellar presence and
 actual vulnerability have not been surveyed. Geocoded entrance positions and
 generalized polygons do not prove a particular dwelling will flood.
+
+## Google Maps Platform (optional "3D photoréaliste" view and Street View)
+
+Terms read on 2026-10-25. A French billing address falls under the **EEA Terms**
+(https://cloud.google.com/terms/maps-platform/eea): no scraping, pre-fetching or
+caching of Google Maps Content (3.3.2 a–b), no "creating content from Google Maps
+Content" — explicitly including Street View imagery (3.3.2 c) — and attribution
+must stay visible and unmodified (3.2.4). Consequences for Zouave:
+
+- Photorealistic 3D Tiles may be rendered with a third-party renderer (deck.gl);
+  the Google logo/attribution **and** the per-tile data attributions are shown, tiles
+  are never cached or used offline, and the view is exclusive with the MapLibre map.
+  The Map Tiles key stays on the server (`GOOGLE_MAPS_API_KEY`, proxied by
+  `/api/google/3d/*`).
+- Street View: the official, unmodified panorama (Maps JavaScript API) may carry
+  our own transparent overlay; the undocumented depth map is **not** used (it is
+  outside the Services and would be derived content). Browser key:
+  `GOOGLE_MAPS_BROWSER_KEY` (referrer-restricted).
+
+Pricing list (USD per 1 000 billable events, monthly free cap), source
+https://developers.google.com/maps/billing-and-pricing/pricing and
+https://developers.google.com/maps/documentation/tile/usage-and-billing:
+
+| SKU | Price / 1 000 | Free per month |
+| --- | --- | --- |
+| Map Tiles API: Photorealistic 3D Tiles (per **root tileset** request; child tiles not billed, session valid 3 h) | $6.00 | 1 000 |
+| Maps JavaScript API: Dynamic Maps (map load) | $7.00 | 10 000 |
+| Maps JavaScript API: Dynamic Street View (panorama) | $14.00 | 5 000 |
+| Street View Static API | $7.00 | 10 000 |
+| Map Tiles API: Street View Tiles | $2.00 | 100 000 |
+
+Estimate: a 10-minute demo ≈ 1 root request + ~5 panoramas + ~3 JS loads ≈ $0.10
+(within the free caps); a development day ≈ 200 root requests + 100 panoramas +
+200 JS loads ≈ $4 list price, $0 while under the monthly caps.
+

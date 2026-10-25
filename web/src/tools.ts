@@ -69,7 +69,8 @@ export async function exposition({ lat, lon, scenario }: { lat: number; lon: num
   showCaves(scenario === '1910');
   $('cave-key').hidden = scenario !== '1910';
   const shownHeight = scenario === '1910' ? height : scenario === 'pire' ? 'Emprise seulement' : 'Aucune simulation';
-  showCard('exposure-card', `<div class="card-eyebrow"><i></i>CHEZ VOUS · ${scenario === '1910' ? 'SCÉNARIO 1910' : scenario === 'pire' ? 'SCÉNARIO EXTRÊME' : 'AUJOURD’HUI'}</div><h2>Votre adresse,<br>face à la crue.</h2><p class="address">${escape(state.address.label)}</p><div class="exposure-depth">${escape(shownHeight)}</div>${scenario === '1910' && classe ? `<div class="exposure-tag">Hauteur de submersion · classe ${escape(classe)}</div>` : ''}<div class="exposure-row"><span>Emprise ${scenario === 'pire' ? 'SDRIF-E' : 'PPRI 1910'}</span><strong>${(scenario === 'pire' ? extreme : classe) ? 'Dans la zone' : 'Hors zone cartographiée'}</strong></div><div class="exposure-row"><span>Caves · scénario 1910</span><strong>${cave ? 'Secteur exposé' : 'Hors secteur cartographié'}</strong></div><p class="disclaimer">${scenario === 'pire' ? 'Hauteurs locales non publiées. ' : ''}La carte ne mesure pas votre logement. L’absence de zone n’exclut pas un risque ni des coupures de réseaux.</p>${scenario === '1910' ? `<button class="photo-button" id="show-photo">${classe ? 'Voir ma rue en simulation ↗' : 'Voir ma rue (au sec, à vous de régler l’eau) ↗'}</button>` : ''}`, result.sources.map(s => source(s.label, s.url)).join(''));
+  showCard('exposure-card', `<div class="card-eyebrow"><i></i>CHEZ VOUS · ${scenario === '1910' ? 'SCÉNARIO 1910' : scenario === 'pire' ? 'SCÉNARIO EXTRÊME' : 'AUJOURD’HUI'}</div><h2>Votre adresse,<br>face à la crue.</h2><p class="address">${escape(state.address.label)}</p><div class="exposure-depth">${escape(shownHeight)}</div>${scenario === '1910' && classe ? `<div class="exposure-tag">Hauteur de submersion · classe ${escape(classe)}</div>` : ''}<div class="exposure-row"><span>Emprise ${scenario === 'pire' ? 'SDRIF-E' : 'PPRI 1910'}</span><strong>${(scenario === 'pire' ? extreme : classe) ? 'Dans la zone' : 'Hors zone cartographiée'}</strong></div><div class="exposure-row"><span>Caves · scénario 1910</span><strong>${cave ? 'Secteur exposé' : 'Hors secteur cartographié'}</strong></div><p class="disclaimer">${scenario === 'pire' ? 'Hauteurs locales non publiées. ' : ''}La carte ne mesure pas votre logement. L’absence de zone n’exclut pas un risque ni des coupures de réseaux.</p>${scenario === '1910' ? `<button class="photo-button" id="show-photo">${classe ? 'Voir ma rue en simulation ↗' : 'Voir ma rue (au sec, à vous de régler l’eau) ↗'}</button>` : ''}${googleStreetView ? `<button class="photo-button" id="show-streetview">Street View · eau à ${result.hauteur_visuelle_m ?? 1} m ↗</button>` : ''}`, result.sources.map(s => source(s.label, s.url)).join(''));
+  $('show-streetview')?.addEventListener('click', () => { void streetView(result.hauteur_visuelle_m ?? 1); });
   $('show-photo')?.addEventListener('click', () => { void photo_inondee({ hauteur: result.hauteur_visuelle_m ?? 0 }).then(photo => { if (!photo.affichee) notify(photo.error!); }).catch(error => notify(error.message)); });
   return result;
 }
@@ -129,6 +130,38 @@ export async function consignes(args: { rez_de_chaussee: boolean; cave: boolean;
   const selected = data.instructions.filter(item => item.condition !== 'always' && args[item.condition]).concat(data.instructions.filter(item => item.condition === 'always')).slice(0, 3).map(item => ({ title: item.title, text: item.text, source: data.sources[item.source].label, url: data.sources[item.source].url }));
   showCard('safety-card', `<div class="card-eyebrow"><i></i>LES BONS RÉFLEXES</div><h2>Se préparer,<br>sans paniquer.</h2><p>Des gestes adaptés à votre foyer.</p><ol class="checklist">${selected.map(item => `<li><strong>${escape(item.title)}</strong><p>${escape(item.text)}</p></li>`).join('')}</ol>`, [...new Map(selected.map(item => [item.url, item])).values()].map(item => source(item.source, item.url)).join(''));
   return { consignes: selected, profil: args, source: 'Consignes officielles de prévention' };
+}
+/** Street View browser key, fetched once; `null` hides the Street View button (key-gated feature). */
+let googleStreetView: string | null = null;
+export async function loadGoogleStatus() { try { const status = await (await fetch('/api/google/status')).json(); googleStreetView = status.streetview ? status.browser_key : null; } catch { googleStreetView = null; } return googleStreetView; }
+let streetViewHandle: { close: () => void; overlay: { setLevel: (level: number) => void } } | undefined;
+let streetViewRequest = 0;
+/** Official Street View panorama at the current address with our water overlay, in an opaque panel (see data/README.md, Google Maps Platform). */
+export async function streetView(hauteur: number) {
+  if (!googleStreetView) { notify('Street View indisponible : clé Google manquante.'); return { affichee: false }; }
+  const dialog = $<HTMLDialogElement>('streetview-dialog'), slider = $<HTMLInputElement>('streetview-slider');
+  const format = (level: number) => `${level.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m`;
+  const request = ++streetViewRequest;
+  streetViewHandle?.close(); streetViewHandle = undefined;
+  // installed before any await: closing during the load invalidates the request, and a late result is disposed
+  dialog.onclose = () => { streetViewRequest++; streetViewHandle?.close(); streetViewHandle = undefined; };
+  $('streetview-label').textContent = `${state.address.label} · Eau à ${format(hauteur)} (hauteur de caméra fixe, sans relief)`;
+  $('streetview-credit').textContent = '';
+  if (!dialog.open) dialog.showModal();
+  try {
+    const { openStreetView } = await import('./streetview.ts');
+    const opened = await openStreetView({ panorama: $('streetview-panorama'), canvas: $<HTMLCanvasElement>('streetview-water'), status: $('streetview-status') }, { lat: state.address.lat, lng: state.address.lon }, { key: googleStreetView, level: hauteur });
+    if (request !== streetViewRequest) { opened.close(); return { affichee: false, remplacee: true }; }
+    streetViewHandle = opened;
+    $('streetview-credit').textContent = `${opened.copyright} · Street View, Google · panorama à ${opened.distance_m} m`;
+    slider.value = String(hauteur); $('streetview-level').textContent = format(hauteur);
+    slider.oninput = () => { opened.overlay.setLevel(Number(slider.value)); $('streetview-level').textContent = format(Number(slider.value)); };
+    return { affichee: true, source: 'Street View (Google)', hauteur_m: hauteur, distance_m: opened.distance_m };
+  } catch (error) {
+    if (request !== streetViewRequest) return { affichee: false, remplacee: true };
+    $('streetview-status').hidden = false; $('streetview-status').textContent = error instanceof Error && /ZERO_RESULTS|not found/i.test(error.message) ? 'Aucun panorama Street View à proximité.' : 'Street View indisponible.';
+    return { affichee: false, error: error instanceof Error ? error.message : String(error) };
+  }
 }
 let hero: ReturnType<typeof createHero> | undefined;
 /** The scene actually rendering (set once its textures are installed, cleared while a load is in flight or after closing). */
@@ -210,7 +243,7 @@ export async function afficher_crue({ annee, niveau_m }: { annee?: string | null
   await showFloodLevel(level);
   $('legend-depths').hidden = true; $('legend-note').hidden = false;
   $('legend-title').textContent = 'LA CARTE DU NIVEAU CHOISI';
-  $('legend-note').innerHTML = `Aplat : inondé · Hachures : peut-être. ${badge(level === 8.62 ? 'Officiel' : 'Estimé')}<br>${level < 6.62 ? 'Berges/quais bas : zone rouge du PPRI utilisée comme emprise indicative.' : level > 8.62 ? 'Hors PPRI, dans SDRIF-E : moins de 50 cm (estimation).' : 'Classes du PPRI décalées selon le niveau à Austerlitz.'}`;
+  $('legend-note').innerHTML = `Aplat : inondé · <span class="legend-map-only">Hachures</span><span class="legend-google-only">Contour translucide</span> : peut-être. ${badge(level === 8.62 ? 'Officiel' : 'Estimé')}<br>${level < 6.62 ? 'Berges/quais bas : zone rouge du PPRI utilisée comme emprise indicative.' : level > 8.62 ? 'Hors PPRI, dans SDRIF-E : moins de 50 cm (estimation).' : 'Classes du PPRI décalées selon le niveau à Austerlitz.'}`;
   window.dispatchEvent(new CustomEvent('zouave:timeline', { detail: state.timeline }));
   const exposure = await timelineExposure(state.address.lat, state.address.lon);
   return { ...state.timeline, bands, exposure, delta_m: Math.round((level - 8.62) * 100) / 100, delta_evidence: 'Estimé', reference_m: 8.62, reference_evidence: 'Officiel', future: '1 chance sur 100 par an, environ 26 % sur 30 ans', future_evidence: 'Estimé', description: `Niveau à Austerlitz : ${level.toLocaleString('fr-FR')} m (${state.timeline!.evidence}). À votre adresse : ${exposure.hauteur_texte} (${exposure.evidence}).` };
@@ -221,3 +254,4 @@ export async function executeTool(name: string, args: unknown): Promise<unknown>
   if (!tool) throw new Error(`Outil inconnu : ${name}`);
   return (tool as (args: unknown) => Promise<unknown>)(args);
 }
+

@@ -4,6 +4,8 @@ export const config = {
   initialCenter: [2.357, 48.850] as [number, number],
   waterExaggeration: 2,
   waterRenderer: 'three' as 'three' | 'extrusion',
+  /** Absolute water surface for the Google 3D view: Austerlitz gauge zero (m NGF-IGN69) and the geoid undulation in Paris (ellipsoidal = NGF + undulation). Approximate; tune if the water sits visibly above/below the quays. */
+  seine: { austerlitzZeroNgf: 26.0, geoidUndulationM: 44.5 },
   sources: {
     ppri: 'https://www.prefectures-regions.gouv.fr/content/download/12314/84310/file/PPRI2003-pr%C3%A9sentation.pdf',
     reference: 'https://www.drieat.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/bilan_1910_cle7c8919.pdf',

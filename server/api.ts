@@ -3,6 +3,7 @@ import OpenAI from 'openai';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { instructions, liveTools, realtimeTools } from './tools.ts';
+import { googleStatus, proxyTile, TilePathError, type GoogleOptions } from './google.ts';
 import { findNearestPicture, renderStreet, defaultDepthEstimator, cacheDir, type DepthEstimator } from './street.ts';
 
 export const publicDir = fileURLToPath(new URL('../web/public/', import.meta.url));
@@ -32,9 +33,23 @@ export function selectPhoto(manifest: Record<string, PhotoEntry> | { photos: Pho
   const credit = author ? `Photo : ${author}${entry.photo?.source && !author.includes(entry.photo.source) ? ` / ${entry.photo.source}` : ''}, ${license}` : anonymize(entry.credit ?? '');
   return { url: photoPath(url), url_clean: photoPath(entry.files?.original ?? entry.url_clean ?? entry.clean), hauteur_m: Number(key), address_label: entry.label ?? entry.address_label ?? entry.address ?? '', credit, license, license_url: entry.photo?.license_url ?? entry.license_url ?? null, source_url: entry.photo?.page_url ?? null, simulation: true, distance_m: Math.round(distance(lat, lon, entry)), url_depth: photoPath(entry.files?.depth), view: { fov: entry.photo?.view?.fov ?? 80, pitch: entry.photo?.view?.pitch ?? 0, camera_height_m: entry.depth?.camera_height_m ?? 2 } };
 }
-export function createApp(options: { fetcher?: typeof fetch; photosPath?: string; apiKey?: string; mode?: string; street?: { enabled?: boolean; radius_m?: number; estimateDepth?: DepthEstimator; cache?: string } } = {}) {
+export function createApp(options: { fetcher?: typeof fetch; photosPath?: string; apiKey?: string; mode?: string; google?: GoogleOptions; street?: { enabled?: boolean; radius_m?: number; estimateDepth?: DepthEstimator; cache?: string } } = {}) {
   const app = express();
   const fetcher = options.fetcher ?? fetch;
+  const google = { tilesKey: options.google?.tilesKey ?? (process.env.GOOGLE_MAPS_API_KEY || undefined), browserKey: options.google?.browserKey ?? (process.env.GOOGLE_MAPS_BROWSER_KEY || undefined) };
+  app.get('/api/google/status', (_req, res) => { res.json(googleStatus(google)); });
+  // Photorealistic 3D Tiles proxy: root tileset and child tiles (session token in the query) with the server-side key.
+  app.get(/^\/api\/google\/3d\/(.+)$/, async (req, res) => {
+    if (!google.tilesKey) { res.status(404).json({ error: 'Clé Google manquante : définissez GOOGLE_MAPS_API_KEY côté serveur.' }); return; }
+    try {
+      const tile = await proxyTile(req.params[0], new URL(req.url, 'http://localhost').searchParams, { tilesKey: google.tilesKey, fetcher });
+      res.status(tile.status).type(tile.contentType);
+      if (tile.cacheControl) res.setHeader('cache-control', tile.cacheControl);
+      res.send(tile.body);
+    } catch (error) {
+      if (error instanceof TilePathError) { res.status(400).json({ error: error.message }); return; }
+      res.status(502).json({ error: 'Tuiles 3D Google indisponibles.', detail: error instanceof Error ? error.message : String(error) }); }
+  });
   const street = { enabled: options.street?.enabled ?? process.env.ZOUAVE_STREET !== 'off', radius: options.street?.radius_m ?? Number(process.env.ZOUAVE_STREET_RADIUS_M ?? 80), estimateDepth: options.street?.estimateDepth ?? defaultDepthEstimator(), cache: options.street?.cache ?? cacheDir };
   const streetScenes = new Map<string, { value: unknown; expires: number }>();
   let streetJobs = 0;
