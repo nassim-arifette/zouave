@@ -1,6 +1,6 @@
 # Zouave · 2-minute pitch video
 
-Latest render: [`zouave-pitch.mp4`](zouave-pitch.mp4) (v3, 1 min 53 s). Earlier versions: [`versions/`](versions) — v1 (app screenshots only), v2 (+ Google Photorealistic 3D and the street going under water).
+Latest render: [`zouave-pitch.mp4`](zouave-pitch.mp4) (v4, 1 min 53 s). Every version is in [`versions/`](versions): v1 (app screenshots only), v2 (+ Google Photorealistic 3D and the street going under water), v3 (+ the Zouave presenting, lip-synced, and "Why it matters"), v4 (+ 13 OpenAI poses).
 
 [HyperFrames](https://hyperframes.heygen.com) composition (HTML + GSAP, rendered to MP4) built from real screenshots of
 the app and the Zouave's voice (ElevenLabs v3, "Jamie", French accent), with burned-in subtitles.
