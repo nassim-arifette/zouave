@@ -50,9 +50,9 @@ export async function routeIntent(message: string) {
   }
   if (/flood|rise|rising|crue|monte/.test(intent)) { const result = await afficher_scenario({ scenario: '1910' }); return `${result.description} Source: ${result.source}. What about your home?`; }
   // Small talk keeps the conversation going without inventing facts: every number still comes from a tool above.
-  if (/who are you|introduce|qui es|t'?es qui|tu es qui|presente|zouave|alma|statue/.test(intent)) return 'I am the Zouave of the Pont de l’Alma, a stone soldier standing in the Seine. Parisians watch the water climb my legs; in 1910 it reached my shoulders. I help you understand floods with official data. Shall we look at 1910?';
-  if (/thank|great|awesome|perfect|merci|super|genial|parfait|top\b/.test(intent)) return 'With pleasure! I watch over the Seine day and night. Shall we check your address, or the right moves?';
-  if (/goodbye|\bbye\b|see you|au revoir|a bientot|bonne (?:journee|soiree)/.test(intent)) return 'À bientôt! If the Seine rises, I will be here, feet in the water.';
-  if (/^(?:hello|hi|hey|good (?:morning|evening)|bonjour|bonsoir|salut|coucou)\b|how are you|ca va|comment vas/.test(intent)) return 'Bonjour! Still standing under the Pont de l’Alma, feet in the water. Ask me to show 1910, check your address, or read the Seine level today.';
-  return 'I am only a stone soldier, but I can show the 1910 flood, check your address, read the Seine level or remind you of the right moves. What would you like to see?';
+  if (/who are you|introduce|qui es|t'?es qui|tu es qui|presente|zouave|alma|statue/.test(intent)) return 'Me? The Zouave of the Pont de l’Alma, mon ami: a stone soldier standing in the Seine. Parisians watch the water climb my legs; in 1910 it reached my shoulders. I turn official flood data into straight answers. Shall we look at 1910?';
+  if (/thank|great|awesome|perfect|merci|super|genial|parfait|top\b/.test(intent)) return 'With pleasure, mon ami! I watch over the Seine day and night. Next: your address, or the right moves?';
+  if (/goodbye|\bbye\b|see you|au revoir|a bientot|bonne (?:journee|soiree)/.test(intent)) return 'À bientôt! If the Seine rises, I will be right here, feet in the water. Keep an eye on Vigicrues!';
+  if (/^(?:hello|hi|hey|good (?:morning|evening)|bonjour|bonsoir|salut|coucou)\b|how are you|ca va|comment vas/.test(intent)) return 'Bonjour! Still standing under the Pont de l’Alma, feet in the water, as always. Ask me to show 1910, check your address, or read the Seine level right now.';
+  return 'Ah, I am only a stone soldier… but I can show the 1910 flood, check your address, read the Seine level or remind you of the right moves. Your pick?';
 }

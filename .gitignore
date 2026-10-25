@@ -8,3 +8,4 @@ web/dist/
 !.env.example
 .cache/
 *.webm
+voice-smoke*.mp3

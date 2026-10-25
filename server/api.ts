@@ -36,6 +36,9 @@ export function selectPhoto(manifest: Record<string, PhotoEntry> | { photos: Pho
   const credit = author ? `Photo: ${author}${entry.photo?.source && !author.includes(entry.photo.source) ? ` / ${entry.photo.source}` : ''}, ${license}` : anonymize(entry.credit ?? '');
   return { url: photoPath(url), url_clean: photoPath(entry.files?.original ?? entry.url_clean ?? entry.clean), hauteur_m: Number(key), address_label: entry.label ?? entry.address_label ?? entry.address ?? '', credit, license, license_url: entry.photo?.license_url ?? entry.license_url ?? null, source_url: entry.photo?.page_url ?? null, simulation: true, distance_m: Math.round(distance(lat, lon, entry)), url_depth: photoPath(entry.files?.depth), view: { fov: entry.photo?.view?.fov ?? 80, pitch: entry.photo?.view?.pitch ?? 0, camera_height_m: entry.depth?.camera_height_m ?? 2 } };
 }
+const hash = (value: string) => createHash('sha256').update(value).digest('hex').slice(0, 32);
+/** ElevenLabs v3 audio tags ([excited], [whispers]…) are for the expressive voice only: never sent elsewhere, never shown. */
+export const stripVoiceTags = (text: string) => text.replace(/\[[a-z][a-z '-]{0,30}\]\s*/gi, '').replace(/\s+/g, ' ').trim();
 export const ttsInstructions = 'You are the Zouave, the 19th-century stone statue of a French Zouave soldier standing in the Seine under the Pont de l’Alma in Paris. Speak English with a light, warm French accent. Calm, wise storyteller with gentle gravitas and a hint of humour; measured pace, never rushed. Numbers and units are read clearly.';
 /** Address other devices on the same network can open (QR code at the end of the story); ZOUAVE_PUBLIC_URL wins. */
 export function shareURL(port = Number(process.env.PORT ?? 3000)) {
@@ -44,7 +47,7 @@ export function shareURL(port = Number(process.env.PORT ?? 3000)) {
   // With ZOUAVE_HTTPS=1 phones get the secure (self-signed) address, so the microphone works there too.
   return lan ? httpsEnabled() ? `https://${lan}:${httpsPort()}` : `http://${lan}:${port}` : null;
 }
-export function createApp(options: { fetcher?: typeof fetch; photosPath?: string; apiKey?: string; mode?: string; google?: GoogleOptions; street?: { enabled?: boolean; radius_m?: number; estimateDepth?: DepthEstimator; cache?: string }; tts?: { enabled?: boolean; cache?: string; model?: string; voice?: string } } = {}) {
+export function createApp(options: { fetcher?: typeof fetch; photosPath?: string; apiKey?: string; mode?: string; google?: GoogleOptions; street?: { enabled?: boolean; radius_m?: number; estimateDepth?: DepthEstimator; cache?: string }; tts?: { enabled?: boolean; cache?: string; model?: string; voice?: string }; eleven?: { key?: string; voice?: string; model?: string; expressiveModel?: string } } = {}) {
   const app = express();
   const fetcher = options.fetcher ?? fetch;
   const google = { tilesKey: options.google?.tilesKey ?? (process.env.GOOGLE_MAPS_API_KEY || undefined), browserKey: options.google?.browserKey ?? (process.env.GOOGLE_MAPS_BROWSER_KEY || undefined) };
@@ -71,7 +74,11 @@ export function createApp(options: { fetcher?: typeof fetch; photosPath?: string
   app.disable('x-powered-by');
   app.use(express.json({ limit: '128kb' }));
   const tts = { enabled: Boolean(key) && (options.tts?.enabled ?? process.env.ZOUAVE_TTS !== 'off'), cache: options.tts?.cache ?? fileURLToPath(new URL('../.cache/tts/', import.meta.url)), model: options.tts?.model ?? process.env.ZOUAVE_TTS_MODEL ?? 'gpt-4o-mini-tts', voice: options.tts?.voice ?? process.env.ZOUAVE_TTS_VOICE ?? 'marin' };
-  app.get('/api/config', (_req, res) => { res.json({ voice: Boolean(key), mode, tts: tts.enabled, share_url: shareURL() }); });
+  // ElevenLabs gives the Zouave his French accent in English (shared voice "Jamie - French Accent & Charismatic");
+  // it is preferred when its key is set, OpenAI text-to-speech is the fallback.
+  const eleven = { key: options.eleven?.key ?? process.env.ELEVENLABS_API_KEY ?? '', voice: options.eleven?.voice ?? process.env.ZOUAVE_ELEVEN_VOICE ?? 'K8nDX2f6wjv6bCh5UeZi', model: options.eleven?.model ?? process.env.ZOUAVE_ELEVEN_MODEL ?? 'eleven_multilingual_v2', expressiveModel: options.eleven?.expressiveModel ?? process.env.ZOUAVE_ELEVEN_EXPRESSIVE_MODEL ?? 'eleven_v3' };
+  const elevenEnabled = Boolean(eleven.key) && (options.tts?.enabled ?? process.env.ZOUAVE_TTS !== 'off');
+  app.get('/api/config', (_req, res) => { res.json({ voice: Boolean(key), mode, tts: elevenEnabled || tts.enabled, tts_provider: elevenEnabled ? 'elevenlabs' : tts.enabled ? 'openai' : null, share_url: shareURL() }); });
   app.get('/api/niveau', async (_req, res) => {
     if (levelCache && levelCache.expires > Date.now()) { res.json(levelCache.value); return; }
     try {
@@ -177,31 +184,46 @@ export function createApp(options: { fetcher?: typeof fetch; photosPath?: string
       res.status(502).json({ error: `Voice session unavailable: ${message}` });
     }
   });
-  // The Zouave's narrated voice (OpenAI text-to-speech), cached on disk by text so rehearsals and the demo replay offline.
+  // The Zouave's narrated voice (ElevenLabs, else OpenAI text-to-speech), cached on disk by provider, model, voice,
+  // settings and text, so rehearsed lines replay offline. `expressive` keeps ElevenLabs v3 audio tags ([excited]…).
   const speaking = new Map<string, Promise<Buffer>>();
   app.post('/api/tts', async (req, res) => {
-    const text = typeof req.body?.text === 'string' ? req.body.text.replace(/\s+/g, ' ').trim() : '';
-    if (!text || text.length > 600) { res.status(400).json({ error: 'Text of 1 to 600 characters is required.' }); return; }
-    const id = createHash('sha256').update(`${tts.model}|${tts.voice}|${ttsInstructions}|${text}`).digest('hex').slice(0, 32);
-    const file = `${tts.cache}${id}.mp3`;
-    const send = (audio: Buffer) => { res.type('audio/mpeg').setHeader('cache-control', 'public, max-age=86400'); res.send(audio); };
-    try { send(await readFile(file)); return; } catch { /* not cached yet */ }
-    if (!tts.enabled) { res.status(404).json({ error: 'Narrated voice unavailable: OPENAI_API_KEY is missing on the server.' }); return; }
-    let pending = speaking.get(id);
-    if (!pending) {
-      pending = (async () => {
+    const raw = typeof req.body?.text === 'string' ? req.body.text.replace(/\s+/g, ' ').trim() : '';
+    if (!raw || raw.length > 600) { res.status(400).json({ error: 'Text of 1 to 600 characters is required.' }); return; }
+    const expressive = req.body?.expressive === true;
+    const plain = stripVoiceTags(raw);
+    if (!plain) { res.status(400).json({ error: 'Text of 1 to 600 characters is required.' }); return; }
+    const elevenModel = expressive ? eleven.expressiveModel : eleven.model;
+    const elevenSettings = { stability: expressive ? 0.5 : 0.35, similarity_boost: 0.8, style: 0.45, use_speaker_boost: true, speed: 1.12 };
+    const elevenText = expressive ? raw : plain;
+    const jobs = [
+      { provider: 'elevenlabs', enabled: elevenEnabled, id: hash(`elevenlabs|${elevenModel}|${eleven.voice}|${JSON.stringify(elevenSettings)}|${elevenText}`), run: async () => {
+        const upstream = await fetcher(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(eleven.voice)}?output_format=mp3_44100_128`, { method: 'POST', headers: { 'xi-api-key': eleven.key, 'Content-Type': 'application/json', Accept: 'audio/mpeg' }, body: JSON.stringify({ text: elevenText, model_id: elevenModel, voice_settings: elevenSettings }), signal: AbortSignal.timeout(20_000) });
+        if (!upstream.ok) throw new Error(`ElevenLabs HTTP ${upstream.status}: ${(await upstream.text()).slice(0, 200)}`);
+        return Buffer.from(await upstream.arrayBuffer());
+      } },
+      { provider: 'openai', enabled: tts.enabled, id: hash(`${tts.model}|${tts.voice}|${ttsInstructions}|${plain}`), run: async () => {
         // Official SDK call (parameters type-checked against openai's SpeechCreateParams); the fetcher stays injectable for tests.
         const client = new OpenAI({ apiKey: key, fetch: fetcher, timeout: 20_000, maxRetries: 0 });
-        const upstream = await client.audio.speech.create({ model: tts.model, voice: tts.voice, input: text, instructions: ttsInstructions, response_format: 'mp3' });
-        const audio = Buffer.from(await upstream.arrayBuffer());
-        await mkdir(tts.cache, { recursive: true });
-        await writeFile(file, audio);
-        return audio;
-      })().finally(() => speaking.delete(id));
-      speaking.set(id, pending);
+        const upstream = await client.audio.speech.create({ model: tts.model, voice: tts.voice, input: plain, instructions: ttsInstructions, response_format: 'mp3' });
+        return Buffer.from(await upstream.arrayBuffer());
+      } },
+    ];
+    const send = (audio: Buffer, provider: string) => { res.type('audio/mpeg').setHeader('cache-control', 'public, max-age=86400'); res.setHeader('x-zouave-tts', provider); res.send(audio); };
+    for (const job of jobs) { try { send(await readFile(`${tts.cache}${job.id}.mp3`), job.provider); return; } catch { /* not cached with this provider */ } }
+    const available = jobs.filter(job => job.enabled);
+    if (!available.length) { res.status(404).json({ error: 'Narrated voice unavailable: set ELEVENLABS_API_KEY or OPENAI_API_KEY on the server.' }); return; }
+    const errors: string[] = [];
+    for (const job of available) {
+      let pending = speaking.get(job.id);
+      if (!pending) {
+        pending = job.run().then(async audio => { await mkdir(tts.cache, { recursive: true }); await writeFile(`${tts.cache}${job.id}.mp3`, audio); return audio; }).finally(() => speaking.delete(job.id));
+        speaking.set(job.id, pending);
+      }
+      try { send(await pending, job.provider); return; }
+      catch (error) { errors.push(error instanceof Error ? error.message : String(error)); }
     }
-    try { send(await pending); }
-    catch (error) { res.status(502).json({ error: `Narrated voice unavailable: ${error instanceof Error ? error.message : String(error)}` }); }
+    res.status(502).json({ error: `Narrated voice unavailable: ${errors.join(' · ')}` });
   });
   app.use('/api', (_req, res) => { res.status(404).json({ error: 'Unknown route.' }); });
   app.use((error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => { res.status(400).json({ error: error instanceof SyntaxError ? 'Invalid JSON.' : 'Invalid request.' }); });

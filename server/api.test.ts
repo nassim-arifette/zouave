@@ -109,14 +109,14 @@ test('narrated voice calls OpenAI speech once, then replays from the disk cache,
     return new Response(new Uint8Array([73, 68, 51, 1]), { headers: { 'content-type': 'audio/mpeg' } });
   }) as typeof fetch;
   const post = (url: string, text: unknown) => fetch(`${url}/api/tts`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
-  await withApp({ apiKey: 'test-not-a-key', fetcher, tts: { cache } }, async url => {
+  await withApp({ apiKey: 'test-not-a-key', fetcher, tts: { cache }, eleven: { key: '' } }, async url => {
     assert.equal((await (await fetch(`${url}/api/config`)).json()).tts, true);
     for (let i = 0; i < 2; i++) { const response = await post(url, ' Bonjour,  Paris. '); assert.equal(response.status, 200); assert.equal(response.headers.get('content-type'), 'audio/mpeg'); assert.deepEqual([...new Uint8Array(await response.arrayBuffer())], [73, 68, 51, 1]); }
     assert.equal(calls, 1);
     assert.equal((await post(url, '')).status, 400);
     assert.equal((await post(url, 'x'.repeat(601))).status, 400);
   });
-  await withApp({ apiKey: '', fetcher, tts: { cache } }, async url => {
+  await withApp({ apiKey: '', fetcher, tts: { cache }, eleven: { key: '' } }, async url => {
     assert.equal((await (await fetch(`${url}/api/config`)).json()).tts, false);
     assert.equal((await post(url, 'Bonjour, Paris.')).status, 200, 'a cached line still plays without a key');
     assert.equal((await post(url, 'Something new.')).status, 404);
@@ -133,4 +133,42 @@ test('self-signed LAN certificate covers the given addresses and is reused', asy
   assert.match(san, /IP Address:192\.168\.1\.42/); assert.match(san, /DNS:localhost/);
   assert.equal((await lanCertificate(['192.168.1.42'], dir)).cert, first.cert);
   assert.notEqual((await lanCertificate(['10.0.0.7'], dir)).cert, first.cert, 'a new address gets a new certificate');
+});
+test('ElevenLabs gives the Zouave his French-accented voice first: expressive lines keep v3 tags, plain ones lose them, both cached', async () => {
+  const { mkdtemp } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const cache = `${await mkdtemp(`${tmpdir()}/zouave-eleven-`)}/`;
+  const calls: { url: string; key: string | null; body: { text: string; model_id: string; voice_settings: { speed: number } } }[] = [];
+  const fetcher = (async (url, init) => {
+    calls.push({ url: String(url), key: new Headers(init?.headers).get('xi-api-key'), body: JSON.parse(String(init?.body)) });
+    return new Response(new Uint8Array([73, 68, 51, 4]), { headers: { 'content-type': 'audio/mpeg' } });
+  }) as typeof fetch;
+  const post = (url: string, body: unknown) => fetch(`${url}/api/tts`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  await withApp({ apiKey: '', fetcher, tts: { cache }, eleven: { key: 'xi-test' } }, async url => {
+    const config = await (await fetch(`${url}/api/config`)).json();
+    assert.equal(config.tts, true); assert.equal(config.tts_provider, 'elevenlabs'); assert.equal(config.voice, false);
+    const plain = await post(url, { text: '[excited] Bonjour, Paris!' });
+    assert.equal(plain.status, 200); assert.equal(plain.headers.get('x-zouave-tts'), 'elevenlabs');
+    assert.equal(calls[0].url, 'https://api.elevenlabs.io/v1/text-to-speech/K8nDX2f6wjv6bCh5UeZi?output_format=mp3_44100_128');
+    assert.equal(calls[0].key, 'xi-test');
+    assert.equal(calls[0].body.text, 'Bonjour, Paris!', 'tags are stripped for the conversational model');
+    assert.equal(calls[0].body.model_id, 'eleven_multilingual_v2'); assert.equal(calls[0].body.voice_settings.speed, 1.12);
+    const expressive = await post(url, { text: '[excited] Bonjour, Paris!', expressive: true });
+    assert.equal(expressive.status, 200);
+    assert.equal(calls[1].body.text, '[excited] Bonjour, Paris!'); assert.equal(calls[1].body.model_id, 'eleven_v3');
+    await post(url, { text: '[excited] Bonjour, Paris!', expressive: true });
+    assert.equal(calls.length, 2, 'the expressive line replays from the disk cache');
+    assert.equal((await post(url, { text: '[whispers]' })).status, 400, 'a line made only of tags is empty');
+  });
+});
+
+test('ElevenLabs failures fall back to OpenAI speech when both keys are set', async () => {
+  const { mkdtemp } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const cache = `${await mkdtemp(`${tmpdir()}/zouave-fallback-`)}/`;
+  const fetcher = (async url => String(url).includes('elevenlabs') ? Response.json({ detail: 'quota' }, { status: 401 }) : new Response(new Uint8Array([73, 68, 51, 2]), { headers: { 'content-type': 'audio/mpeg' } })) as typeof fetch;
+  await withApp({ apiKey: 'test-not-a-key', fetcher, tts: { cache }, eleven: { key: 'xi-test' } }, async url => {
+    const response = await fetch(`${url}/api/tts`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: 'Bonjour.' }) });
+    assert.equal(response.status, 200); assert.equal(response.headers.get('x-zouave-tts'), 'openai');
+  });
 });

@@ -11,7 +11,7 @@ import { map, mapReady, datasets } from './map.ts';
 import { afficher_crue, aller_a, exposition, photo_inondee, consignes, state } from './tools.ts';
 import { floodPresets, consequences, timelineBands, sceneHeight, BANKS_ONLY_BELOW, REFERENCE_LEVEL, type DepthBand } from './flood-level.ts';
 import { flattenFootprints, timelineFootprints, type WaterFeature } from './water-footprints.ts';
-import { isSpeaking, pauseSpeaking, resumeSpeaking, speak, speakEnabled, stopListening, stopSpeaking } from './speech.ts';
+import { isSpeaking, pauseSpeaking, resumeSpeaking, speak, speakEnabled, stopListening, stopSpeaking, stripTags } from './speech.ts';
 import { isVoiceSessionActive, stopVoice } from './voice.ts';
 import { closeMemory, openMemory, storyMemory } from './memoire.ts';
 import { animateAnswer, setSpeaking } from './avatar.ts';
@@ -51,11 +51,13 @@ async function wait(ms: number) {
 
 /** Shows the line as the Zouave's caption and speaks it; resolves when the speech ends (or after an estimate). */
 async function say(text: string, minMs = 0) {
+  // Lines carry ElevenLabs v3 audio tags ([excited]…) for the acted narration; the caption never shows them.
+  const shown = stripTags(text);
   const caption = el('caption');
-  if (caption) caption.textContent = text;
-  const voiced = speak(spoken(text));
-  if (!voiced) animateAnswer(text);
-  const estimate = text.split(/\s+/).length * 400 + 600;
+  if (caption) caption.textContent = shown;
+  const voiced = speak(spoken(text), { expressive: true });
+  if (!voiced) animateAnswer(shown);
+  const estimate = shown.split(/\s+/).length * 400 + 600;
   let elapsed = 0;
   for (;;) {
     await wait(150);
@@ -327,7 +329,7 @@ const steps: Array<() => Promise<void>> = [
     hook.hidden = false;
     document.body.classList.add('tour-hooked');
     if (!reducedMotion()) map.easeTo({ center: config.initialCenter, zoom: 13.7, pitch: 56, bearing: -32, padding: { top: 40, bottom: 220, left: 0, right: 0 }, duration: 3000 });
-    await say('I’m the Zouave of the Alma bridge. For generations, Parisians have read the Seine’s floods on my body. If 1910 came back today, up to five million people would be hit.', 9000);
+    await say('[excited] Bonjour! I’m the Zouave of the Alma bridge. [proud] For generations, Parisians have read the Seine’s floods on my body. [dramatic] If 1910 came back today… up to five million people would be hit.', 9000);
   },
   // 2 · Today, live.
   async () => {
@@ -338,13 +340,13 @@ const steps: Array<() => Promise<void>> = [
     // Only this run's reading may be narrated: no reuse of an earlier timeline level, no invented default.
     const today = await capped(timeline('today'), 9000);
     const level = today && 'level' in today && Number.isFinite(Number(today.level)) ? Number(today.level) : null;
-    if (level === null) await say('Here is the Seine in Paris today. Now, watch it rise.', 3500);
+    if (level === null) await say('[playful] Here is the Seine in Paris today. [excited] Now, watch it rise!', 3500);
     else {
       const stale = Boolean(today && 'stale' in today && today.stale);
       el('tour-year')!.textContent = stale ? 'LAST KNOWN READING' : 'TODAY · LIVE';
       showLevel(level); thresholds(level);
       showCount(await capped(countAt(level), 6000) ?? shownCount);
-      await say(stale ? `My last known reading: ${metres(level)} m at Austerlitz. Now, watch it rise.` : `This is the Seine right now: ${metres(level)} m at Austerlitz. Now, watch it rise.`, 3500);
+      await say(stale ? `[curious] My last known reading: ${metres(level)} m at Austerlitz. [excited] Now, watch it rise!` : `[excited] This is the Seine right now: ${metres(level)} m at Austerlitz. Now, watch it rise!`, 3500);
     }
     if (!reducedMotion()) map.easeTo({ bearing: map.getBearing() + 26, duration: 34_000, easing: t => t });
   },
@@ -353,21 +355,21 @@ const steps: Array<() => Promise<void>> = [
     el('tour-year')!.textContent = 'JUNE 2016';
     const level = presetLevel('2016');
     void timeline('2016');
-    await Promise.all([rise(level, 4500), say(`June 2016: ${metres(level)} m. Riverside roads close, boats stop, RER C trains halt.`, 5000)]);
+    await Promise.all([rise(level, 4500), say(`[dramatic] June 2016: ${metres(level)} m. Riverside roads close, boats stop, RER C trains halt!`, 5000)]);
   },
   // 4 · 1955.
   async () => {
     el('tour-year')!.textContent = 'JANUARY 1955';
     const level = presetLevel('1955');
     void timeline('1955');
-    await Promise.all([rise(level, 3500), say(`1955: ${metres(level)} m. Low-lying streets may flood.`, 4000)]);
+    await Promise.all([rise(level, 3500), say(`[serious] 1955: ${metres(level)} m. Now the low-lying streets may flood.`, 4000)]);
   },
   // 5 · 1910, the reference flood: up to the Zouave's shoulders.
   async () => {
     el('tour-year')!.textContent = 'JANUARY 1910';
     const level = presetLevel('1910');
     const pending = timeline('1910');
-    await Promise.all([rise(level, 4500), say(`January 1910: ${metres(level)} m. The reference flood. Up to my shoulders!`, 5500)]);
+    await Promise.all([rise(level, 4500), say(`[dramatic] January 1910: ${metres(level)} m. The reference flood. [laughs] Up to my shoulders!`, 5500)]);
     meterTag(true);
     await capped(pending, 6000);
     await wait(2500);
@@ -377,7 +379,7 @@ const steps: Array<() => Promise<void>> = [
     const memory = storyMemory();
     if (!memory) return;
     void openMemory(memory);
-    await say(`This is not a simulation. ${memory.label}, near here, in January 1910.`, 6000);
+    await say(`[whispers] This is not a simulation. ${memory.label}, near here, in January 1910.`, 6000);
     closeMemory();
   },
   // 6 · And your home?
@@ -385,18 +387,18 @@ const steps: Array<() => Promise<void>> = [
     document.body.classList.add('tour-home');
     const street = config.demoAddress.split(',')[0];
     const flight = aller_a({ adresse: config.demoAddress }).catch(error => { console.warn('Story: address unavailable', error); return null; });
-    await say(`And your home? Let’s fly to ${street}.`, 3200);
+    await say(`[excited] And your home? Allez, let’s fly to ${street}!`, 3200);
     const point = await capped(flight, 6000);
     const where = point ?? state.address;
     exposure = await capped(exposition({ lat: where.lat, lon: where.lon, scenario: state.timeline ? state.scenario : '1910' }) as unknown as Promise<typeof exposure>, 8000).catch(() => null);
     const label = exposure?.hauteur_texte ?? exposure?.label;
-    if (label) await say(`Here, in a 1910-type flood: ${label} of water.`, 3500);
+    if (label) await say(`[serious] Here, in a 1910-type flood: ${label} of water.`, 3500);
   },
   // 7 · Your street, with the water rising (3D street scene from a real photo and its depth map).
   async () => {
     const height = exposure && exposure.status ? sceneHeight(exposure as DepthBand) : 1.5;
     const shown = capped(photo_inondee({ hauteur: height || 1.5 }), 14_000).catch(() => null);
-    await say(`Your street, with ${metres(height || 1.5, 1)} m of water. A simulation, not a forecast.`, 4000);
+    await say(`[dramatic] Your street, with ${metres(height || 1.5, 1)} m of water. [calm] A simulation, not a forecast.`, 4000);
     await shown;
     await wait(7000);
     closeDialogs();
@@ -406,14 +408,14 @@ const steps: Array<() => Promise<void>> = [
     document.body.classList.add('tour-home');
     const advice = await capped(consignes({ rez_de_chaussee: true, cave: true, enfants: true }), 5000).catch(() => null);
     const titles = advice?.consignes.map(item => item.title.replace(/\.$/, '')) ?? [];
-    await say(titles.length ? `Three things to do now. ${titles.join('. ')}.` : 'Prepare now: know your refuge, protect your cellar, follow the authorities.', 6000);
+    await say(titles.length ? `[warm] Three things to do now. ${titles.join('. ')}.` : '[warm] Prepare now: know your refuge, protect your cellar, follow the authorities.', 6000);
   },
   // 9 · End card.
   async () => {
     hud.hidden = true;
     resetMeter();
     endCard.hidden = false;
-    await say('Zouave. See your flood before it comes.', 2500);
+    await say('[proud] Zouave. See your flood before it comes.', 2500);
   },
 ];
 

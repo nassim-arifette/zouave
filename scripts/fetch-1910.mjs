@@ -53,9 +53,20 @@ export function toEntry(place, found, image) {
   };
 }
 
+const UA = { 'User-Agent': 'ZouaveFloodDemo/1.0 (https://github.com/nassim-arifette/zouave; hackathon) scripts/fetch-1910.mjs' };
+/** Wikimedia rate-limits shared addresses (HTTP 429): wait (Retry-After or exponential backoff) and retry. */
+async function polite(url, fetcher, tries = 6) {
+  for (let attempt = 0; ; attempt++) {
+    const response = await fetcher(url, { headers: UA });
+    if (response.status !== 429 && response.status < 500) return response;
+    if (attempt >= tries - 1) return response;
+    const wait = Number(response.headers?.get?.('retry-after')) * 1000 || 2000 * 2 ** attempt;
+    await new Promise(resolve => setTimeout(resolve, Math.min(wait, 30_000)));
+  }
+}
 async function search(query, fetcher) {
   const params = new URLSearchParams({ action: 'query', format: 'json', generator: 'search', gsrsearch: `${query} filetype:bitmap`, gsrnamespace: '6', gsrlimit: '20', prop: 'imageinfo', iiprop: 'url|extmetadata|size|mime', iiurlwidth: '1600', origin: '*' });
-  const response = await fetcher(`${API}?${params}`, { headers: { 'User-Agent': 'Zouave flood-awareness demo (hackathon; scripts/fetch-1910.mjs)' } });
+  const response = await polite(`${API}?${params}`, fetcher);
   if (!response.ok) throw new Error(`Commons HTTP ${response.status}`);
   return (await response.json()).query?.pages ?? {};
 }
@@ -73,7 +84,7 @@ export async function fetchMemories({ fetcher = fetch, out = fileURLToPath(new U
     }
     if (!found) { log(`· ${place.label}: no public-domain 1910 photo found, skipped`); continue; }
     const image = `/memoire/${place.slug}.jpg`;
-    const response = await fetcher(found.info.thumburl, { headers: { 'User-Agent': 'Zouave flood-awareness demo (hackathon)' } });
+    const response = await polite(found.info.thumburl, fetcher);
     if (!response.ok) { log(`· ${place.label}: download failed (${response.status}), skipped`); continue; }
     await writeFile(`${out}${place.slug}.jpg`, Buffer.from(await response.arrayBuffer()));
     used.add(found.page.title);

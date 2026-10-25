@@ -39,15 +39,20 @@ Environment variables (optional gitignored `.env`, see `.env.example`):
 | `ZOUAVE_VOICE` | `live` | `live` or `realtime` |
 | `ZOUAVE_REALTIME_MODEL` | `gpt-realtime-2.1` | Set `gpt-realtime` if the newer model is unavailable |
 | `PORT` | `3000` | Production/Express port; dev proxy targets 3000 |
-| `ZOUAVE_TTS` | on with a key | `off` disables the narrated OpenAI voice (`/api/tts`) |
+| `ELEVENLABS_API_KEY` | unset | The Zouave's narrated voice (English with a French accent), preferred over OpenAI TTS; never sent to the browser |
+| `ZOUAVE_ELEVEN_VOICE` | `K8nDX2f6wjv6bCh5UeZi` | ElevenLabs voice ("Jamie - French Accent & Charismatic", shared library) |
+| `ZOUAVE_ELEVEN_MODEL` | `eleven_multilingual_v2` | ElevenLabs model for conversational answers (fast) |
+| `ZOUAVE_ELEVEN_EXPRESSIVE_MODEL` | `eleven_v3` | ElevenLabs model for the Story narration (audio tags such as `[excited]`) |
+| `ZOUAVE_TTS` | on with a key | `off` disables the narrated voice (`/api/tts`) |
 | `ZOUAVE_TTS_MODEL` | `gpt-4o-mini-tts` | OpenAI text-to-speech model for the Zouave's narration |
 | `ZOUAVE_TTS_VOICE` | `marin` | OpenAI voice name (same as the Realtime agent) |
 | `ZOUAVE_HTTPS` / `HTTPS_PORT` | off / `3443` | Self-signed HTTPS listener for phones (QR code) |
 | `ZOUAVE_PUBLIC_URL` | LAN address | URL encoded in the "try it on your phone" QR code |
 
 Without a key, every map, address, exposure and safety feature works via the four
-demo buttons, text input and shortcuts **1–4**. With a key, the Zouave's answers and the Story narration use OpenAI
-text-to-speech, cached in `.cache/tts/` (a line spoken once replays offline). Without a key he still talks: the
+demo buttons, text input and shortcuts **1–4**. With `ELEVENLABS_API_KEY` (preferred) or `OPENAI_API_KEY`, the
+Zouave's answers and the Story narration use a narrated voice — English with a French accent on ElevenLabs, acted
+with v3 audio tags in the Story — cached in `.cache/tts/` (a line spoken once replays offline). Without a key he still talks: the
 browser reads his answers aloud (Web Speech synthesis, English, mutable with the speaker button) and, where the
 browser supports speech recognition, the mic turns a spoken sentence into a text intent.
 Press **H** (or the *Immersion* button) to hide the panels and let the camera drift over the city. The demo address is configured in

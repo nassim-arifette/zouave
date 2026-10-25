@@ -22,19 +22,22 @@ function zouaveVoice() {
   return voices.find(voice => /^en-GB/i.test(voice.lang) && /daniel|arthur|george|male/i.test(voice.name)) ?? voices.find(voice => /^en-GB/i.test(voice.lang)) ?? voices.find(voice => /^en-US/i.test(voice.lang)) ?? voices[0];
 }
 
-/** With OPENAI_API_KEY on the server, the Zouave speaks with OpenAI text-to-speech (cached server-side); otherwise the browser voice. */
+/** With ELEVENLABS_API_KEY or OPENAI_API_KEY on the server, the Zouave speaks with a narrated voice (cached server-side); otherwise the browser voice. */
 let serverVoice = false;
 export function useServerVoice(on: boolean) { serverVoice = on; }
 let playing: HTMLAudioElement | undefined, fetching: AbortController | undefined, serverBusy = false, paused = false;
 const clean = (text: string) => text.replace(/https?:\/\/\S+/g, '').replace(/[↗↑·]/g, ' ').replace(/\s+/g, ' ').trim();
+/** ElevenLabs v3 audio tags ([excited], [whispers]…) steer the expressive voice; captions and the browser voice never show or read them. */
+export const stripTags = (text: string) => text.replace(/\[[a-z][a-z '-]{0,30}\]\s*/gi, '').replace(/\s+/g, ' ').trim();
 
-/** Reads `text` aloud with the mouth animation synced to the voice; returns false when it cannot speak. */
-export function speak(text: string) {
-  if (!speakEnabled() || !text.trim()) return false;
+/** Reads `text` aloud with the mouth animation synced to the voice; returns false when it cannot speak.
+ * `expressive` asks the server for the acted voice (ElevenLabs v3, audio tags kept). */
+export function speak(text: string, options: { expressive?: boolean } = {}) {
+  if (!speakEnabled() || !stripTags(text)) return false;
   stopSpeaking();
   paused = false;
-  if (serverVoice) { void speakWithServer(clean(text)); return true; }
-  return speakWithBrowser(clean(text));
+  if (serverVoice) { void speakWithServer(clean(text), Boolean(options.expressive)); return true; }
+  return speakWithBrowser(stripTags(clean(text)));
 }
 function speakWithBrowser(text: string) {
   if (!synth) return false;
@@ -46,11 +49,11 @@ function speakWithBrowser(text: string) {
   synth.speak(utterance);
   return true;
 }
-async function speakWithServer(text: string) {
+async function speakWithServer(text: string, expressive = false) {
   const controller = fetching = new AbortController();
   serverBusy = true;
   try {
-    const response = await fetch('/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }), signal: AbortSignal.any([controller.signal, AbortSignal.timeout(6000)]) });
+    const response = await fetch('/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, expressive }), signal: AbortSignal.any([controller.signal, AbortSignal.timeout(expressive ? 9000 : 6000)]) });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const url = URL.createObjectURL(await response.blob());
     if (controller.signal.aborted) { URL.revokeObjectURL(url); return; }
@@ -66,7 +69,7 @@ async function speakWithServer(text: string) {
     // One failure (network, quota) switches the session to the browser voice: no more waits on stage.
     if (browserVoice.canSpeak) serverVoice = false;
     console.warn('Narrated voice unavailable, using the browser voice:', error);
-    if (speakWithBrowser(text) && paused) synth?.pause();
+    if (speakWithBrowser(stripTags(text)) && paused) synth?.pause();
   }
 }
 /** True while the Zouave is speaking or about to (narrated audio still loading counts). */
