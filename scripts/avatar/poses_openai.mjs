@@ -13,18 +13,24 @@ import sharp from 'sharp';
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const POSES = {
   facing: 'His head and gaze now turn to face the viewer directly, attentive and friendly, as if listening to a question.',
-  point: 'He raises his right arm and points with his index finger up and towards the viewer\'s left, as if showing something on a big map beside him; head turned in the same direction.',
   wave: 'He raises one open hand at shoulder height in a warm greeting, a slight welcoming smile.',
   worried: 'Worried expression, eyebrows raised, looking down as if flood water were rising around him, one hand pressed to his chest.',
   thinking: 'Thoughtful: one hand on his chin, eyes looking up and to the side, as if checking his memory.',
   reassure: 'A calm, reassuring smile, one open palm turned towards the viewer as if saying "no panic, here is what to do".',
   soaked: 'The same statue drenched after a flood: wet darker stone, water droplets running down his face, beard and robe, a resigned but good-humoured look.',
+  point: 'He raises his right arm and points with his index finger up and towards the viewer\'s left, as if showing something on a big map beside him. His head, shoulders and body stay exactly where they are in the frame; only the arm moves, and the hand stays inside the frame.',
+  present: 'He opens one arm to the side, palm turned up, presenting something beside him with a welcoming look.',
+  proud: 'Proud: chin raised, one hand placed on his heart, a confident dignified smile.',
+  laugh: 'A big hearty laugh, eyes crinkled almost shut, mouth open in genuine joy.',
+  surprised: 'Surprised: eyebrows raised high, eyes wide, mouth open in astonishment.',
+  listen: 'He cups one hand behind his ear and leans his head slightly, listening carefully.',
+  salute: 'A military salute: his right hand raised flat to his temple, a proud and respectful look.',
 };
 const BASE = 'Edit this image of a stone statue bust of a 19th-century French Zouave soldier. Keep the same statue: identical face, beard, headgear, robe, carved details, stone material and colours, same lighting, same bust framing, size and position in the frame, cut off at the same height. Transparent background, no pedestal, no added text. New pose: ';
 
 export function editForm({ image, pose, model, quality }) {
   const form = new FormData();
-  for (const [key, value] of Object.entries({ model, prompt: BASE + POSES[pose], quality, size: '1024x1024', n: 1, background: 'transparent', input_fidelity: 'high', output_format: 'png' })) form.append(key, String(value));
+  for (const [key, value] of Object.entries({ model, prompt: BASE + POSES[pose], quality, size: '1024x1024', n: 1, background: 'transparent', output_format: 'png' })) form.append(key, String(value));
   form.append('image[]', new Blob([image], { type: 'image/png' }), 'avatar.png');
   return form;
 }

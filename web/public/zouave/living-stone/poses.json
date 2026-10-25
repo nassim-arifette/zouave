@@ -5,8 +5,15 @@
     "worried": "poses/worried@2x.webp",
     "reassure": "poses/reassure@2x.webp",
     "soaked": "poses/soaked@2x.webp",
-    "wave": "poses/wave@2x.webp"
+    "wave": "poses/wave@2x.webp",
+    "surprised": "poses/surprised@2x.webp",
+    "laugh": "poses/laugh@2x.webp",
+    "point": "poses/point@2x.webp",
+    "present": "poses/present@2x.webp",
+    "proud": "poses/proud@2x.webp",
+    "listen": "poses/listen@2x.webp",
+    "salute": "poses/salute@2x.webp"
   },
   "model": "gpt-image-2.5-sunburst",
-  "generated": "2026-10-25T22:06:52.988Z"
+  "generated": "2026-10-25T22:13:51.944Z"
 }
