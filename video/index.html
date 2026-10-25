@@ -47,12 +47,26 @@ html, body { width:1920px; height:1080px; overflow:hidden; background:var(--grou
 .claim { font-family:var(--font-display); font-size:70px; margin-top:12px; }
 .claim em { color:var(--water); }
 .meta { font-size:28px; color:#9fb9b5; margin-top:40px; line-height:1.6; }
-.sub { position:absolute; left:50%; bottom:64px; transform:translateX(-50%); max-width:1500px; text-align:center; font-size:40px; line-height:1.35; font-weight:600; color:#fff; background:rgba(4,10,15,.72); border-radius:14px; padding:12px 26px; z-index:50; text-shadow:0 2px 8px rgba(0,0,0,.6); }
+.sub { position:absolute; left:calc(50% + 150px); bottom:64px; transform:translateX(-50%); max-width:1300px; text-align:center; font-size:40px; line-height:1.35; font-weight:600; color:#fff; background:rgba(4,10,15,.72); border-radius:14px; padding:12px 26px; z-index:50; text-shadow:0 2px 8px rgba(0,0,0,.6); }
+.zbig { position:relative; width:420px; height:420px; flex:none; }
+.zbig img, .pip img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
+.zbig img { filter: drop-shadow(0 30px 40px rgba(0,0,0,.6)); }
+.end .zbig { width:340px; height:340px; }
+.zt, .zp { opacity:0; }
+#presenter { position:absolute; left:14px; bottom:0; width:330px; height:330px; z-index:44; }
+#presenter::before { content:''; position:absolute; inset:22% 12% 0; border-radius:50%; background:radial-gradient(circle at 50% 55%, rgba(164,214,188,.38), rgba(143,211,226,.12) 45%, transparent 70%); filter:blur(8px); }
+.pip { position:relative; width:100%; height:100%; -webkit-mask-image:linear-gradient(#000 82%, transparent); mask-image:linear-gradient(#000 82%, transparent); }
+.pip img { filter: drop-shadow(0 16px 24px rgba(0,0,0,.6)); }
+.value-stack { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:34px; }
+.cards { display:flex; gap:34px; }
+.vcard { width:470px; padding:34px 34px 38px; border-radius:24px; background:rgba(8,19,27,.84); border:2px solid rgba(164,214,188,.4); box-shadow:0 30px 70px rgba(0,0,0,.5); opacity:0; }
+.vcard b { display:block; font-family:var(--font-display); font-weight:400; font-size:62px; color:var(--water); margin-bottom:12px; }
+.vcard span { font-size:32px; line-height:1.35; color:#dfeee6; }
 .brand { position:absolute; right:56px; top:48px; z-index:40; font-size:24px; letter-spacing:8px; font-weight:700; color:rgba(238,244,240,.75); }
 </style>
 </head>
 <body>
-<div id="root" data-composition-id="main" data-start="0" data-duration="101.62" data-width="1920" data-height="1080">
+<div id="root" data-composition-id="main" data-start="0" data-duration="113.30" data-width="1920" data-height="1080">
 <section id="hook" class="clip scene" data-start="0.00" data-duration="18.75" data-track-index="1" style="z-index:1"><img class="bg dim" src="assets/img/g-overview.jpg" alt="">
 <div class="veil"></div><p class="credit on">Google Maps · Photorealistic 3D Tiles · Map data ©Google · Data SIO, NOAA, U.S. Navy, NGA, GEBCO · IBCAO · Landsat / Copernicus</p>
 <div class="hook-stack">
@@ -64,7 +78,7 @@ html, body { width:1920px; height:1080px; overflow:hidden; background:var(--grou
 </div></section>
 <section id="intro" class="clip scene" data-start="18.35" data-duration="18.09" data-track-index="2" style="z-index:2"><img class="bg" src="assets/img/g-alma.jpg" alt="">
 <div class="veil soft"></div><p class="credit on">Google Maps · Photorealistic 3D Tiles · Map data ©Google · Data SIO, NOAA, U.S. Navy, NGA, GEBCO · IBCAO · Landsat / Copernicus</p>
-<div class="intro-card"><img src="assets/img/zouave.png" alt=""><div><p class="eyebrow">MEET</p><h1>Zouave</h1><p>The stone soldier Parisians read the floods on.<br><b>Now he talks.</b></p><p class="tag">Any address · official data only</p></div></div></section>
+<div class="intro-card"><div class="zbig" id="zi"><div class="zg" id="zi-g"><img src="assets/img/z-base.webp" alt=""><img class="zt" id="zi-talk" src="assets/img/z-talk.webp" alt=""></div><img class="zp" id="zi-facing" src="assets/img/z-facing.webp" alt=""><img class="zp" id="zi-wave" src="assets/img/z-wave.webp" alt=""><img class="zp" id="zi-worried" src="assets/img/z-worried.webp" alt=""><img class="zp" id="zi-thinking" src="assets/img/z-thinking.webp" alt=""><img class="zp" id="zi-reassure" src="assets/img/z-reassure.webp" alt=""><img class="zp" id="zi-soaked" src="assets/img/z-soaked.webp" alt=""></div><div><p class="eyebrow">MEET</p><h1>Zouave</h1><p>The stone soldier Parisians read the floods on.<br><b>Now he talks.</b></p><p class="tag">Any address · official data only</p></div></div></section>
 <section id="rise" class="clip scene" data-start="36.04" data-duration="15.77" data-track-index="3" style="z-index:3"><img class="bg" id="r-today" src="assets/shots/03-today.jpg" alt="">
 <img class="bg" id="r-2016" src="assets/shots/04-2016.jpg" alt="">
 <img class="bg" id="r-1910" src="assets/shots/05-1910.jpg" alt="">
@@ -78,7 +92,14 @@ html, body { width:1920px; height:1080px; overflow:hidden; background:var(--grou
 <section id="agent" class="clip scene" data-start="66.05" data-duration="12.97" data-track-index="6" style="z-index:6"><img class="bg" id="g-trace" src="assets/shots/10-trace.jpg" alt="">
 <img class="bg" id="g-advice" src="assets/shots/08-advice.jpg" alt="">
 <div class="chip" id="c-tools">Every answer shows its tool calls</div><div class="chip warn" id="c-never">No number without a tool result</div></section>
-<section id="tech" class="clip scene" data-start="78.62" data-duration="13.21" data-track-index="7" style="z-index:7"><img class="bg" src="assets/shots/11-hood.jpg" alt=""><div class="veil"></div>
+<section id="value" class="clip scene" data-start="78.62" data-duration="12.08" data-track-index="6" style="z-index:6"><img class="bg dim" src="assets/img/street-1.5.jpg" alt=""><div class="veil"></div>
+<div class="value-stack"><p class="eyebrow" id="v-eye">WHY IT MATTERS</p>
+<div class="cards">
+  <div class="vcard" id="v1"><b>Your address</b><span>Your flood in seconds, from the official flood plan</span></div>
+  <div class="vcard" id="v2"><b>See it</b><span>Your own street under water, so the risk feels real</span></div>
+  <div class="vcard" id="v3"><b>Act</b><span>The official right moves for your home and family</span></div>
+</div></div></section>
+<section id="tech" class="clip scene" data-start="90.31" data-duration="13.21" data-track-index="7" style="z-index:7"><img class="bg" src="assets/shots/11-hood.jpg" alt=""><div class="veil"></div>
 <div class="stack">
   <div class="pill" id="k1"><b>OpenAI Realtime</b> voice agent · function calling</div>
   <div class="pill" id="k2"><b>French open data</b> · PPRI flood plan · IGN buildings · Hub’Eau live gauge</div>
@@ -86,13 +107,14 @@ html, body { width:1920px; height:1080px; overflow:hidden; background:var(--grou
   <div class="pill" id="k4"><b>ElevenLabs</b> · the Zouave’s French accent</div>
   <div class="pill" id="k5"><b>OpenAI image edits</b> · your street under water, from a real photo</div>
 </div></section>
-<section id="close" class="clip scene" data-start="91.44" data-duration="10.18" data-track-index="8" style="z-index:8"><div class="end">
-  <img src="assets/img/zouave.png" alt="" id="z-end">
+<section id="close" class="clip scene" data-start="103.12" data-duration="10.18" data-track-index="8" style="z-index:8"><div class="end">
+  <div class="zbig end-z" id="z-end"><div class="zg" id="z-end-g"><img src="assets/img/z-base.webp" alt=""><img class="zt" id="z-end-talk" src="assets/img/z-talk.webp" alt=""></div><img class="zp" id="z-end-facing" src="assets/img/z-facing.webp" alt=""><img class="zp" id="z-end-wave" src="assets/img/z-wave.webp" alt=""><img class="zp" id="z-end-worried" src="assets/img/z-worried.webp" alt=""><img class="zp" id="z-end-thinking" src="assets/img/z-thinking.webp" alt=""><img class="zp" id="z-end-reassure" src="assets/img/z-reassure.webp" alt=""><img class="zp" id="z-end-soaked" src="assets/img/z-soaked.webp" alt=""></div>
   <h1 id="z-name">Zouave</h1>
   <p class="claim" id="z-claim">See your flood <em>before it comes.</em></p>
   <p class="meta" id="z-meta">Paris DevDay Community Hackathon · Impact → Climate action<br>github.com/nassim-arifette/zouave</p>
 </div></section>
-<p id="brand" class="clip brand" data-start="18.35" data-duration="73.09" data-track-index="30">ZOUAVE</p>
+<div id="presenter" class="clip" data-start="0.50" data-duration="102.92" data-track-index="29"><div class="pip" id="zp"><div class="zg" id="zp-g"><img src="assets/img/z-base.webp" alt=""><img class="zt" id="zp-talk" src="assets/img/z-talk.webp" alt=""></div><img class="zp" id="zp-facing" src="assets/img/z-facing.webp" alt=""><img class="zp" id="zp-wave" src="assets/img/z-wave.webp" alt=""><img class="zp" id="zp-worried" src="assets/img/z-worried.webp" alt=""><img class="zp" id="zp-thinking" src="assets/img/z-thinking.webp" alt=""><img class="zp" id="zp-reassure" src="assets/img/z-reassure.webp" alt=""><img class="zp" id="zp-soaked" src="assets/img/z-soaked.webp" alt=""></div></div>
+<p id="brand" class="clip brand" data-start="18.35" data-duration="84.77" data-track-index="30">ZOUAVE</p>
 <p id="sub-01-hook-0" class="clip sub" data-start="0.92" data-duration="6.15" data-track-index="21">January 1910. The Seine rises to eight point six two metres in Paris.</p>
 <p id="sub-01-hook-1" class="clip sub" data-start="7.76" data-duration="1.17" data-track-index="21">If it happened today:</p>
 <p id="sub-01-hook-2" class="clip sub" data-start="9.26" data-duration="1.95" data-track-index="21">up to five million people hit.</p>
@@ -117,16 +139,21 @@ html, body { width:1920px; height:1080px; overflow:hidden; background:var(--grou
 <p id="sub-06-agent-1" class="clip sub" data-start="69.05" data-duration="2.39" data-track-index="21">Every answer shows the tools I called:</p>
 <p id="sub-06-agent-2" class="clip sub" data-start="71.75" data-duration="2.83" data-track-index="21">the live gauge, the official flood map,</p>
 <p id="sub-06-agent-3" class="clip sub" data-start="74.79" data-duration="4.05" data-track-index="21">the safety advice. I never invent a number.</p>
-<p id="sub-07-tech-0" class="clip sub" data-start="79.26" data-duration="4.61" data-track-index="21">Under the hood: an OpenAI Realtime voice agent with function calling,</p>
-<p id="sub-07-tech-1" class="clip sub" data-start="84.22" data-duration="3.13" data-track-index="21">French open data, a Three.js city,</p>
-<p id="sub-07-tech-2" class="clip sub" data-start="87.56" data-duration="2.51" data-track-index="21">and my French accent by ElevenLabs.</p>
+<p id="sub-065-value-0" class="clip sub" data-start="79.28" data-duration="1.13" data-track-index="21">Why does it matter?</p>
+<p id="sub-065-value-1" class="clip sub" data-start="80.82" data-duration="2.55" data-track-index="21">Nobody prepares for a risk they cannot picture.</p>
+<p id="sub-065-value-2" class="clip sub" data-start="84.02" data-duration="4.27" data-track-index="21">With Zouave, every Parisian sees their own flood in seconds,</p>
+<p id="sub-065-value-3" class="clip sub" data-start="88.58" data-duration="2.01" data-track-index="21">and knows exactly what to do.</p>
+<p id="sub-07-tech-0" class="clip sub" data-start="90.94" data-duration="4.61" data-track-index="21">Under the hood: an OpenAI Realtime voice agent with function calling,</p>
+<p id="sub-07-tech-1" class="clip sub" data-start="95.90" data-duration="3.13" data-track-index="21">French open data, a Three.js city,</p>
+<p id="sub-07-tech-2" class="clip sub" data-start="99.24" data-duration="2.51" data-track-index="21">and my French accent by ElevenLabs.</p>
 <audio id="vo-01-hook" class="clip" src="assets/vo/01-hook.mp3" data-start="0.80" data-duration="17.63" data-track-index="20"></audio>
 <audio id="vo-02-intro" class="clip" src="assets/vo/02-intro.mp3" data-start="18.88" data-duration="17.24" data-track-index="20"></audio>
 <audio id="vo-03-rise" class="clip" src="assets/vo/03-rise.mp3" data-start="36.57" data-duration="14.92" data-track-index="20"></audio>
 <audio id="vo-04-home" class="clip" src="assets/vo/04-home.mp3" data-start="51.94" data-duration="11.00" data-track-index="20"></audio>
 <audio id="vo-06-agent" class="clip" src="assets/vo/06-agent.mp3" data-start="66.59" data-duration="12.12" data-track-index="20"></audio>
-<audio id="vo-07-tech" class="clip" src="assets/vo/07-tech.mp3" data-start="79.16" data-duration="10.76" data-track-index="20"></audio>
-<audio id="vo-08-close" class="clip" src="assets/vo/08-close.mp3" data-start="91.97" data-duration="7.00" data-track-index="20"></audio>
+<audio id="vo-065-value" class="clip" src="assets/vo/065-value.mp3" data-start="79.16" data-duration="11.23" data-track-index="20"></audio>
+<audio id="vo-07-tech" class="clip" src="assets/vo/07-tech.mp3" data-start="90.84" data-duration="10.76" data-track-index="20"></audio>
+<audio id="vo-08-close" class="clip" src="assets/vo/08-close.mp3" data-start="103.65" data-duration="7.00" data-track-index="20"></audio>
 </div>
 <script>
 window.__timelines = window.__timelines || {};
@@ -144,6 +171,67 @@ tl.fromTo("#intro", {opacity: 0}, {opacity: 1, duration: 0.45, ease: "power2.out
 tl.fromTo("#intro .bg", {scale: 1.0, xPercent: 0, yPercent: 0, transformOrigin: "60% 55%"}, {scale: 1.14, xPercent: -3, yPercent: 2, duration: 18.09, ease: "none"}, 18.35);
 tl.fromTo("#intro .intro-card", {opacity: 0, y: 40, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.9, ease: "power3.out"}, 19.08);
 tl.to("#intro .intro-card", {opacity: 0, duration: 0.4, ease: "power2.in"}, 30.26);
+tl.set("#zi-talk", {opacity: 1}, 19.08); tl.set("#zi-talk", {opacity: 0}, 19.19);
+tl.set("#zi-talk", {opacity: 1}, 19.28); tl.set("#zi-talk", {opacity: 0}, 19.39);
+tl.set("#zi-talk", {opacity: 1}, 19.48); tl.set("#zi-talk", {opacity: 0}, 19.59);
+tl.set("#zi-talk", {opacity: 1}, 20.02); tl.set("#zi-talk", {opacity: 0}, 20.13);
+tl.set("#zi-talk", {opacity: 1}, 20.30); tl.set("#zi-talk", {opacity: 0}, 20.38);
+tl.set("#zi-talk", {opacity: 1}, 20.44); tl.set("#zi-talk", {opacity: 0}, 20.55);
+tl.set("#zi-talk", {opacity: 1}, 20.64); tl.set("#zi-talk", {opacity: 0}, 20.75);
+tl.set("#zi-talk", {opacity: 1}, 21.16); tl.set("#zi-talk", {opacity: 0}, 21.27);
+tl.set("#zi-talk", {opacity: 1}, 21.50); tl.set("#zi-talk", {opacity: 0}, 21.61);
+tl.set("#zi-talk", {opacity: 1}, 21.84); tl.set("#zi-talk", {opacity: 0}, 21.95);
+tl.set("#zi-talk", {opacity: 1}, 22.04); tl.set("#zi-talk", {opacity: 0}, 22.15);
+tl.set("#zi-talk", {opacity: 1}, 22.42); tl.set("#zi-talk", {opacity: 0}, 22.52);
+tl.set("#zi-talk", {opacity: 1}, 22.58); tl.set("#zi-talk", {opacity: 0}, 22.64);
+tl.set("#zi-talk", {opacity: 1}, 22.76); tl.set("#zi-talk", {opacity: 0}, 22.87);
+tl.set("#zi-talk", {opacity: 1}, 22.96); tl.set("#zi-talk", {opacity: 0}, 23.02);
+tl.set("#zi-talk", {opacity: 1}, 23.10); tl.set("#zi-talk", {opacity: 0}, 23.21);
+tl.set("#zi-talk", {opacity: 1}, 23.30); tl.set("#zi-talk", {opacity: 0}, 23.41);
+tl.set("#zi-talk", {opacity: 1}, 24.16); tl.set("#zi-talk", {opacity: 0}, 24.26);
+tl.set("#zi-talk", {opacity: 1}, 24.36); tl.set("#zi-talk", {opacity: 0}, 24.47);
+tl.set("#zi-talk", {opacity: 1}, 24.56); tl.set("#zi-talk", {opacity: 0}, 24.67);
+tl.set("#zi-talk", {opacity: 1}, 24.76); tl.set("#zi-talk", {opacity: 0}, 24.87);
+tl.set("#zi-talk", {opacity: 1}, 24.96); tl.set("#zi-talk", {opacity: 0}, 25.07);
+tl.set("#zi-talk", {opacity: 1}, 25.50); tl.set("#zi-talk", {opacity: 0}, 25.61);
+tl.set("#zi-talk", {opacity: 1}, 25.70); tl.set("#zi-talk", {opacity: 0}, 25.81);
+tl.set("#zi-talk", {opacity: 1}, 25.90); tl.set("#zi-talk", {opacity: 0}, 26.01);
+tl.set("#zi-talk", {opacity: 1}, 26.08); tl.set("#zi-talk", {opacity: 0}, 26.19);
+tl.set("#zi-talk", {opacity: 1}, 26.28); tl.set("#zi-talk", {opacity: 0}, 26.39);
+tl.set("#zi-talk", {opacity: 1}, 26.50); tl.set("#zi-talk", {opacity: 0}, 26.60);
+tl.set("#zi-talk", {opacity: 1}, 26.66); tl.set("#zi-talk", {opacity: 0}, 26.77);
+tl.set("#zi-talk", {opacity: 1}, 26.86); tl.set("#zi-talk", {opacity: 0}, 26.92);
+tl.set("#zi-talk", {opacity: 1}, 26.96); tl.set("#zi-talk", {opacity: 0}, 27.06);
+tl.set("#zi-talk", {opacity: 1}, 27.10); tl.set("#zi-talk", {opacity: 0}, 27.21);
+tl.set("#zi-talk", {opacity: 1}, 27.30); tl.set("#zi-talk", {opacity: 0}, 27.41);
+tl.set("#zi-talk", {opacity: 1}, 27.50); tl.set("#zi-talk", {opacity: 0}, 27.56);
+tl.set("#zi-talk", {opacity: 1}, 28.40); tl.set("#zi-talk", {opacity: 0}, 28.51);
+tl.set("#zi-talk", {opacity: 1}, 28.60); tl.set("#zi-talk", {opacity: 0}, 28.66);
+tl.set("#zi-talk", {opacity: 1}, 29.30); tl.set("#zi-talk", {opacity: 0}, 29.41);
+tl.set("#zi-talk", {opacity: 1}, 29.50); tl.set("#zi-talk", {opacity: 0}, 29.61);
+tl.set("#zi-talk", {opacity: 1}, 30.46); tl.set("#zi-talk", {opacity: 0}, 30.57);
+tl.set("#zi-talk", {opacity: 1}, 30.70); tl.set("#zi-talk", {opacity: 0}, 30.78);
+tl.set("#zi-talk", {opacity: 1}, 30.84); tl.set("#zi-talk", {opacity: 0}, 30.95);
+tl.set("#zi-talk", {opacity: 1}, 31.04); tl.set("#zi-talk", {opacity: 0}, 31.15);
+tl.set("#zi-talk", {opacity: 1}, 31.22); tl.set("#zi-talk", {opacity: 0}, 31.33);
+tl.set("#zi-talk", {opacity: 1}, 31.46); tl.set("#zi-talk", {opacity: 0}, 31.57);
+tl.set("#zi-talk", {opacity: 1}, 31.66); tl.set("#zi-talk", {opacity: 0}, 31.77);
+tl.set("#zi-talk", {opacity: 1}, 32.28); tl.set("#zi-talk", {opacity: 0}, 32.38);
+tl.set("#zi-talk", {opacity: 1}, 32.50); tl.set("#zi-talk", {opacity: 0}, 32.58);
+tl.set("#zi-talk", {opacity: 1}, 32.64); tl.set("#zi-talk", {opacity: 0}, 32.75);
+tl.set("#zi-talk", {opacity: 1}, 32.90); tl.set("#zi-talk", {opacity: 0}, 33.01);
+tl.set("#zi-talk", {opacity: 1}, 33.08); tl.set("#zi-talk", {opacity: 0}, 33.18);
+tl.set("#zi-talk", {opacity: 1}, 33.30); tl.set("#zi-talk", {opacity: 0}, 33.41);
+tl.set("#zi-talk", {opacity: 1}, 33.50); tl.set("#zi-talk", {opacity: 0}, 33.61);
+tl.set("#zi-talk", {opacity: 1}, 34.36); tl.set("#zi-talk", {opacity: 0}, 34.47);
+tl.set("#zi-talk", {opacity: 1}, 34.54); tl.set("#zi-talk", {opacity: 0}, 34.65);
+tl.set("#zi-talk", {opacity: 1}, 34.74); tl.set("#zi-talk", {opacity: 0}, 34.85);
+tl.set("#zi-talk", {opacity: 1}, 35.08); tl.set("#zi-talk", {opacity: 0}, 35.19);
+tl.set("#zi-talk", {opacity: 1}, 35.28); tl.set("#zi-talk", {opacity: 0}, 35.39);
+tl.set("#zi-talk", {opacity: 1}, 35.76); tl.set("#zi-talk", {opacity: 0}, 35.87);
+tl.set("#zi-talk", {opacity: 1}, 35.96); tl.set("#zi-talk", {opacity: 0}, 36.04);
+tl.to("#zi-g", {opacity: 0, duration: 0.25}, 18.93); tl.fromTo("#zi-wave", {opacity: 0, scale: 0.96}, {opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)"}, 18.93);
+tl.to("#zi-wave", {opacity: 0, duration: 0.3}, 21.53); tl.to("#zi-g", {opacity: 1, duration: 0.3}, 21.53);
 tl.fromTo("#rise", {opacity: 0}, {opacity: 1, duration: 0.45, ease: "power2.out"}, 36.04);
 tl.fromTo("#r-today", {opacity: 0}, {opacity: 1, duration: 0.5}, 36.04);
 tl.fromTo("#r-today", {scale: 1.0, xPercent: 0, yPercent: 0, transformOrigin: "50% 50%"}, {scale: 1.06, xPercent: 0, yPercent: 0, duration: 6.01, ease: "none"}, 36.04);
@@ -180,18 +268,340 @@ tl.fromTo("#g-advice", {scale: 1.0, xPercent: 0, yPercent: 0, transformOrigin: "
 tl.fromTo("#c-tools", {opacity: 0, y: 40, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "power3.out"}, 69.05);
 tl.to("#c-tools", {opacity: 0, duration: 0.4, ease: "power2.in"}, 74.65);
 tl.fromTo("#c-never", {opacity: 0, y: 40, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "power3.out"}, 77.05);
-tl.fromTo("#tech", {opacity: 0}, {opacity: 1, duration: 0.45, ease: "power2.out"}, 78.62);
-tl.fromTo("#tech .bg", {scale: 1.04, xPercent: 0, yPercent: 0, transformOrigin: "50% 50%"}, {scale: 1.0, xPercent: 0, yPercent: 0, duration: 13.21, ease: "none"}, 78.62);
-tl.fromTo("#k1", {opacity: 0, y: 24, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out"}, 80.58);
-tl.fromTo("#k2", {opacity: 0, y: 24, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out"}, 84.22);
-tl.fromTo("#k3", {opacity: 0, y: 24, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out"}, 86.02);
-tl.fromTo("#k4", {opacity: 0, y: 24, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out"}, 89.16);
-tl.fromTo("#k5", {opacity: 0, y: 24, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out"}, 89.86);
-tl.fromTo("#close", {opacity: 0}, {opacity: 1, duration: 0.45, ease: "power2.out"}, 91.44);
-tl.fromTo("#z-end", {opacity: 0, y: 60, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.9, ease: "power3.out"}, 91.64);
-tl.fromTo("#z-name", {opacity: 0, y: 40, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "power3.out"}, 92.07);
-tl.fromTo("#z-claim", {opacity: 0, y: 40, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.8, ease: "power3.out"}, 94.13);
-tl.fromTo("#z-meta", {opacity: 0, y: 10, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.8, ease: "power3.out"}, 95.97);
+tl.fromTo("#value", {opacity: 0}, {opacity: 1, duration: 0.45, ease: "power2.out"}, 78.62);
+tl.fromTo("#value .bg", {scale: 1.04, xPercent: 0, yPercent: 0, transformOrigin: "50% 50%"}, {scale: 1.12, xPercent: 0, yPercent: 0, duration: 12.08, ease: "none"}, 78.62);
+tl.fromTo("#v-eye", {opacity: 0, y: 40, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "power3.out"}, 79.26);
+tl.fromTo("#v1", {opacity: 0, y: 30, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "power3.out"}, 85.22);
+tl.fromTo("#v2", {opacity: 0, y: 30, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "power3.out"}, 86.80);
+tl.fromTo("#v3", {opacity: 0, y: 30, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "power3.out"}, 88.82);
+tl.fromTo("#tech", {opacity: 0}, {opacity: 1, duration: 0.45, ease: "power2.out"}, 90.31);
+tl.fromTo("#tech .bg", {scale: 1.04, xPercent: 0, yPercent: 0, transformOrigin: "50% 50%"}, {scale: 1.0, xPercent: 0, yPercent: 0, duration: 13.21, ease: "none"}, 90.31);
+tl.fromTo("#k1", {opacity: 0, y: 24, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out"}, 92.26);
+tl.fromTo("#k2", {opacity: 0, y: 24, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out"}, 95.90);
+tl.fromTo("#k3", {opacity: 0, y: 24, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out"}, 97.70);
+tl.fromTo("#k4", {opacity: 0, y: 24, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out"}, 100.84);
+tl.fromTo("#k5", {opacity: 0, y: 24, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out"}, 101.54);
+tl.fromTo("#close", {opacity: 0}, {opacity: 1, duration: 0.45, ease: "power2.out"}, 103.12);
+tl.fromTo("#z-end", {opacity: 0, y: 60, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.9, ease: "power3.out"}, 103.32);
+tl.fromTo("#z-name", {opacity: 0, y: 40, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "power3.out"}, 103.75);
+tl.fromTo("#z-claim", {opacity: 0, y: 40, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.8, ease: "power3.out"}, 105.81);
+tl.fromTo("#z-meta", {opacity: 0, y: 10, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.8, ease: "power3.out"}, 107.65);
+tl.set("#z-end-talk", {opacity: 1}, 103.85); tl.set("#z-end-talk", {opacity: 0}, 103.96);
+tl.set("#z-end-talk", {opacity: 1}, 104.05); tl.set("#z-end-talk", {opacity: 0}, 104.16);
+tl.set("#z-end-talk", {opacity: 1}, 104.25); tl.set("#z-end-talk", {opacity: 0}, 104.36);
+tl.set("#z-end-talk", {opacity: 1}, 105.81); tl.set("#z-end-talk", {opacity: 0}, 105.92);
+tl.set("#z-end-talk", {opacity: 1}, 106.03); tl.set("#z-end-talk", {opacity: 0}, 106.14);
+tl.set("#z-end-talk", {opacity: 1}, 106.29); tl.set("#z-end-talk", {opacity: 0}, 106.40);
+tl.set("#z-end-talk", {opacity: 1}, 106.49); tl.set("#z-end-talk", {opacity: 0}, 106.60);
+tl.set("#z-end-talk", {opacity: 1}, 107.83); tl.set("#z-end-talk", {opacity: 0}, 107.94);
+tl.set("#z-end-talk", {opacity: 1}, 108.03); tl.set("#z-end-talk", {opacity: 0}, 108.14);
+tl.set("#z-end-talk", {opacity: 1}, 108.19); tl.set("#z-end-talk", {opacity: 0}, 108.30);
+tl.set("#z-end-talk", {opacity: 1}, 108.41); tl.set("#z-end-talk", {opacity: 0}, 108.52);
+tl.set("#z-end-talk", {opacity: 1}, 108.61); tl.set("#z-end-talk", {opacity: 0}, 108.72);
+tl.set("#z-end-talk", {opacity: 1}, 108.81); tl.set("#z-end-talk", {opacity: 0}, 108.87);
+tl.set("#z-end-talk", {opacity: 1}, 110.03); tl.set("#z-end-talk", {opacity: 0}, 110.11);
+tl.set("#z-end-talk", {opacity: 1}, 110.15); tl.set("#z-end-talk", {opacity: 0}, 110.26);
+tl.set("#z-end-talk", {opacity: 1}, 110.35); tl.set("#z-end-talk", {opacity: 0}, 110.46);
+tl.to("#z-end-g", {opacity: 0, duration: 0.25}, 107.45); tl.fromTo("#z-end-wave", {opacity: 0, scale: 0.96}, {opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)"}, 107.45);
+tl.to("#z-end-wave", {opacity: 0, duration: 0.3}, 111.45); tl.to("#z-end-g", {opacity: 1, duration: 0.3}, 111.45);
+tl.fromTo("#presenter", {opacity: 0, y: 60}, {opacity: 1, y: 0, duration: 0.7, ease: "back.out(1.6)"}, 0.60);
+tl.to("#presenter", {opacity: 0, y: 40, duration: 0.4}, 18.45); tl.to("#presenter", {opacity: 1, y: 0, duration: 0.5}, 36.14);
+tl.to("#presenter", {opacity: 0, y: 40, duration: 0.4}, 103.12);
+tl.set("#zp-talk", {opacity: 1}, 0.92); tl.set("#zp-talk", {opacity: 0}, 1.03);
+tl.set("#zp-talk", {opacity: 1}, 1.12); tl.set("#zp-talk", {opacity: 0}, 1.23);
+tl.set("#zp-talk", {opacity: 1}, 1.32); tl.set("#zp-talk", {opacity: 0}, 1.40);
+tl.set("#zp-talk", {opacity: 1}, 1.60); tl.set("#zp-talk", {opacity: 0}, 1.71);
+tl.set("#zp-talk", {opacity: 1}, 1.80); tl.set("#zp-talk", {opacity: 0}, 1.91);
+tl.set("#zp-talk", {opacity: 1}, 2.00); tl.set("#zp-talk", {opacity: 0}, 2.11);
+tl.set("#zp-talk", {opacity: 1}, 2.20); tl.set("#zp-talk", {opacity: 0}, 2.31);
+tl.set("#zp-talk", {opacity: 1}, 2.84); tl.set("#zp-talk", {opacity: 0}, 2.95);
+tl.set("#zp-talk", {opacity: 1}, 3.08); tl.set("#zp-talk", {opacity: 0}, 3.19);
+tl.set("#zp-talk", {opacity: 1}, 3.28); tl.set("#zp-talk", {opacity: 0}, 3.39);
+tl.set("#zp-talk", {opacity: 1}, 3.88); tl.set("#zp-talk", {opacity: 0}, 3.99);
+tl.set("#zp-talk", {opacity: 1}, 4.08); tl.set("#zp-talk", {opacity: 0}, 4.19);
+tl.set("#zp-talk", {opacity: 1}, 4.28); tl.set("#zp-talk", {opacity: 0}, 4.34);
+tl.set("#zp-talk", {opacity: 1}, 4.38); tl.set("#zp-talk", {opacity: 0}, 4.49);
+tl.set("#zp-talk", {opacity: 1}, 4.58); tl.set("#zp-talk", {opacity: 0}, 4.69);
+tl.set("#zp-talk", {opacity: 1}, 4.82); tl.set("#zp-talk", {opacity: 0}, 4.93);
+tl.set("#zp-talk", {opacity: 1}, 5.08); tl.set("#zp-talk", {opacity: 0}, 5.19);
+tl.set("#zp-talk", {opacity: 1}, 5.36); tl.set("#zp-talk", {opacity: 0}, 5.46);
+tl.set("#zp-talk", {opacity: 1}, 5.58); tl.set("#zp-talk", {opacity: 0}, 5.69);
+tl.set("#zp-talk", {opacity: 1}, 5.78); tl.set("#zp-talk", {opacity: 0}, 5.89);
+tl.set("#zp-talk", {opacity: 1}, 5.98); tl.set("#zp-talk", {opacity: 0}, 6.08);
+tl.set("#zp-talk", {opacity: 1}, 6.12); tl.set("#zp-talk", {opacity: 0}, 6.22);
+tl.set("#zp-talk", {opacity: 1}, 6.32); tl.set("#zp-talk", {opacity: 0}, 6.43);
+tl.set("#zp-talk", {opacity: 1}, 6.52); tl.set("#zp-talk", {opacity: 0}, 6.63);
+tl.set("#zp-talk", {opacity: 1}, 6.72); tl.set("#zp-talk", {opacity: 0}, 6.82);
+tl.set("#zp-talk", {opacity: 1}, 7.76); tl.set("#zp-talk", {opacity: 0}, 7.84);
+tl.set("#zp-talk", {opacity: 1}, 7.88); tl.set("#zp-talk", {opacity: 0}, 7.98);
+tl.set("#zp-talk", {opacity: 1}, 8.00); tl.set("#zp-talk", {opacity: 0}, 8.11);
+tl.set("#zp-talk", {opacity: 1}, 8.20); tl.set("#zp-talk", {opacity: 0}, 8.28);
+tl.set("#zp-talk", {opacity: 1}, 8.34); tl.set("#zp-talk", {opacity: 0}, 8.45);
+tl.set("#zp-talk", {opacity: 1}, 8.54); tl.set("#zp-talk", {opacity: 0}, 8.65);
+tl.set("#zp-talk", {opacity: 1}, 9.26); tl.set("#zp-talk", {opacity: 0}, 9.37);
+tl.set("#zp-talk", {opacity: 1}, 9.42); tl.set("#zp-talk", {opacity: 0}, 9.53);
+tl.set("#zp-talk", {opacity: 1}, 9.64); tl.set("#zp-talk", {opacity: 0}, 9.75);
+tl.set("#zp-talk", {opacity: 1}, 9.92); tl.set("#zp-talk", {opacity: 0}, 10.03);
+tl.set("#zp-talk", {opacity: 1}, 10.12); tl.set("#zp-talk", {opacity: 0}, 10.18);
+tl.set("#zp-talk", {opacity: 1}, 10.26); tl.set("#zp-talk", {opacity: 0}, 10.37);
+tl.set("#zp-talk", {opacity: 1}, 10.46); tl.set("#zp-talk", {opacity: 0}, 10.57);
+tl.set("#zp-talk", {opacity: 1}, 10.68); tl.set("#zp-talk", {opacity: 0}, 10.79);
+tl.set("#zp-talk", {opacity: 1}, 10.88); tl.set("#zp-talk", {opacity: 0}, 10.96);
+tl.set("#zp-talk", {opacity: 1}, 11.56); tl.set("#zp-talk", {opacity: 0}, 11.67);
+tl.set("#zp-talk", {opacity: 1}, 11.72); tl.set("#zp-talk", {opacity: 0}, 11.80);
+tl.set("#zp-talk", {opacity: 1}, 11.98); tl.set("#zp-talk", {opacity: 0}, 12.09);
+tl.set("#zp-talk", {opacity: 1}, 12.18); tl.set("#zp-talk", {opacity: 0}, 12.29);
+tl.set("#zp-talk", {opacity: 1}, 12.44); tl.set("#zp-talk", {opacity: 0}, 12.55);
+tl.set("#zp-talk", {opacity: 1}, 12.64); tl.set("#zp-talk", {opacity: 0}, 12.75);
+tl.set("#zp-talk", {opacity: 1}, 12.82); tl.set("#zp-talk", {opacity: 0}, 12.93);
+tl.set("#zp-talk", {opacity: 1}, 13.02); tl.set("#zp-talk", {opacity: 0}, 13.12);
+tl.set("#zp-talk", {opacity: 1}, 13.18); tl.set("#zp-talk", {opacity: 0}, 13.24);
+tl.set("#zp-talk", {opacity: 1}, 13.32); tl.set("#zp-talk", {opacity: 0}, 13.43);
+tl.set("#zp-talk", {opacity: 1}, 13.52); tl.set("#zp-talk", {opacity: 0}, 13.63);
+tl.set("#zp-talk", {opacity: 1}, 14.66); tl.set("#zp-talk", {opacity: 0}, 14.77);
+tl.set("#zp-talk", {opacity: 1}, 14.90); tl.set("#zp-talk", {opacity: 0}, 15.01);
+tl.set("#zp-talk", {opacity: 1}, 15.22); tl.set("#zp-talk", {opacity: 0}, 15.33);
+tl.set("#zp-talk", {opacity: 1}, 15.42); tl.set("#zp-talk", {opacity: 0}, 15.53);
+tl.set("#zp-talk", {opacity: 1}, 15.62); tl.set("#zp-talk", {opacity: 0}, 15.73);
+tl.set("#zp-talk", {opacity: 1}, 16.00); tl.set("#zp-talk", {opacity: 0}, 16.11);
+tl.set("#zp-talk", {opacity: 1}, 16.26); tl.set("#zp-talk", {opacity: 0}, 16.37);
+tl.set("#zp-talk", {opacity: 1}, 16.46); tl.set("#zp-talk", {opacity: 0}, 16.57);
+tl.set("#zp-talk", {opacity: 1}, 16.66); tl.set("#zp-talk", {opacity: 0}, 16.77);
+tl.set("#zp-talk", {opacity: 1}, 16.92); tl.set("#zp-talk", {opacity: 0}, 17.03);
+tl.set("#zp-talk", {opacity: 1}, 17.10); tl.set("#zp-talk", {opacity: 0}, 17.18);
+tl.set("#zp-talk", {opacity: 1}, 17.22); tl.set("#zp-talk", {opacity: 0}, 17.33);
+tl.set("#zp-talk", {opacity: 1}, 17.42); tl.set("#zp-talk", {opacity: 0}, 17.53);
+tl.set("#zp-talk", {opacity: 1}, 17.68); tl.set("#zp-talk", {opacity: 0}, 17.78);
+tl.set("#zp-talk", {opacity: 1}, 17.84); tl.set("#zp-talk", {opacity: 0}, 17.92);
+tl.set("#zp-talk", {opacity: 1}, 18.02); tl.set("#zp-talk", {opacity: 0}, 18.13);
+tl.set("#zp-talk", {opacity: 1}, 18.22); tl.set("#zp-talk", {opacity: 0}, 18.33);
+tl.set("#zp-talk", {opacity: 1}, 36.73); tl.set("#zp-talk", {opacity: 0}, 36.84);
+tl.set("#zp-talk", {opacity: 1}, 36.93); tl.set("#zp-talk", {opacity: 0}, 37.04);
+tl.set("#zp-talk", {opacity: 1}, 37.63); tl.set("#zp-talk", {opacity: 0}, 37.74);
+tl.set("#zp-talk", {opacity: 1}, 37.81); tl.set("#zp-talk", {opacity: 0}, 37.92);
+tl.set("#zp-talk", {opacity: 1}, 37.97); tl.set("#zp-talk", {opacity: 0}, 38.03);
+tl.set("#zp-talk", {opacity: 1}, 38.13); tl.set("#zp-talk", {opacity: 0}, 38.24);
+tl.set("#zp-talk", {opacity: 1}, 38.47); tl.set("#zp-talk", {opacity: 0}, 38.58);
+tl.set("#zp-talk", {opacity: 1}, 38.67); tl.set("#zp-talk", {opacity: 0}, 38.78);
+tl.set("#zp-talk", {opacity: 1}, 39.49); tl.set("#zp-talk", {opacity: 0}, 39.60);
+tl.set("#zp-talk", {opacity: 1}, 39.77); tl.set("#zp-talk", {opacity: 0}, 39.87);
+tl.set("#zp-talk", {opacity: 1}, 39.97); tl.set("#zp-talk", {opacity: 0}, 40.08);
+tl.set("#zp-talk", {opacity: 1}, 40.17); tl.set("#zp-talk", {opacity: 0}, 40.28);
+tl.set("#zp-talk", {opacity: 1}, 40.37); tl.set("#zp-talk", {opacity: 0}, 40.47);
+tl.set("#zp-talk", {opacity: 1}, 41.45); tl.set("#zp-talk", {opacity: 0}, 41.56);
+tl.set("#zp-talk", {opacity: 1}, 41.65); tl.set("#zp-talk", {opacity: 0}, 41.76);
+tl.set("#zp-talk", {opacity: 1}, 41.85); tl.set("#zp-talk", {opacity: 0}, 41.96);
+tl.set("#zp-talk", {opacity: 1}, 42.05); tl.set("#zp-talk", {opacity: 0}, 42.16);
+tl.set("#zp-talk", {opacity: 1}, 42.77); tl.set("#zp-talk", {opacity: 0}, 42.88);
+tl.set("#zp-talk", {opacity: 1}, 42.95); tl.set("#zp-talk", {opacity: 0}, 43.06);
+tl.set("#zp-talk", {opacity: 1}, 43.29); tl.set("#zp-talk", {opacity: 0}, 43.40);
+tl.set("#zp-talk", {opacity: 1}, 43.49); tl.set("#zp-talk", {opacity: 0}, 43.60);
+tl.set("#zp-talk", {opacity: 1}, 43.99); tl.set("#zp-talk", {opacity: 0}, 44.10);
+tl.set("#zp-talk", {opacity: 1}, 44.19); tl.set("#zp-talk", {opacity: 0}, 44.30);
+tl.set("#zp-talk", {opacity: 1}, 44.39); tl.set("#zp-talk", {opacity: 0}, 44.50);
+tl.set("#zp-talk", {opacity: 1}, 44.61); tl.set("#zp-talk", {opacity: 0}, 44.72);
+tl.set("#zp-talk", {opacity: 1}, 44.81); tl.set("#zp-talk", {opacity: 0}, 44.92);
+tl.set("#zp-talk", {opacity: 1}, 45.79); tl.set("#zp-talk", {opacity: 0}, 45.90);
+tl.set("#zp-talk", {opacity: 1}, 45.99); tl.set("#zp-talk", {opacity: 0}, 46.10);
+tl.set("#zp-talk", {opacity: 1}, 46.19); tl.set("#zp-talk", {opacity: 0}, 46.30);
+tl.set("#zp-talk", {opacity: 1}, 46.39); tl.set("#zp-talk", {opacity: 0}, 46.50);
+tl.set("#zp-talk", {opacity: 1}, 47.17); tl.set("#zp-talk", {opacity: 0}, 47.28);
+tl.set("#zp-talk", {opacity: 1}, 47.37); tl.set("#zp-talk", {opacity: 0}, 47.48);
+tl.set("#zp-talk", {opacity: 1}, 47.57); tl.set("#zp-talk", {opacity: 0}, 47.68);
+tl.set("#zp-talk", {opacity: 1}, 47.79); tl.set("#zp-talk", {opacity: 0}, 47.87);
+tl.set("#zp-talk", {opacity: 1}, 47.97); tl.set("#zp-talk", {opacity: 0}, 48.08);
+tl.set("#zp-talk", {opacity: 1}, 48.17); tl.set("#zp-talk", {opacity: 0}, 48.28);
+tl.set("#zp-talk", {opacity: 1}, 48.39); tl.set("#zp-talk", {opacity: 0}, 48.50);
+tl.set("#zp-talk", {opacity: 1}, 48.55); tl.set("#zp-talk", {opacity: 0}, 48.61);
+tl.set("#zp-talk", {opacity: 1}, 48.71); tl.set("#zp-talk", {opacity: 0}, 48.82);
+tl.set("#zp-talk", {opacity: 1}, 49.05); tl.set("#zp-talk", {opacity: 0}, 49.16);
+tl.set("#zp-talk", {opacity: 1}, 49.25); tl.set("#zp-talk", {opacity: 0}, 49.33);
+tl.set("#zp-talk", {opacity: 1}, 50.15); tl.set("#zp-talk", {opacity: 0}, 50.25);
+tl.set("#zp-talk", {opacity: 1}, 50.35); tl.set("#zp-talk", {opacity: 0}, 50.46);
+tl.set("#zp-talk", {opacity: 1}, 50.51); tl.set("#zp-talk", {opacity: 0}, 50.62);
+tl.set("#zp-talk", {opacity: 1}, 50.79); tl.set("#zp-talk", {opacity: 0}, 50.90);
+tl.set("#zp-talk", {opacity: 1}, 50.99); tl.set("#zp-talk", {opacity: 0}, 51.10);
+tl.set("#zp-talk", {opacity: 1}, 51.19); tl.set("#zp-talk", {opacity: 0}, 51.30);
+tl.set("#zp-talk", {opacity: 1}, 52.00); tl.set("#zp-talk", {opacity: 0}, 52.10);
+tl.set("#zp-talk", {opacity: 1}, 52.16); tl.set("#zp-talk", {opacity: 0}, 52.27);
+tl.set("#zp-talk", {opacity: 1}, 52.34); tl.set("#zp-talk", {opacity: 0}, 52.45);
+tl.set("#zp-talk", {opacity: 1}, 52.54); tl.set("#zp-talk", {opacity: 0}, 52.62);
+tl.set("#zp-talk", {opacity: 1}, 53.82); tl.set("#zp-talk", {opacity: 0}, 53.90);
+tl.set("#zp-talk", {opacity: 1}, 54.04); tl.set("#zp-talk", {opacity: 0}, 54.15);
+tl.set("#zp-talk", {opacity: 1}, 54.38); tl.set("#zp-talk", {opacity: 0}, 54.49);
+tl.set("#zp-talk", {opacity: 1}, 54.58); tl.set("#zp-talk", {opacity: 0}, 54.69);
+tl.set("#zp-talk", {opacity: 1}, 54.78); tl.set("#zp-talk", {opacity: 0}, 54.89);
+tl.set("#zp-talk", {opacity: 1}, 54.98); tl.set("#zp-talk", {opacity: 0}, 55.09);
+tl.set("#zp-talk", {opacity: 1}, 55.62); tl.set("#zp-talk", {opacity: 0}, 55.73);
+tl.set("#zp-talk", {opacity: 1}, 55.88); tl.set("#zp-talk", {opacity: 0}, 55.99);
+tl.set("#zp-talk", {opacity: 1}, 56.08); tl.set("#zp-talk", {opacity: 0}, 56.18);
+tl.set("#zp-talk", {opacity: 1}, 56.26); tl.set("#zp-talk", {opacity: 0}, 56.37);
+tl.set("#zp-talk", {opacity: 1}, 56.46); tl.set("#zp-talk", {opacity: 0}, 56.57);
+tl.set("#zp-talk", {opacity: 1}, 56.66); tl.set("#zp-talk", {opacity: 0}, 56.76);
+tl.set("#zp-talk", {opacity: 1}, 56.84); tl.set("#zp-talk", {opacity: 0}, 56.95);
+tl.set("#zp-talk", {opacity: 1}, 57.00); tl.set("#zp-talk", {opacity: 0}, 57.11);
+tl.set("#zp-talk", {opacity: 1}, 57.20); tl.set("#zp-talk", {opacity: 0}, 57.31);
+tl.set("#zp-talk", {opacity: 1}, 57.40); tl.set("#zp-talk", {opacity: 0}, 57.48);
+tl.set("#zp-talk", {opacity: 1}, 58.70); tl.set("#zp-talk", {opacity: 0}, 58.81);
+tl.set("#zp-talk", {opacity: 1}, 58.96); tl.set("#zp-talk", {opacity: 0}, 59.06);
+tl.set("#zp-talk", {opacity: 1}, 59.10); tl.set("#zp-talk", {opacity: 0}, 59.20);
+tl.set("#zp-talk", {opacity: 1}, 59.30); tl.set("#zp-talk", {opacity: 0}, 59.41);
+tl.set("#zp-talk", {opacity: 1}, 59.50); tl.set("#zp-talk", {opacity: 0}, 59.61);
+tl.set("#zp-talk", {opacity: 1}, 60.52); tl.set("#zp-talk", {opacity: 0}, 60.63);
+tl.set("#zp-talk", {opacity: 1}, 60.72); tl.set("#zp-talk", {opacity: 0}, 60.83);
+tl.set("#zp-talk", {opacity: 1}, 60.92); tl.set("#zp-talk", {opacity: 0}, 61.03);
+tl.set("#zp-talk", {opacity: 1}, 61.12); tl.set("#zp-talk", {opacity: 0}, 61.22);
+tl.set("#zp-talk", {opacity: 1}, 61.88); tl.set("#zp-talk", {opacity: 0}, 61.99);
+tl.set("#zp-talk", {opacity: 1}, 62.06); tl.set("#zp-talk", {opacity: 0}, 62.14);
+tl.set("#zp-talk", {opacity: 1}, 62.20); tl.set("#zp-talk", {opacity: 0}, 62.31);
+tl.set("#zp-talk", {opacity: 1}, 62.40); tl.set("#zp-talk", {opacity: 0}, 62.51);
+tl.set("#zp-talk", {opacity: 1}, 62.60); tl.set("#zp-talk", {opacity: 0}, 62.71);
+tl.set("#zp-talk", {opacity: 1}, 66.69); tl.set("#zp-talk", {opacity: 0}, 66.80);
+tl.set("#zp-talk", {opacity: 1}, 66.93); tl.set("#zp-talk", {opacity: 0}, 67.01);
+tl.set("#zp-talk", {opacity: 1}, 67.09); tl.set("#zp-talk", {opacity: 0}, 67.20);
+tl.set("#zp-talk", {opacity: 1}, 67.69); tl.set("#zp-talk", {opacity: 0}, 67.80);
+tl.set("#zp-talk", {opacity: 1}, 67.91); tl.set("#zp-talk", {opacity: 0}, 68.02);
+tl.set("#zp-talk", {opacity: 1}, 68.11); tl.set("#zp-talk", {opacity: 0}, 68.22);
+tl.set("#zp-talk", {opacity: 1}, 69.05); tl.set("#zp-talk", {opacity: 0}, 69.16);
+tl.set("#zp-talk", {opacity: 1}, 69.43); tl.set("#zp-talk", {opacity: 0}, 69.54);
+tl.set("#zp-talk", {opacity: 1}, 69.63); tl.set("#zp-talk", {opacity: 0}, 69.74);
+tl.set("#zp-talk", {opacity: 1}, 69.91); tl.set("#zp-talk", {opacity: 0}, 70.02);
+tl.set("#zp-talk", {opacity: 1}, 70.11); tl.set("#zp-talk", {opacity: 0}, 70.17);
+tl.set("#zp-talk", {opacity: 1}, 70.19); tl.set("#zp-talk", {opacity: 0}, 70.25);
+tl.set("#zp-talk", {opacity: 1}, 70.37); tl.set("#zp-talk", {opacity: 0}, 70.48);
+tl.set("#zp-talk", {opacity: 1}, 70.57); tl.set("#zp-talk", {opacity: 0}, 70.65);
+tl.set("#zp-talk", {opacity: 1}, 70.73); tl.set("#zp-talk", {opacity: 0}, 70.79);
+tl.set("#zp-talk", {opacity: 1}, 70.89); tl.set("#zp-talk", {opacity: 0}, 71.00);
+tl.set("#zp-talk", {opacity: 1}, 71.09); tl.set("#zp-talk", {opacity: 0}, 71.19);
+tl.set("#zp-talk", {opacity: 1}, 71.75); tl.set("#zp-talk", {opacity: 0}, 71.83);
+tl.set("#zp-talk", {opacity: 1}, 71.89); tl.set("#zp-talk", {opacity: 0}, 72.00);
+tl.set("#zp-talk", {opacity: 1}, 72.09); tl.set("#zp-talk", {opacity: 0}, 72.17);
+tl.set("#zp-talk", {opacity: 1}, 72.27); tl.set("#zp-talk", {opacity: 0}, 72.38);
+tl.set("#zp-talk", {opacity: 1}, 72.47); tl.set("#zp-talk", {opacity: 0}, 72.58);
+tl.set("#zp-talk", {opacity: 1}, 73.03); tl.set("#zp-talk", {opacity: 0}, 73.14);
+tl.set("#zp-talk", {opacity: 1}, 73.23); tl.set("#zp-talk", {opacity: 0}, 73.34);
+tl.set("#zp-talk", {opacity: 1}, 73.43); tl.set("#zp-talk", {opacity: 0}, 73.54);
+tl.set("#zp-talk", {opacity: 1}, 73.77); tl.set("#zp-talk", {opacity: 0}, 73.88);
+tl.set("#zp-talk", {opacity: 1}, 74.07); tl.set("#zp-talk", {opacity: 0}, 74.18);
+tl.set("#zp-talk", {opacity: 1}, 74.27); tl.set("#zp-talk", {opacity: 0}, 74.33);
+tl.set("#zp-talk", {opacity: 1}, 74.79); tl.set("#zp-talk", {opacity: 0}, 74.89);
+tl.set("#zp-talk", {opacity: 1}, 74.95); tl.set("#zp-talk", {opacity: 0}, 75.06);
+tl.set("#zp-talk", {opacity: 1}, 75.15); tl.set("#zp-talk", {opacity: 0}, 75.26);
+tl.set("#zp-talk", {opacity: 1}, 75.35); tl.set("#zp-talk", {opacity: 0}, 75.46);
+tl.set("#zp-talk", {opacity: 1}, 75.55); tl.set("#zp-talk", {opacity: 0}, 75.66);
+tl.set("#zp-talk", {opacity: 1}, 75.75); tl.set("#zp-talk", {opacity: 0}, 75.86);
+tl.set("#zp-talk", {opacity: 1}, 76.79); tl.set("#zp-talk", {opacity: 0}, 76.89);
+tl.set("#zp-talk", {opacity: 1}, 77.05); tl.set("#zp-talk", {opacity: 0}, 77.16);
+tl.set("#zp-talk", {opacity: 1}, 77.25); tl.set("#zp-talk", {opacity: 0}, 77.36);
+tl.set("#zp-talk", {opacity: 1}, 77.59); tl.set("#zp-talk", {opacity: 0}, 77.70);
+tl.set("#zp-talk", {opacity: 1}, 77.79); tl.set("#zp-talk", {opacity: 0}, 77.90);
+tl.set("#zp-talk", {opacity: 1}, 78.13); tl.set("#zp-talk", {opacity: 0}, 78.19);
+tl.set("#zp-talk", {opacity: 1}, 78.25); tl.set("#zp-talk", {opacity: 0}, 78.36);
+tl.set("#zp-talk", {opacity: 1}, 78.45); tl.set("#zp-talk", {opacity: 0}, 78.56);
+tl.set("#zp-talk", {opacity: 1}, 79.28); tl.set("#zp-talk", {opacity: 0}, 79.39);
+tl.set("#zp-talk", {opacity: 1}, 79.50); tl.set("#zp-talk", {opacity: 0}, 79.61);
+tl.set("#zp-talk", {opacity: 1}, 79.66); tl.set("#zp-talk", {opacity: 0}, 79.77);
+tl.set("#zp-talk", {opacity: 1}, 79.84); tl.set("#zp-talk", {opacity: 0}, 79.95);
+tl.set("#zp-talk", {opacity: 1}, 80.04); tl.set("#zp-talk", {opacity: 0}, 80.15);
+tl.set("#zp-talk", {opacity: 1}, 80.82); tl.set("#zp-talk", {opacity: 0}, 80.93);
+tl.set("#zp-talk", {opacity: 1}, 81.02); tl.set("#zp-talk", {opacity: 0}, 81.13);
+tl.set("#zp-talk", {opacity: 1}, 81.24); tl.set("#zp-talk", {opacity: 0}, 81.35);
+tl.set("#zp-talk", {opacity: 1}, 81.44); tl.set("#zp-talk", {opacity: 0}, 81.55);
+tl.set("#zp-talk", {opacity: 1}, 81.68); tl.set("#zp-talk", {opacity: 0}, 81.79);
+tl.set("#zp-talk", {opacity: 1}, 81.96); tl.set("#zp-talk", {opacity: 0}, 82.07);
+tl.set("#zp-talk", {opacity: 1}, 82.16); tl.set("#zp-talk", {opacity: 0}, 82.22);
+tl.set("#zp-talk", {opacity: 1}, 82.24); tl.set("#zp-talk", {opacity: 0}, 82.35);
+tl.set("#zp-talk", {opacity: 1}, 82.44); tl.set("#zp-talk", {opacity: 0}, 82.55);
+tl.set("#zp-talk", {opacity: 1}, 82.64); tl.set("#zp-talk", {opacity: 0}, 82.72);
+tl.set("#zp-talk", {opacity: 1}, 82.76); tl.set("#zp-talk", {opacity: 0}, 82.87);
+tl.set("#zp-talk", {opacity: 1}, 82.96); tl.set("#zp-talk", {opacity: 0}, 83.07);
+tl.set("#zp-talk", {opacity: 1}, 84.02); tl.set("#zp-talk", {opacity: 0}, 84.13);
+tl.set("#zp-talk", {opacity: 1}, 84.24); tl.set("#zp-talk", {opacity: 0}, 84.35);
+tl.set("#zp-talk", {opacity: 1}, 84.44); tl.set("#zp-talk", {opacity: 0}, 84.55);
+tl.set("#zp-talk", {opacity: 1}, 85.22); tl.set("#zp-talk", {opacity: 0}, 85.33);
+tl.set("#zp-talk", {opacity: 1}, 85.42); tl.set("#zp-talk", {opacity: 0}, 85.53);
+tl.set("#zp-talk", {opacity: 1}, 85.66); tl.set("#zp-talk", {opacity: 0}, 85.77);
+tl.set("#zp-talk", {opacity: 1}, 85.86); tl.set("#zp-talk", {opacity: 0}, 85.97);
+tl.set("#zp-talk", {opacity: 1}, 86.06); tl.set("#zp-talk", {opacity: 0}, 86.17);
+tl.set("#zp-talk", {opacity: 1}, 86.32); tl.set("#zp-talk", {opacity: 0}, 86.43);
+tl.set("#zp-talk", {opacity: 1}, 86.56); tl.set("#zp-talk", {opacity: 0}, 86.67);
+tl.set("#zp-talk", {opacity: 1}, 86.80); tl.set("#zp-talk", {opacity: 0}, 86.91);
+tl.set("#zp-talk", {opacity: 1}, 87.08); tl.set("#zp-talk", {opacity: 0}, 87.19);
+tl.set("#zp-talk", {opacity: 1}, 87.32); tl.set("#zp-talk", {opacity: 0}, 87.42);
+tl.set("#zp-talk", {opacity: 1}, 87.56); tl.set("#zp-talk", {opacity: 0}, 87.67);
+tl.set("#zp-talk", {opacity: 1}, 87.76); tl.set("#zp-talk", {opacity: 0}, 87.87);
+tl.set("#zp-talk", {opacity: 1}, 87.96); tl.set("#zp-talk", {opacity: 0}, 88.04);
+tl.set("#zp-talk", {opacity: 1}, 88.58); tl.set("#zp-talk", {opacity: 0}, 88.69);
+tl.set("#zp-talk", {opacity: 1}, 88.82); tl.set("#zp-talk", {opacity: 0}, 88.93);
+tl.set("#zp-talk", {opacity: 1}, 89.02); tl.set("#zp-talk", {opacity: 0}, 89.13);
+tl.set("#zp-talk", {opacity: 1}, 89.20); tl.set("#zp-talk", {opacity: 0}, 89.31);
+tl.set("#zp-talk", {opacity: 1}, 89.40); tl.set("#zp-talk", {opacity: 0}, 89.51);
+tl.set("#zp-talk", {opacity: 1}, 89.60); tl.set("#zp-talk", {opacity: 0}, 89.71);
+tl.set("#zp-talk", {opacity: 1}, 89.80); tl.set("#zp-talk", {opacity: 0}, 89.86);
+tl.set("#zp-talk", {opacity: 1}, 89.90); tl.set("#zp-talk", {opacity: 0}, 90.01);
+tl.set("#zp-talk", {opacity: 1}, 90.14); tl.set("#zp-talk", {opacity: 0}, 90.22);
+tl.set("#zp-talk", {opacity: 1}, 90.26); tl.set("#zp-talk", {opacity: 0}, 90.34);
+tl.set("#zp-talk", {opacity: 1}, 90.94); tl.set("#zp-talk", {opacity: 0}, 91.05);
+tl.set("#zp-talk", {opacity: 1}, 91.14); tl.set("#zp-talk", {opacity: 0}, 91.20);
+tl.set("#zp-talk", {opacity: 1}, 91.28); tl.set("#zp-talk", {opacity: 0}, 91.36);
+tl.set("#zp-talk", {opacity: 1}, 91.42); tl.set("#zp-talk", {opacity: 0}, 91.53);
+tl.set("#zp-talk", {opacity: 1}, 91.62); tl.set("#zp-talk", {opacity: 0}, 91.68);
+tl.set("#zp-talk", {opacity: 1}, 92.10); tl.set("#zp-talk", {opacity: 0}, 92.20);
+tl.set("#zp-talk", {opacity: 1}, 92.26); tl.set("#zp-talk", {opacity: 0}, 92.37);
+tl.set("#zp-talk", {opacity: 1}, 92.46); tl.set("#zp-talk", {opacity: 0}, 92.57);
+tl.set("#zp-talk", {opacity: 1}, 92.66); tl.set("#zp-talk", {opacity: 0}, 92.77);
+tl.set("#zp-talk", {opacity: 1}, 92.98); tl.set("#zp-talk", {opacity: 0}, 93.09);
+tl.set("#zp-talk", {opacity: 1}, 93.18); tl.set("#zp-talk", {opacity: 0}, 93.29);
+tl.set("#zp-talk", {opacity: 1}, 93.38); tl.set("#zp-talk", {opacity: 0}, 93.46);
+tl.set("#zp-talk", {opacity: 1}, 93.58); tl.set("#zp-talk", {opacity: 0}, 93.69);
+tl.set("#zp-talk", {opacity: 1}, 93.90); tl.set("#zp-talk", {opacity: 0}, 94.01);
+tl.set("#zp-talk", {opacity: 1}, 94.10); tl.set("#zp-talk", {opacity: 0}, 94.21);
+tl.set("#zp-talk", {opacity: 1}, 94.32); tl.set("#zp-talk", {opacity: 0}, 94.43);
+tl.set("#zp-talk", {opacity: 1}, 94.54); tl.set("#zp-talk", {opacity: 0}, 94.65);
+tl.set("#zp-talk", {opacity: 1}, 94.74); tl.set("#zp-talk", {opacity: 0}, 94.84);
+tl.set("#zp-talk", {opacity: 1}, 94.96); tl.set("#zp-talk", {opacity: 0}, 95.07);
+tl.set("#zp-talk", {opacity: 1}, 95.16); tl.set("#zp-talk", {opacity: 0}, 95.27);
+tl.set("#zp-talk", {opacity: 1}, 95.90); tl.set("#zp-talk", {opacity: 0}, 96.01);
+tl.set("#zp-talk", {opacity: 1}, 96.10); tl.set("#zp-talk", {opacity: 0}, 96.21);
+tl.set("#zp-talk", {opacity: 1}, 96.36); tl.set("#zp-talk", {opacity: 0}, 96.47);
+tl.set("#zp-talk", {opacity: 1}, 96.66); tl.set("#zp-talk", {opacity: 0}, 96.77);
+tl.set("#zp-talk", {opacity: 1}, 96.86); tl.set("#zp-talk", {opacity: 0}, 96.97);
+tl.set("#zp-talk", {opacity: 1}, 97.54); tl.set("#zp-talk", {opacity: 0}, 97.60);
+tl.set("#zp-talk", {opacity: 1}, 97.70); tl.set("#zp-talk", {opacity: 0}, 97.81);
+tl.set("#zp-talk", {opacity: 1}, 97.90); tl.set("#zp-talk", {opacity: 0}, 98.01);
+tl.set("#zp-talk", {opacity: 1}, 98.10); tl.set("#zp-talk", {opacity: 0}, 98.21);
+tl.set("#zp-talk", {opacity: 1}, 98.30); tl.set("#zp-talk", {opacity: 0}, 98.38);
+tl.set("#zp-talk", {opacity: 1}, 98.46); tl.set("#zp-talk", {opacity: 0}, 98.57);
+tl.set("#zp-talk", {opacity: 1}, 98.66); tl.set("#zp-talk", {opacity: 0}, 98.77);
+tl.set("#zp-talk", {opacity: 1}, 99.24); tl.set("#zp-talk", {opacity: 0}, 99.34);
+tl.set("#zp-talk", {opacity: 1}, 99.40); tl.set("#zp-talk", {opacity: 0}, 99.51);
+tl.set("#zp-talk", {opacity: 1}, 99.64); tl.set("#zp-talk", {opacity: 0}, 99.75);
+tl.set("#zp-talk", {opacity: 1}, 99.84); tl.set("#zp-talk", {opacity: 0}, 99.92);
+tl.set("#zp-talk", {opacity: 1}, 100.08); tl.set("#zp-talk", {opacity: 0}, 100.19);
+tl.set("#zp-talk", {opacity: 1}, 100.28); tl.set("#zp-talk", {opacity: 0}, 100.39);
+tl.set("#zp-talk", {opacity: 1}, 100.60); tl.set("#zp-talk", {opacity: 0}, 100.71);
+tl.set("#zp-talk", {opacity: 1}, 100.84); tl.set("#zp-talk", {opacity: 0}, 100.95);
+tl.set("#zp-talk", {opacity: 1}, 101.04); tl.set("#zp-talk", {opacity: 0}, 101.15);
+tl.set("#zp-talk", {opacity: 1}, 101.24); tl.set("#zp-talk", {opacity: 0}, 101.35);
+tl.set("#zp-talk", {opacity: 1}, 101.44); tl.set("#zp-talk", {opacity: 0}, 101.50);
+tl.to("#zp-g", {opacity: 0, duration: 0.25}, 7.76); tl.fromTo("#zp-worried", {opacity: 0, scale: 0.96}, {opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)"}, 7.76);
+tl.to("#zp-worried", {opacity: 0, duration: 0.3}, 10.76); tl.to("#zp-g", {opacity: 1, duration: 0.3}, 10.76);
+tl.to("#zp-g", {opacity: 0, duration: 0.25}, 50.49); tl.fromTo("#zp-soaked", {opacity: 0, scale: 0.96}, {opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)"}, 50.49);
+tl.to("#zp-soaked", {opacity: 0, duration: 0.3}, 53.49); tl.to("#zp-g", {opacity: 1, duration: 0.3}, 53.49);
+tl.to("#zp-g", {opacity: 0, duration: 0.25}, 55.62); tl.fromTo("#zp-worried", {opacity: 0, scale: 0.96}, {opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)"}, 55.62);
+tl.to("#zp-worried", {opacity: 0, duration: 0.3}, 57.82); tl.to("#zp-g", {opacity: 1, duration: 0.3}, 57.82);
+tl.to("#zp-g", {opacity: 0, duration: 0.25}, 60.52); tl.fromTo("#zp-reassure", {opacity: 0, scale: 0.96}, {opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)"}, 60.52);
+tl.to("#zp-reassure", {opacity: 0, duration: 0.3}, 63.12); tl.to("#zp-g", {opacity: 1, duration: 0.3}, 63.12);
+tl.to("#zp-g", {opacity: 0, duration: 0.25}, 69.05); tl.fromTo("#zp-facing", {opacity: 0, scale: 0.96}, {opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)"}, 69.05);
+tl.to("#zp-facing", {opacity: 0, duration: 0.3}, 71.45); tl.to("#zp-g", {opacity: 1, duration: 0.3}, 71.45);
+tl.to("#zp-g", {opacity: 0, duration: 0.25}, 77.05); tl.fromTo("#zp-reassure", {opacity: 0, scale: 0.96}, {opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)"}, 77.05);
+tl.to("#zp-reassure", {opacity: 0, duration: 0.3}, 79.65); tl.to("#zp-g", {opacity: 1, duration: 0.3}, 79.65);
+tl.to("#zp-g", {opacity: 0, duration: 0.25}, 80.82); tl.fromTo("#zp-thinking", {opacity: 0, scale: 0.96}, {opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)"}, 80.82);
+tl.to("#zp-thinking", {opacity: 0, duration: 0.3}, 83.42); tl.to("#zp-g", {opacity: 1, duration: 0.3}, 83.42);
+tl.to("#zp-g", {opacity: 0, duration: 0.25}, 88.82); tl.fromTo("#zp-reassure", {opacity: 0, scale: 0.96}, {opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)"}, 88.82);
+tl.to("#zp-reassure", {opacity: 0, duration: 0.3}, 91.42); tl.to("#zp-g", {opacity: 1, duration: 0.3}, 91.42);
+tl.to("#zp-g", {opacity: 0, duration: 0.25}, 90.94); tl.fromTo("#zp-facing", {opacity: 0, scale: 0.96}, {opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)"}, 90.94);
+tl.to("#zp-facing", {opacity: 0, duration: 0.3}, 93.34); tl.to("#zp-g", {opacity: 1, duration: 0.3}, 93.34);
 tl.fromTo("#sub-01-hook-0", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 0.92);
 tl.fromTo("#sub-01-hook-1", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 7.76);
 tl.fromTo("#sub-01-hook-2", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 9.26);
@@ -216,9 +626,13 @@ tl.fromTo("#sub-06-agent-0", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0
 tl.fromTo("#sub-06-agent-1", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 69.05);
 tl.fromTo("#sub-06-agent-2", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 71.75);
 tl.fromTo("#sub-06-agent-3", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 74.79);
-tl.fromTo("#sub-07-tech-0", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 79.26);
-tl.fromTo("#sub-07-tech-1", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 84.22);
-tl.fromTo("#sub-07-tech-2", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 87.56);
+tl.fromTo("#sub-065-value-0", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 79.28);
+tl.fromTo("#sub-065-value-1", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 80.82);
+tl.fromTo("#sub-065-value-2", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 84.02);
+tl.fromTo("#sub-065-value-3", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 88.58);
+tl.fromTo("#sub-07-tech-0", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 90.94);
+tl.fromTo("#sub-07-tech-1", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 95.90);
+tl.fromTo("#sub-07-tech-2", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 99.24);
 window.__timelines["main"] = tl;
 tl.seek(0);
 </script>

@@ -16,7 +16,7 @@ lines['08-close'] = 'Zouave. See your flood… before it comes. À bientôt!'
 dur = lambda n: float(subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f'{VO}/{n}.mp3'], capture_output=True, text=True).stdout)
 words = lambda n: json.load(open(f'{VO}/{n}.words.json'))
 
-order = ['01-hook', '02-intro', '03-rise', '04-home'] + (['05-memory'] if MEMORY else []) + ['06-agent', '07-tech', '08-close']
+order = ['01-hook', '02-intro', '03-rise', '04-home'] + (['05-memory'] if MEMORY else []) + ['06-agent', '065-value', '07-tech', '08-close']
 GAP, t = 0.45, 0.8
 GCREDIT = 'Google Maps · Photorealistic 3D Tiles · Map data ©Google · Data SIO, NOAA, U.S. Navy, NGA, GEBCO · IBCAO · Landsat / Copernicus'
 HOLD = {'04-home': 3.2, '07-tech': 1.6}  # seconds of picture after a voice-over line (the water keeps rising)
@@ -53,6 +53,25 @@ def subtitles(seg):
     return out
 
 S = {seg['name']: seg for seg in segments}
+
+POSES = ['facing', 'wave', 'worried', 'thinking', 'reassure', 'soaked']
+def zouave(prefix, cls):
+    """The talking Zouave: still frame + open-mouth frame (lip-sync) in one group, poses beside it."""
+    poses = ''.join(f'<img class="zp" id="{prefix}-{p}" src="assets/img/z-{p}.webp" alt="">' for p in POSES)
+    return f'<div class="{cls}" id="{prefix}"><div class="zg" id="{prefix}-g"><img src="assets/img/z-base.webp" alt=""><img class="zt" id="{prefix}-talk" src="assets/img/z-talk.webp" alt=""></div>{poses}</div>'
+def lipsync(prefix, seg):
+    """Mouth open on each spoken word (and flaps inside long words), closed in between."""
+    for w in seg['words']:
+        s0, e0 = seg['vo'] + w['s'], seg['vo'] + w['e']
+        t = s0
+        while t < e0 - 0.05:
+            tl.append(f'tl.set("#{prefix}-talk", {{opacity: 1}}, {t:.2f}); tl.set("#{prefix}-talk", {{opacity: 0}}, {min(t + 0.11, e0):.2f});')
+            t += 0.2
+def pose(prefix, name, t, d=2.4):
+    """Swap the talking Zouave for a pose, then back."""
+    tl.append(f'tl.to("#{prefix}-g", {{opacity: 0, duration: 0.25}}, {t:.2f}); tl.fromTo("#{prefix}-{name}", {{opacity: 0, scale: 0.96}}, {{opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)"}}, {t:.2f});')
+    tl.append(f'tl.to("#{prefix}-{name}", {{opacity: 0, duration: 0.3}}, {t + d:.2f}); tl.to("#{prefix}-g", {{opacity: 1, duration: 0.3}}, {t + d:.2f});')
+
 scenes, tl = [], []
 def scene(sid, start, end, inner, z):
     scenes.append(f'<section id="{sid}" class="clip scene" data-start="{start:.2f}" data-duration="{end - start:.2f}" data-track-index="{z}" style="z-index:{z}">{inner}</section>')
@@ -88,10 +107,11 @@ pop('#h-q', at(h, 'most'), 0.8)
 i = S['02-intro']; s1 = e0 - 0.4; e1 = seg_end('02-intro')
 scene('intro', s1, e1, '''<img class="bg" src="assets/img/g-alma.jpg" alt="">
 <div class="veil soft"></div><p class="credit on">Google Maps · Photorealistic 3D Tiles · Map data ©Google · Data SIO, NOAA, U.S. Navy, NGA, GEBCO · IBCAO · Landsat / Copernicus</p>
-<div class="intro-card"><img src="assets/img/zouave.png" alt=""><div><p class="eyebrow">MEET</p><h1>Zouave</h1><p>The stone soldier Parisians read the floods on.<br><b>Now he talks.</b></p><p class="tag">Any address · official data only</p></div></div>''', 2)
+<div class="intro-card">''' + zouave('zi', 'zbig') + '''<div><p class="eyebrow">MEET</p><h1>Zouave</h1><p>The stone soldier Parisians read the floods on.<br><b>Now he talks.</b></p><p class="tag">Any address · official data only</p></div></div>''', 2)
 kb('#intro .bg', s1, e1 - s1, 1.0, 1.14, 0, -3, 0, 2, '60% 55%')
 pop('#intro .intro-card', i['vo'] + 0.2, 0.9)
 out('#intro .intro-card', at(i, 'ask') - 0.2)
+lipsync('zi', i); pose('zi', 'wave', i['vo'] + 0.05, 2.6)
 
 # 3 · The Seine rises
 r = S['03-rise']; s2 = e1 - 0.4; e2 = seg_end('03-rise')
@@ -148,6 +168,20 @@ tl.append(f'tl.fromTo("#g-advice", {{opacity: 0}}, {{opacity: 1, duration: 0.6}}
 kb('#g-advice', tadv - 0.3, e5 - tadv + 0.4, 1.0, 1.06)
 pop('#c-tools', at(g, 'every', 2.0)); out('#c-tools', tadv - 0.3); pop('#c-never', at(g, 'never', 9.5))
 
+# 6b · Why it matters: the value of the site, in three cards
+v = S['065-value']; sv = e5 - 0.4; ev = seg_end('065-value')
+scene('value', sv, ev, '''<img class="bg dim" src="assets/img/street-1.5.jpg" alt=""><div class="veil"></div>
+<div class="value-stack"><p class="eyebrow" id="v-eye">WHY IT MATTERS</p>
+<div class="cards">
+  <div class="vcard" id="v1"><b>Your address</b><span>Your flood in seconds, from the official flood plan</span></div>
+  <div class="vcard" id="v2"><b>See it</b><span>Your own street under water, so the risk feels real</span></div>
+  <div class="vcard" id="v3"><b>Act</b><span>The official right moves for your home and family</span></div>
+</div></div>''', 6)
+kb('#value .bg', sv, ev - sv, 1.04, 1.12)
+pop('#v-eye', v['vo'] + 0.1)
+pop('#v1', at(v, 'every', 5.0), 0.6, 30); pop('#v2', at(v, 'own', 6.5), 0.6, 30); pop('#v3', at(v, 'knows', 8.5), 0.6, 30)
+e5 = ev
+
 # 7 · Under the hood
 k = S['07-tech']; s6 = e5 - 0.4; e6 = seg_end('07-tech')
 scene('tech', s6, e6, '''<img class="bg" src="assets/shots/11-hood.jpg" alt=""><div class="veil"></div>
@@ -165,12 +199,30 @@ pop('#k5', at(k, 'eleven', 8.5) + 0.7, 0.5, 24)
 # 8 · Close
 c = S['08-close']; s7 = e6 - 0.4; e7 = END
 scene('close', s7, e7, '''<div class="end">
-  <img src="assets/img/zouave.png" alt="" id="z-end">
+  ''' + zouave('z-end', 'zbig end-z') + '''
   <h1 id="z-name">Zouave</h1>
   <p class="claim" id="z-claim">See your flood <em>before it comes.</em></p>
   <p class="meta" id="z-meta">Paris DevDay Community Hackathon · Impact → Climate action<br>github.com/nassim-arifette/zouave</p>
 </div>''', 8)
 pop('#z-end', s7 + 0.2, 0.9, 60); pop('#z-name', c['vo'] + 0.1); pop('#z-claim', at(c, 'see', 1.2), 0.8); pop('#z-meta', at(c, 'bientot', 4.0), 0.8, 10)
+lipsync('z-end', c); pose('z-end', 'wave', at(c, 'bientot', 4.0) - 0.2, 4.0)
+
+# The Zouave presents the whole film from the corner (except when he is on screen in full: intro, close)
+presenter_start = 0.5
+scenes.append(f'<div id="presenter" class="clip" data-start="{presenter_start:.2f}" data-duration="{s7 + 0.3 - presenter_start:.2f}" data-track-index="29">' + zouave('zp', 'pip') + '</div>')
+tl.append(f'tl.fromTo("#presenter", {{opacity: 0, y: 60}}, {{opacity: 1, y: 0, duration: 0.7, ease: "back.out(1.6)"}}, {presenter_start + 0.1:.2f});')
+tl.append(f'tl.to("#presenter", {{opacity: 0, y: 40, duration: 0.4}}, {s1 + 0.1:.2f}); tl.to("#presenter", {{opacity: 1, y: 0, duration: 0.5}}, {e1 - 0.3:.2f});')
+tl.append(f'tl.to("#presenter", {{opacity: 0, y: 40, duration: 0.4}}, {s7:.2f});')
+for name in ['01-hook', '03-rise', '04-home', '06-agent', '065-value', '07-tech']: lipsync('zp', S[name])
+pose('zp', 'worried', at(h, 'if', 6.0), 3.0)
+pose('zp', 'soaked', at(r, 'shoulders', 12.0) - 0.3, 3.0)
+pose('zp', 'worried', at(m, 'one', 3.6), 2.2)
+pose('zp', 'reassure', at(m, 'simulation', 8.0), 2.6)
+pose('zp', 'facing', at(g, 'every', 2.0), 2.4)
+pose('zp', 'reassure', at(g, 'never', 9.5), 2.6)
+pose('zp', 'thinking', at(v, 'nobody', 1.6), 2.6)
+pose('zp', 'reassure', at(v, 'knows', 8.5), 2.6)
+pose('zp', 'facing', at(k, 'under', 0.3), 2.4)
 
 # Voice-over and subtitles
 audio = '\n'.join(f'<audio id="vo-{seg["name"]}" class="clip" src="assets/vo/{seg["name"]}.mp3" data-start="{seg["vo"]:.2f}" data-duration="{seg["d"]:.2f}" data-track-index="20"></audio>' for seg in segments)
@@ -231,7 +283,21 @@ html, body {{ width:1920px; height:1080px; overflow:hidden; background:var(--gro
 .claim {{ font-family:var(--font-display); font-size:70px; margin-top:12px; }}
 .claim em {{ color:var(--water); }}
 .meta {{ font-size:28px; color:#9fb9b5; margin-top:40px; line-height:1.6; }}
-.sub {{ position:absolute; left:50%; bottom:64px; transform:translateX(-50%); max-width:1500px; text-align:center; font-size:40px; line-height:1.35; font-weight:600; color:#fff; background:rgba(4,10,15,.72); border-radius:14px; padding:12px 26px; z-index:50; text-shadow:0 2px 8px rgba(0,0,0,.6); }}
+.sub {{ position:absolute; left:calc(50% + 150px); bottom:64px; transform:translateX(-50%); max-width:1300px; text-align:center; font-size:40px; line-height:1.35; font-weight:600; color:#fff; background:rgba(4,10,15,.72); border-radius:14px; padding:12px 26px; z-index:50; text-shadow:0 2px 8px rgba(0,0,0,.6); }}
+.zbig {{ position:relative; width:420px; height:420px; flex:none; }}
+.zbig img, .pip img {{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }}
+.zbig img {{ filter: drop-shadow(0 30px 40px rgba(0,0,0,.6)); }}
+.end .zbig {{ width:340px; height:340px; }}
+.zt, .zp {{ opacity:0; }}
+#presenter {{ position:absolute; left:14px; bottom:0; width:330px; height:330px; z-index:44; }}
+#presenter::before {{ content:''; position:absolute; inset:22% 12% 0; border-radius:50%; background:radial-gradient(circle at 50% 55%, rgba(164,214,188,.38), rgba(143,211,226,.12) 45%, transparent 70%); filter:blur(8px); }}
+.pip {{ position:relative; width:100%; height:100%; -webkit-mask-image:linear-gradient(#000 82%, transparent); mask-image:linear-gradient(#000 82%, transparent); }}
+.pip img {{ filter: drop-shadow(0 16px 24px rgba(0,0,0,.6)); }}
+.value-stack {{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:34px; }}
+.cards {{ display:flex; gap:34px; }}
+.vcard {{ width:470px; padding:34px 34px 38px; border-radius:24px; background:rgba(8,19,27,.84); border:2px solid rgba(164,214,188,.4); box-shadow:0 30px 70px rgba(0,0,0,.5); opacity:0; }}
+.vcard b {{ display:block; font-family:var(--font-display); font-weight:400; font-size:62px; color:var(--water); margin-bottom:12px; }}
+.vcard span {{ font-size:32px; line-height:1.35; color:#dfeee6; }}
 .brand {{ position:absolute; right:56px; top:48px; z-index:40; font-size:24px; letter-spacing:8px; font-weight:700; color:rgba(238,244,240,.75); }}
 </style>
 </head>

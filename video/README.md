@@ -1,5 +1,7 @@
 # Zouave · 2-minute pitch video
 
+Latest render: [`zouave-pitch.mp4`](zouave-pitch.mp4) (v3, 1 min 53 s). Earlier versions: [`versions/`](versions) — v1 (app screenshots only), v2 (+ Google Photorealistic 3D and the street going under water).
+
 [HyperFrames](https://hyperframes.heygen.com) composition (HTML + GSAP, rendered to MP4) built from real screenshots of
 the app and the Zouave's voice (ElevenLabs v3, "Jamie", French accent), with burned-in subtitles.
 Scene by scene script: [`docs/PITCH.md`](../docs/PITCH.md).
@@ -13,6 +15,7 @@ Scene by scene script: [`docs/PITCH.md`](../docs/PITCH.md).
 | `assets/vo/*.mp3` | Voice-over, one file per scene · `*.words.json`: word timings (ElevenLabs speech-to-text) |
 | `assets/shots/*.jpg` | App screenshots, 1920×1080 |
 | `assets/img/g-*.jpg` | Google Photorealistic 3D views from `docs/google-compare/` (`scripts/compare-google.mjs`); the aerial ones are cropped below the HUD, and the Google attribution is drawn on the frame |
+| `assets/img/z-*.webp` | The Zouave presenter: still and open-mouth frames (lip-sync on the word timings) and the OpenAI poses from `web/public/zouave/living-stone/` |
 | `assets/img/street-*.jpg` | The demo street dry, at 0.5 m and at 1.5 m: OpenAI image edits of a Panoramax photo (Lejun, CC BY-SA 4.0), from `web/public/photos/4-rue-traversiere/` |
 
 ## Render
