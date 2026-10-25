@@ -2,9 +2,10 @@ import { test, mock } from 'node:test';
 import assert from 'node:assert/strict';
 
 const showScenario = mock.fn(async () => {});
+const showFloodLevel = mock.fn(async () => {});
 const square = { type: 'FeatureCollection', features: [{ type: 'Feature', properties: { classe: '1-2', h_min: 1 }, geometry: { type: 'Polygon', coordinates: [[[2,48],[3,48],[3,49],[2,49],[2,48]]] } }] };
-mock.module('../web/src/map.ts', { exports: { mapReady: Promise.resolve(), showScenario, goTo: async () => {}, showCaves: () => {}, datasets: { ppri_aleas: square, caves_1910: square, sdrife_zone_inondable: square } } });
-const { state, aller_a, exposition, afficher_scenario } = await import('../web/src/tools.ts');
+mock.module('../web/src/map.ts', { exports: { mapReady: Promise.resolve(), showScenario, showFloodLevel, goTo: async () => {}, showCaves: () => {}, datasets: { ppri_aleas: square, caves_1910: square, sdrife_zone_inondable: square } } });
+const { state, aller_a, exposition, afficher_scenario, afficher_crue } = await import('../web/src/tools.ts');
 
 function element(scenario) {
   const classes = new Set();
@@ -15,7 +16,9 @@ function reset() {
   const buttons = ['aujourdhui', '1910', 'pire'].map(element);
   globalThis.document = { getElementById: id => { if (!elements.has(id)) elements.set(id, element()); return elements.get(id); }, querySelectorAll: () => buttons };
   globalThis.fetch = async () => ({ ok: true, json: async () => ({ features: [{ geometry: { type: 'Point', coordinates: [2.369632,48.844929] }, properties: { label: '4 Rue Traversière' } }], source_url: 'https://data.geopf.fr/geocodage/search' }) });
-  state.scenario = 'aujourdhui'; state.exposureShown = false;
+  state.scenario = 'aujourdhui'; state.exposureShown = false; state.timeline = null;
+  globalThis.window = { dispatchEvent() {} };
+  showFloodLevel.mock.resetCalls();
   showScenario.mock.resetCalls();
   return { elements, buttons };
 }
@@ -55,4 +58,27 @@ test('outside all footprints still synchronizes scenario without inventing expos
   assert.equal(result.classe, null);
   assert.equal(state.scenario, '1910');
   assert.equal(showScenario.mock.callCount(), 1);
+});
+test('voice timeline tool returns derived numbers and updates the renderer and exposure', async () => {
+  reset();
+  const result = await afficher_crue({ annee: '1955', niveau_m: null });
+  assert.equal(result.level, 7.12);
+  assert.equal(result.exposure.status, 'possible');
+  assert.equal(result.exposure.photo_height_m, 0.5);
+  assert.deepEqual(showFloodLevel.mock.calls[0].arguments, [7.12]);
+  assert.equal(state.timeline.id, '1955');
+});
+test('custom levels are estimated, unavailable photos do not prevent exposure and classic scenarios exit timeline', async () => {
+  reset();
+  globalThis.fetch = async () => { throw new Error('photo offline'); };
+  const result = await afficher_crue({ annee: null, niveau_m: 9.1 });
+  assert.equal(result.evidence, 'Estimé');
+  assert.equal(result.exposure.photo_available_height_m, undefined);
+  await afficher_scenario({ scenario: '1910' });
+  assert.equal(state.timeline, null);
+});
+test('voice timeline rejects unknown or ambiguous requests without changing layers', async () => {
+  reset();
+  for (const args of [{}, { annee: 'future' }, { annee: '1910', niveau_m: 8.62 }, { niveau_m: NaN }]) await assert.rejects(afficher_crue(args));
+  assert.equal(showFloodLevel.mock.callCount(), 0);
 });

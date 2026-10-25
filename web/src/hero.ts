@@ -51,7 +51,26 @@ export function createLifecycle() {
   };
 }
 
-export function createHero(container: HTMLElement) {
+export interface HeroAdapters {
+  createRenderer: () => THREE.WebGLRenderer;
+  loadTexture: (url: string) => Promise<THREE.Texture>;
+  loadDepth: (url: string) => Promise<{ data: Float32Array; width: number; height: number }>;
+  roadColour: (texture: THREE.Texture) => THREE.Color;
+  requestFrame: (callback: FrameRequestCallback) => number;
+  cancelFrame: (handle: number) => void;
+  observeResize: (target: HTMLElement, callback: () => void) => () => void;
+}
+const browserAdapters = (): HeroAdapters => ({
+  createRenderer: () => new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' }),
+  loadTexture: url => new THREE.TextureLoader().loadAsync(url),
+  loadDepth,
+  roadColour: texture => roadColour(texture.image as HTMLImageElement),
+  requestFrame: callback => requestAnimationFrame(callback),
+  cancelFrame: handle => cancelAnimationFrame(handle),
+  observeResize: (target, callback) => { const observer = new ResizeObserver(callback); observer.observe(target); return () => observer.disconnect(); },
+});
+
+export function createHero(container: HTMLElement, adapters: HeroAdapters = browserAdapters()) {
   let renderer: THREE.WebGLRenderer | undefined;
   const lifecycle = createLifecycle();
   const state = { level: 0, target: 0, start: 0, from: 0 };
@@ -61,10 +80,18 @@ export function createHero(container: HTMLElement) {
   /** Resolves to `false` when a newer `show()` or `stop()` superseded this one while its assets were loading. */
   async function show(options: HeroOptions): Promise<boolean> {
     const ticket = lifecycle.begin();
-    renderer ??= new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+    renderer ??= adapters.createRenderer();
+    renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio ?? 1, 1.5));
     container.replaceChildren(renderer.domElement);
-    const [texture, depth] = await Promise.all([new THREE.TextureLoader().loadAsync(options.photoUrl), loadDepth(options.depthUrl)]);
+    const loads = [adapters.loadTexture(options.photoUrl), adapters.loadDepth(options.depthUrl)] as const;
+    let texture: THREE.Texture, depth: Awaited<typeof loads[1]>;
+    try { [texture, depth] = await Promise.all(loads); }
+    catch (error) {
+      // A load that failed after being superseded must not disturb the newer scene: swallow it and free what did load.
+      if (lifecycle.isCurrent(ticket)) throw error;
+      void loads[0].then(loaded => loaded.dispose(), () => {});
+      return false;
+    }
     if (!lifecycle.isCurrent(ticket)) { texture.dispose(); return false; }
     texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = 8;
     const aspect = depth.width / depth.height;
@@ -121,7 +148,7 @@ export function createHero(container: HTMLElement) {
     backdrop.position.set(0, 0, -300).applyMatrix4(tilt); backdrop.position.y += options.cameraHeight; backdrop.quaternion.setFromRotationMatrix(tilt);
     scene.add(backdrop);
     // Street level under the relief so the water has a consistent bed right up to the camera.
-    const bed = new THREE.Mesh(new THREE.PlaneGeometry(800, 800), new THREE.MeshBasicMaterial({ color: roadColour(texture.image as HTMLImageElement) }));
+    const bed = new THREE.Mesh(new THREE.PlaneGeometry(800, 800), new THREE.MeshBasicMaterial({ color: adapters.roadColour(texture) }));
     bed.rotation.x = -Math.PI / 2; bed.position.y = -0.02; bed.renderOrder = -1;
     scene.add(bed);
 
@@ -180,17 +207,16 @@ export function createHero(container: HTMLElement) {
       const size = renderer!.getDrawingBufferSize(new THREE.Vector2());
       prepass.setSize(size.x, size.y); waterUniforms.uRes.value.copy(size);
     };
-    const observer = new ResizeObserver(resize);
-    observer.observe(container);
+    const unobserve = adapters.observeResize(container, resize);
     resize();
 
-    const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduceMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
     state.level = 0; state.from = 0; state.target = options.target; state.start = performance.now();
     const duration = reduceMotion ? 0 : 3000 + options.target * 2400;
     let shownLevel = -1;
     let frame = 0;
     const tick = (now: number) => {
-      frame = requestAnimationFrame(tick);
+      frame = adapters.requestFrame(tick);
       if (state.level !== state.target) {
         const t = duration ? Math.min((now - state.start) / duration, 1) : 1;
         state.level = state.from + (state.target - state.from) * (1 - Math.pow(1 - t, 2));
@@ -209,13 +235,13 @@ export function createHero(container: HTMLElement) {
       renderer!.render(scene, camera);
     };
     const dispose = () => {
-      cancelAnimationFrame(frame);
-      observer.disconnect();
+      adapters.cancelFrame(frame);
+      unobserve();
       relief.dispose(); photoMaterial.dispose(); bed.geometry.dispose(); (bed.material as THREE.Material).dispose(); backdrop.geometry.dispose(); (backdrop.material as THREE.Material).dispose();
       water.dispose(); prepass.dispose(); texture.dispose();
     };
     if (!lifecycle.commit(ticket, { stop: dispose })) return false;
-    frame = requestAnimationFrame(tick);
+    frame = adapters.requestFrame(tick);
     return true;
   }
 

@@ -10,11 +10,12 @@
     "dev": "concurrently -k \"node --env-file-if-exists=.env --experimental-strip-types server/index.ts\" \"vite --config web/vite.config.ts\"",
     "build": "tsc --noEmit && vite build --config web/vite.config.ts",
     "start": "npm run build && node --env-file-if-exists=.env --experimental-strip-types server/index.ts",
-    "test": "node --experimental-strip-types --test server/api.test.ts && node --experimental-strip-types --experimental-test-module-mocks --test scripts/tools.test.mjs && node --experimental-strip-types --test scripts/hero.test.mjs"
+    "test": "node --experimental-strip-types --test server/api.test.ts scripts/flood-level.test.mjs && node --experimental-strip-types --experimental-test-module-mocks --test scripts/tools.test.mjs scripts/intent.test.mjs && node --experimental-strip-types --test scripts/hero.test.mjs"
   },
   "dependencies": {
     "@protomaps/basemaps": "^5.7.1",
     "@turf/boolean-point-in-polygon": "^7.3.4",
+    "@turf/difference": "^7.4.0",
     "express": "^5.1.0",
     "maplibre-gl": "^6.15.0",
     "openai": "^7.43.0",
