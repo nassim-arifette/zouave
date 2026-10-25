@@ -58,7 +58,23 @@ test('reprojection looks along the requested heading and metric fit puts the roa
   const tilted = reproject(src, 0, -10, 80, 64, 36, { pitch: 20, roll: 0 }), level = reproject(src, 0, 10, 80, 64, 36);
   const close = (a: number[], b: number[]) => a.every((v, k) => Math.abs(v - b[k]) <= 3);
   assert.ok(close(centre(tilted), centre(level)), `tilt-compensated ${centre(tilted)} vs level ${centre(level)}`);
-  assert.ok(close(centre(reproject(src, 90, 0, 80, 64, 36, { pitch: 0, roll: 35 })), centre(reproject(src, 90, 0, 80, 64, 36))));
+  assert.ok(close(centre(reproject(src, 45, 0, 80, 64, 36, { pitch: 0, roll: 35 })), centre(reproject(src, 45, 0, 80, 64, 36))));
+  // Horizon test on a panorama built with the reference capture rotation (camera pitched 7° up and rolled 10°): once
+  // compensated, the sky/ground boundary must be horizontal across the whole view, at every yaw.
+  const tp = 7 * Math.PI / 180, tr = 10 * Math.PI / 180, W = 1024, H = 512, pano = new Uint8Array(W * H * 3);
+  for (let v = 0; v < H; v++) for (let u = 0; u < W; u++) {
+    const lon = ((u + 0.5) / W) * 2 * Math.PI, lat = Math.PI / 2 - ((v + 0.5) / H) * Math.PI;
+    // camera-frame direction of this texel, then back to the level frame: undo roll (about forward), then undo pitch (about X)
+    const xc = Math.cos(lat) * Math.sin(lon), yc = Math.sin(lat), zc = Math.cos(lat) * Math.cos(lon);
+    const xr = xc * Math.cos(tr) - yc * Math.sin(tr), yr = xc * Math.sin(tr) + yc * Math.cos(tr);
+    const yl = yr * Math.cos(tp) - zc * Math.sin(tp);
+    const o = (v * W + u) * 3; if (yl > 0) { pano[o + 2] = 220; } else { pano[o] = 200; pano[o + 1] = 120; }
+  }
+  for (const yawDeg of [0, 90, 180, 270]) {
+    const view = reproject({ data: pano, width: W, height: H, channels: 3 }, yawDeg, 0, 80, 321, 181, { pitch: 7, roll: 10 });
+    const horizon = [20, 80, 160, 240, 300].map(x => { for (let row = 0; row < 181; row++) if (view.data[(row * 321 + x) * 3] > view.data[(row * 321 + x) * 3 + 2]) return row; return -1; });
+    assert.ok(horizon.every(row => Math.abs(row - 90) <= 2), `yaw ${yawDeg}: horizon rows ${horizon} should all be ≈ 90`);
+  }
   const relative = await fakeDepth();
   const metres = metricDepth(relative);
   const bottom = metres.data[(OUT_H - 1) * OUT_W + Math.floor(OUT_W * 0.3)];

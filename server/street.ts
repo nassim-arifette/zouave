@@ -9,7 +9,7 @@ export const cacheDir = fileURLToPath(new URL('../.cache/street/', import.meta.u
 export const OUT_W = 1600, OUT_H = 896, FOV = 80, PITCH = -4, CAMERA_HEIGHT = 2;
 export const DEPTH_MODEL = 'onnx-community/depth-anything-v2-small';
 /** Bump when the projection or depth pipeline changes: cached renders with another version are recomputed. */
-export const RENDER_VERSION = 2;
+export const RENDER_VERSION = 3;
 
 export interface Picture { id: string; lat: number; lon: number; azimuth: number; pitch: number; roll: number; hd: string; sd?: string; producer: string; license: string; license_url: string; datetime: string; distance_m: number }
 export type DepthEstimator = (jpeg: Buffer) => Promise<{ data: Float32Array; width: number; height: number }>;
@@ -57,7 +57,7 @@ export function reproject(src: { data: Uint8Array; width: number; height: number
     const x2 = x * cy + z1 * sy, z2 = -x * sy + z1 * cy;
     // level frame → camera frame: undo the capture pitch (about the camera's X axis) then its roll (about its forward axis)
     const y3 = y1 * ctp + z2 * stp, z3 = -y1 * stp + z2 * ctp;
-    const x4 = x2 * ctr - y3 * str, y4 = x2 * str + y3 * ctr;
+    const x4 = x2 * ctr + y3 * str, y4 = -x2 * str + y3 * ctr;
     const lon = Math.atan2(x4, z3), lat = Math.atan2(y4, Math.hypot(x4, z3));
     const u = ((lon / (2 * Math.PI)) % 1 + 1) % 1 * sw - 0.5, v = (0.5 - lat / Math.PI) * sh - 0.5;
     const u0 = Math.floor(u), v0 = Math.min(Math.max(Math.floor(v), 0), sh - 2);
