@@ -1,0 +1,22 @@
+{
+  "batiments.geojson": {
+    "bytes": 8507550,
+    "sha256": "53bec2eda534598937642b6b7ae556df565008a0e34b66fcce45392a37fe8f04"
+  },
+  "caves_1910.geojson": {
+    "bytes": 357950,
+    "sha256": "f09f394d6f3e60b84771ec27abbb60035b3af9a8e0014478b24047b9d44c92e9"
+  },
+  "ppri_aleas.geojson": {
+    "bytes": 383520,
+    "sha256": "c80330b2951e37e46f72b2ec6f2e8bd55906f603f29356cd6eeced1c66e425c2"
+  },
+  "ppri_zonage.geojson": {
+    "bytes": 509483,
+    "sha256": "4aaa88e905d92254593a2678dda42cfa1d89e4773ac80de7ec3bba9ffbd33d2c"
+  },
+  "sdrife_zone_inondable.geojson": {
+    "bytes": 1149194,
+    "sha256": "57a771cd18783bacf3e775e0f715302e3b656a5d0b321634a7f27067695686dd"
+  }
+}
