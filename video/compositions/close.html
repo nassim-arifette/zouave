@@ -1,0 +1,32 @@
+<template>
+<style>
+  #root { position: absolute; inset: 0; overflow: hidden; }
+  #cl-bg { position: absolute; inset: 0; background: linear-gradient(180deg, #21252b 0%, #0d0e11 100%); }
+  #cl-z { position: absolute; left: 420px; top: 0; width: 1080px; height: 1080px; object-fit: cover; }
+  #cl-vig { position: absolute; inset: 0; background: linear-gradient(90deg, #0d0e11 0%, rgba(13,14,17,0) 28%, rgba(13,14,17,0) 72%, #0d0e11 100%); }
+  #cl-card { position: absolute; inset: 0; background: #0c1219; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  #cl-card h1 { font: 700 200px/1 "Playfair Display", serif; color: #eef3f6; letter-spacing: 0.02em; }
+  #cl-card .cta { font: 500 44px/1.3 "Inter", sans-serif; color: #bfe6d4; margin-top: 28px; }
+  #cl-card .repo { font: 500 30px/1 "Inter", sans-serif; color: #8fd3e8; margin-top: 44px; letter-spacing: 0.02em; }
+  #cl-card .credits { position: absolute; left: 0; right: 0; bottom: 56px; font: 400 18px/1.6 "Inter", sans-serif; color: rgba(238,243,246,0.55); }
+</style>
+<div id="root" data-composition-id="close" data-width="1920" data-height="1080">
+  <div id="cl-bg"></div>
+  <video id="cl-z" class="clip" src="assets/zouave/s8_close.mp4" data-start="0" data-duration="9.08" data-track-index="0" playsinline data-has-audio="true"></video>
+  <div id="cl-vig"></div>
+  <div id="cl-card" class="clip" data-start="8.8" data-duration="3.2" data-track-index="1">
+    <h1>Zouave</h1>
+    <div class="cta">Type your address. Two minutes. And you'll know.</div>
+    <div class="repo">github.com/nassim-arifette/zouave</div>
+    <div class="credits">Data: PPRI de Paris / DRIEAT · Ville de Paris · Institut Paris Région · OECD · Hub'Eau / Vigicrues · IGN · Street photo: Panoramax CC BY-SA 4.0<br />Voice: OpenAI TTS · Statue animation: Ditto-TalkingHead · Edited with HyperFrames · No music</div>
+  </div>
+</div>
+<script>
+  const tl = gsap.timeline({ paused: true });
+  tl.to("#cl-z", { opacity: 0, duration: 0.5 }, 8.7);
+  tl.fromTo("#cl-card", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 8.8);
+  tl.fromTo("#cl-card h1, #cl-card .cta, #cl-card .repo", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.6, stagger: 0.18, ease: "power3.out" }, 9.0);
+  tl.fromTo("#cl-card .credits", { opacity: 0 }, { opacity: 1, duration: 0.6 }, 9.8);
+  window.__timelines["close"] = tl;
+</script>
+</template>

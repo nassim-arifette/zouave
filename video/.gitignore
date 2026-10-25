@@ -1,0 +1,6 @@
+node_modules/
+.hyperframes/
+out/
+*.mp4.tmp
+# heavy renders and raw site captures (see assets/README.md)
+assets/site/*.mp4
