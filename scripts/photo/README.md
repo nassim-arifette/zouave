@@ -6,7 +6,13 @@ Run `python3 scripts/photo/fetch_sources.py` to regenerate originals from the `p
 OPENAI_API_KEY=... node scripts/photo/edit_openai.mjs --all
 python3 scripts/photo/postprocess.py --all [--banner]
 python3 scripts/photo/contact_sheet.py
+python3 scripts/photo/depth.py   # depth.png per location for the 3D street scene
 ```
+
+`depth.py` runs Depth Anything V2 (metric outdoor, Small) on each original, rescales the
+map so the road under the camera sits 2 m below the lens, and stores centimetres as a
+16-bit PNG (R = high byte, G = low byte) at half resolution. `web/src/hero.ts` unprojects it
+into a relief and floods it with real-time water; the AI edits remain the fallback.
 
 The edit script supports `--dry-run` to review prompts and output paths without making API requests. Use `--height 1.5` to select heights explicitly; otherwise each location's manifest heights are used.
 

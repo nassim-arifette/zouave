@@ -41,10 +41,17 @@ missing assets return an explicit 404 and do not interrupt the demo.
   Turf checks the delivered WGS84 polygons. Every card carries attribution.
 - `web/src/map.ts`: local Protomaps PMTiles, IGN building extrusions and flood layers.
 - `web/src/water.ts`: Three.js custom MapLibre layer sharing its WebGL2 context.
-  PPRI polygon meshes preserve holes and class depths; a translucent, silty blue-brown
-  shader animates ripples, approximate Fresnel reflection and the four-second rise.
+  PPRI polygon meshes preserve holes and class depths; a murky Seine-flood shader
+  animates flow-driven ripples, sky Fresnel and sun glint, darkens with class depth,
+  and adds foam along banks and building walls (a blurred mask of the PPRI polygons
+  minus IGN footprints) during the four-second rise.
   Set `waterRenderer: 'extrusion'` in config for the simpler class-colored fallback.
   The visual depth exaggeration defaults to 2; labels always use official intervals.
+- `web/src/hero.ts`: street-level "hero" scene. The Panoramax photo of the address is
+  unprojected into a 2.5D relief with a precomputed depth map (`scripts/photo/depth.py`),
+  and real-time Three.js water (planar reflection, screen-space refraction, silt
+  absorption, wet band on walls, foam, debris) rises to the requested height; a slider
+  lets the user scrub 0–3 m. Falls back to the AI-edited photo when no depth map exists.
 - `web/src/voice.ts`: microphone/WebRTC lifecycle, captions, Live nested Responses
   function results and Realtime function results. The mic stops and frees devices;
   idle sessions close after two minutes. Live uses graceful `session.close`.
@@ -74,7 +81,9 @@ The avatar automatically uses `/zouave/avatar.png` and
 Photo lookup accepts a slug-keyed object, array or `{photos: [...]}` of entries:
 `{lat,lon,address_label,heights:{"1":"slug/1.jpg","2":"slug/2.jpg"},url_clean,credit,license}`.
 Relative paths resolve beneath `/photos/`; the nearest available simulated height
-is returned rather than relabeling an image with the requested height.
+is returned rather than relabeling an image with the requested height. Entries with
+`files.depth` (see `scripts/photo/depth.py`) also return `url_depth` and `view`
+(fov, pitch, camera height) so the browser renders the live 3D street scene instead.
 
 ## Verification
 

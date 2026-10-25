@@ -1,5 +1,6 @@
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 import { config } from './config.ts';
+import { createHero } from './hero.ts';
 import { mapReady, showScenario, goTo, showCaves, datasets, type Scenario } from './map.ts';
 export const state = { scenario: 'aujourdhui' as Scenario, address: { label: config.demoAddress, ...config.demoPosition }, exposureShown: false };
 export const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -82,9 +83,11 @@ export async function photo_inondee({ hauteur }: { hauteur: number }) {
   if (!Number.isFinite(hauteur) || hauteur < 0 || hauteur > 10) throw new Error('Hauteur de simulation invalide.');
   try {
     const result = await api(`/api/photo?${new URLSearchParams({ lat: String(state.address.lat), lon: String(state.address.lon), h: String(hauteur) })}`);
+    const credit = `${escape(result.credit)}${result.credit.includes(result.license) ? '' : ` · ${escape(result.license)}`}${result.source_url ? ` · ${source('Photo originale · Panoramax', result.source_url)}` : ''}`;
+    if (result.url_depth && await showHero({ ...result, hauteur_m: hauteur }, credit)) return { affichee: true, ...result, hauteur_m: hauteur, rendu: 'relief-3d' };
     const image = $<HTMLImageElement>('photo-image'); image.src = result.url;
     $('photo-label').textContent = `${result.address_label} · ${result.hauteur_m} m simulés`;
-    $('photo-credit').innerHTML = `${escape(result.credit)}${result.credit.includes(result.license) ? '' : ` · ${escape(result.license)}`}${result.source_url ? ` · ${source('Photo originale · Panoramax', result.source_url)}` : ''}`;
+    $('photo-credit').innerHTML = credit;
     image.onerror = () => { $<HTMLDialogElement>('photo-dialog').close(); notify('Image indisponible. La simulation ne peut pas être affichée.'); };
     $<HTMLDialogElement>('photo-dialog').showModal();
     return { affichee: true, ...result };
@@ -98,6 +101,23 @@ export async function consignes(args: { rez_de_chaussee: boolean; cave: boolean;
   const selected = data.instructions.filter(item => item.condition !== 'always' && args[item.condition]).concat(data.instructions.filter(item => item.condition === 'always')).slice(0, 3).map(item => ({ title: item.title, text: item.text, source: data.sources[item.source].label, url: data.sources[item.source].url }));
   showCard('safety-card', `<div class="card-eyebrow"><i></i>LES BONS RÉFLEXES</div><h2>Se préparer,<br>sans paniquer.</h2><p>Des gestes adaptés à votre foyer.</p><ol class="checklist">${selected.map(item => `<li><strong>${escape(item.title)}</strong><p>${escape(item.text)}</p></li>`).join('')}</ol>`, [...new Map(selected.map(item => [item.url, item])).values()].map(item => source(item.source, item.url)).join(''));
   return { consignes: selected, profil: args, source: 'Consignes officielles de prévention' };
+}
+let hero: ReturnType<typeof createHero> | undefined;
+async function showHero(result: { url_clean: string; url_depth: string; address_label: string; hauteur_m: number; view: { fov: number; pitch: number; camera_height_m: number } }, credit: string) {
+  const dialog = $<HTMLDialogElement>('hero-dialog');
+  const slider = $<HTMLInputElement>('hero-slider');
+  const format = (level: number) => `${level.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m`;
+  try {
+    hero ??= createHero($('hero-view'));
+    await hero.show({ photoUrl: result.url_clean, depthUrl: result.url_depth, fov: result.view.fov, pitch: result.view.pitch, cameraHeight: result.view.camera_height_m, target: result.hauteur_m, onLevel: level => { slider.value = String(level); $('hero-level').textContent = format(level); } });
+  } catch (error) { console.warn('3D street scene unavailable, falling back to the photo:', error); hero?.stop(); return false; }
+  $('hero-label').textContent = `${result.address_label} · jusqu’à ${format(result.hauteur_m)} simulés`;
+  $('hero-credit').innerHTML = credit;
+  slider.oninput = () => hero?.setLevel(Number(slider.value));
+  $('hero-replay').onclick = () => { hero?.setLevel(0); hero?.animateTo(result.hauteur_m); };
+  dialog.onclose = () => hero?.stop();
+  if (!dialog.open) dialog.showModal();
+  return true;
 }
 let toastTimer: ReturnType<typeof setTimeout>;
 export function notify(message: string) { $('toast').textContent = message; $('toast').hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { $('toast').hidden = true; }, 6500); }
