@@ -8,8 +8,10 @@ export const panoramaxURL = 'https://api.panoramax.xyz/api';
 export const cacheDir = fileURLToPath(new URL('../.cache/street/', import.meta.url));
 export const OUT_W = 1600, OUT_H = 896, FOV = 80, PITCH = -4, CAMERA_HEIGHT = 2;
 export const DEPTH_MODEL = 'onnx-community/depth-anything-v2-small';
+/** Bump when the projection or depth pipeline changes: cached renders with another version are recomputed. */
+export const RENDER_VERSION = 2;
 
-export interface Picture { id: string; lat: number; lon: number; azimuth: number; hd: string; sd?: string; producer: string; license: string; license_url: string; datetime: string; distance_m: number }
+export interface Picture { id: string; lat: number; lon: number; azimuth: number; pitch: number; roll: number; hd: string; sd?: string; producer: string; license: string; license_url: string; datetime: string; distance_m: number }
 export type DepthEstimator = (jpeg: Buffer) => Promise<{ data: Float32Array; width: number; height: number }>;
 
 export function bearing(fromLat: number, fromLon: number, toLat: number, toLon: number) {
@@ -33,24 +35,30 @@ export async function findNearestPicture(lat: number, lon: number, radius: numbe
     const d = distance(lat, lon, { lat: plat, lon: plon });
     if (d > radius) return [];
     const licenseLink = (feature.links ?? []).find((l: { rel: string }) => l.rel === 'license');
-    return [{ id: String(feature.id), lat: plat, lon: plon, azimuth: Number(p['view:azimuth'] ?? 0), hd: feature.assets.hd.href, sd: feature.assets.sd?.href, producer: String(p['geovisio:producer'] ?? 'contributeur Panoramax'), license: String(p.license ?? 'CC-BY-SA-4.0'), license_url: licenseLink?.href ?? 'https://creativecommons.org/licenses/by-sa/4.0/', datetime: String(p.datetime ?? ''), distance_m: Math.round(d) } satisfies Picture];
+    return [{ id: String(feature.id), lat: plat, lon: plon, azimuth: Number(p['view:azimuth'] ?? 0), pitch: Number(p['pers:pitch'] ?? 0), roll: Number(p['pers:roll'] ?? 0), hd: feature.assets.hd.href, sd: feature.assets.sd?.href, producer: String(p['geovisio:producer'] ?? 'contributeur Panoramax'), license: String(p.license ?? 'CC-BY-SA-4.0'), license_url: licenseLink?.href ?? 'https://creativecommons.org/licenses/by-sa/4.0/', datetime: String(p.datetime ?? ''), distance_m: Math.round(d) } satisfies Picture];
   });
   return pictures.sort((a, b) => a.distance_m - b.distance_m)[0] ?? null;
 }
 
 /** Rectilinear view of an equirectangular picture. Panoramax panoramas start (u = 0) at the camera azimuth. */
-export function reproject(src: { data: Uint8Array; width: number; height: number; channels: number }, yawDeg: number, pitchDeg = PITCH, fovDeg = FOV, w = OUT_W, h = OUT_H) {
+/** `tilt` is the capture orientation of the panorama (Panoramax `pers:pitch` / `pers:roll`, degrees): the view is computed in the level frame and converted to the tilted camera frame before sampling, so a hand-held panorama comes out straight. */
+export function reproject(src: { data: Uint8Array; width: number; height: number; channels: number }, yawDeg: number, pitchDeg = PITCH, fovDeg = FOV, w = OUT_W, h = OUT_H, tilt = { pitch: 0, roll: 0 }) {
   const out = new Uint8Array(w * h * 3);
   const f = (w / 2) / Math.tan(fovDeg * Math.PI / 360);
   const yaw = yawDeg * Math.PI / 180, pitch = pitchDeg * Math.PI / 180;
   const cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
+  const tp = tilt.pitch * Math.PI / 180, tr = tilt.roll * Math.PI / 180;
+  const ctp = Math.cos(tp), stp = Math.sin(tp), ctr = Math.cos(tr), str = Math.sin(tr);
   const { data, width: sw, height: sh, channels } = src;
   for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
     const x = i - w / 2 + 0.5, y = -(j - h / 2 + 0.5), z = f;
     // pitch about X (negative = looking down, as hero.ts and metricDepth assume), then yaw about Y
     const y1 = y * cp + z * sp, z1 = -y * sp + z * cp;
     const x2 = x * cy + z1 * sy, z2 = -x * sy + z1 * cy;
-    const lon = Math.atan2(x2, z2), lat = Math.atan2(y1, Math.hypot(x2, z2));
+    // level frame → camera frame: undo the capture pitch (about the camera's X axis) then its roll (about its forward axis)
+    const y3 = y1 * ctp + z2 * stp, z3 = -y1 * stp + z2 * ctp;
+    const x4 = x2 * ctr - y3 * str, y4 = x2 * str + y3 * ctr;
+    const lon = Math.atan2(x4, z3), lat = Math.atan2(y4, Math.hypot(x4, z3));
     const u = ((lon / (2 * Math.PI)) % 1 + 1) % 1 * sw - 0.5, v = (0.5 - lat / Math.PI) * sh - 0.5;
     const u0 = Math.floor(u), v0 = Math.min(Math.max(Math.floor(v), 0), sh - 2);
     const fu = u - u0, fv = Math.min(Math.max(v - v0, 0), 1);
@@ -86,6 +94,14 @@ export function metricDepth(relative: { data: Float32Array; width: number; heigh
   const a = (1 / nearMetres - 1 / FAR) / Math.max(near - far, 1e-6), b = 1 / FAR - a * far;
   const metres = new Float32Array(data.length);
   for (let k = 0; k < data.length; k++) { const inv = a * data[k] + b; metres[k] = inv > 1 / FAR ? Math.max(1, 1 / inv) : FAR; }
+  // Ground-plane prior: along a ray that points below the horizon nothing visible can lie beyond the ground, so the road
+  // (textureless, often estimated too far by the model) is never sunk under the scene's floor.
+  for (let j = 0; j < height; j++) {
+    const t = (j + 0.5) / height, slope = (1 - 2 * t) * tanY * Math.cos(p) + Math.sin(p);
+    if (slope >= -1e-3) continue;
+    const ground = -cameraHeight / slope * 1.05;
+    for (let i = 0; i < width; i++) { const k = j * width + i; if (metres[k] > ground) metres[k] = ground; }
+  }
   return { data: metres, width, height, scale: a, shift: b };
 }
 
@@ -129,27 +145,30 @@ const inflight = new Map<string, Promise<StreetScene>>();
 export function renderStreet(picture: Picture, lat: number, lon: number, options: { fetcher: typeof fetch; estimateDepth: DepthEstimator; cache?: string }): Promise<StreetScene> {
   const dir = `${options.cache ?? cacheDir}${picture.id}/`;
   const yaw = Math.round(bearing(picture.lat, picture.lon, lat, lon));
-  const key = `${picture.id}:${yaw}`;
+  // Version in the file names too, so browsers (and CDNs) never reuse a render from an older pipeline.
+  const stem = `${yaw}_v${RENDER_VERSION}`;
+  const key = `${picture.id}:${stem}`;
   const credit = `Photo : ${anonymize(picture.producer)} / Panoramax, ${picture.license}`;
-  const scene = (): StreetScene => ({ id: picture.id, url_clean: `/cache/street/${picture.id}/photo_${yaw}.jpg`, url_depth: `/cache/street/${picture.id}/depth_${yaw}.png`, view: { fov: FOV, pitch: PITCH, camera_height_m: CAMERA_HEIGHT }, credit, license: picture.license, license_url: picture.license_url, source_url: `https://api.panoramax.xyz/#focus=pic&pic=${picture.id}`, author: anonymize(picture.producer), datetime: picture.datetime, distance_m: picture.distance_m, yaw });
+  const scene = (): StreetScene => ({ id: picture.id, url_clean: `/cache/street/${picture.id}/photo_${stem}.jpg`, url_depth: `/cache/street/${picture.id}/depth_${stem}.png`, view: { fov: FOV, pitch: PITCH, camera_height_m: CAMERA_HEIGHT }, credit, license: picture.license, license_url: picture.license_url, source_url: `https://api.panoramax.xyz/#focus=pic&pic=${picture.id}`, author: anonymize(picture.producer), datetime: picture.datetime, distance_m: picture.distance_m, yaw });
   const pending = inflight.get(key);
   if (pending) return pending;
   const job = (async () => {
-    try { await access(`${dir}depth_${yaw}.png`); return scene(); } catch { /* not cached yet */ }
+    const cached = await readCachedScene(picture.id, yaw, options.cache ?? cacheDir);
+    if (cached?.render_version === RENDER_VERSION) { try { await access(`${dir}depth_${stem}.png`); return scene(); } catch { /* incomplete entry: recompute */ } }
     const sharp = (await import('sharp')).default;
     const response = await options.fetcher(picture.hd, { signal: AbortSignal.timeout(9000) });
     if (!response.ok) throw new Error(`Panoramax image HTTP ${response.status}`);
     const source = Buffer.from(await response.arrayBuffer());
     const { data, info } = await sharp(source).rotate().removeAlpha().raw().toBuffer({ resolveWithObject: true });
-    const view = reproject({ data: new Uint8Array(data.buffer, data.byteOffset, data.byteLength), width: info.width, height: info.height, channels: info.channels }, yaw - picture.azimuth);
+    const view = reproject({ data: new Uint8Array(data.buffer, data.byteOffset, data.byteLength), width: info.width, height: info.height, channels: info.channels }, yaw - picture.azimuth, PITCH, FOV, OUT_W, OUT_H, { pitch: picture.pitch, roll: picture.roll });
     const jpeg = await sharp(Buffer.from(view.data.buffer), { raw: { width: view.width, height: view.height, channels: 3 } }).jpeg({ quality: 86 }).toBuffer();
     const relative = await options.estimateDepth(jpeg);
     const depth = encodeDepth(metricDepth(relative));
     const png = await sharp(Buffer.from(depth.data.buffer), { raw: { width: depth.width, height: depth.height, channels: 3 } }).png({ compressionLevel: 9 }).toBuffer();
     await mkdir(dir, { recursive: true });
-    await writeFile(`${dir}photo_${yaw}.jpg`, jpeg);
-    await writeFile(`${dir}meta_${yaw}.json`, JSON.stringify({ ...scene(), model: DEPTH_MODEL }, null, 2));
-    await writeFile(`${dir}depth_${yaw}.png`, png);
+    await writeFile(`${dir}photo_${stem}.jpg`, jpeg);
+    await writeFile(`${dir}meta_${stem}.json`, JSON.stringify({ ...scene(), model: DEPTH_MODEL, render_version: RENDER_VERSION }, null, 2));
+    await writeFile(`${dir}depth_${stem}.png`, png);
     return scene();
   })().finally(() => inflight.delete(key));
   inflight.set(key, job);
@@ -157,5 +176,5 @@ export function renderStreet(picture: Picture, lat: number, lon: number, options
 }
 
 export async function readCachedScene(id: string, yaw: number, cache = cacheDir) {
-  try { return JSON.parse(await readFile(`${cache}${id}/meta_${yaw}.json`, 'utf8')) as StreetScene; } catch { return null; }
+  try { return JSON.parse(await readFile(`${cache}${id}/meta_${yaw}_v${RENDER_VERSION}.json`, 'utf8')) as StreetScene & { render_version?: number }; } catch { return null; }
 }

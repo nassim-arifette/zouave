@@ -5,7 +5,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import sharp from 'sharp';
 import { createApp } from './api.ts';
-import { bearing, findNearestPicture, metricDepth, reproject, defaultDepthEstimator, OUT_W, OUT_H } from './street.ts';
+import { bearing, findNearestPicture, metricDepth, reproject, defaultDepthEstimator, OUT_W, OUT_H, RENDER_VERSION } from './street.ts';
+import { mkdir, writeFile } from 'node:fs/promises';
 
 const address = { lat: 48.845905, lon: 2.382605 };
 const feature = (id: string, lon: number, lat: number, extra: Record<string, unknown> = {}) => ({ id, geometry: { type: 'Point', coordinates: [lon, lat] }, properties: { 'view:azimuth': 187, 'pers:interior_orientation': { field_of_view: 360 }, 'geovisio:producer': 'someone@example.org', license: 'CC-BY-SA-4.0', datetime: '2026-08-05T10:00:00Z', ...extra }, assets: { hd: { href: `https://img.test/${id}.jpg` } }, links: [{ rel: 'license', href: 'https://creativecommons.org/licenses/by-sa/4.0/' }] });
@@ -52,11 +53,23 @@ test('reprojection looks along the requested heading and metric fit puts the roa
   const down = centre(reproject(src, 90, -60, 80, 64, 36)), up = centre(reproject(src, 90, 60, 80, 64, 36));
   assert.ok(down[0] < 60 && down[1] < 60 && down[2] < 60, `pitch -60° must see the ground band, got ${down}`);
   assert.ok(up[0] > 100, `pitch +60° must see the red upper half, got ${up}`);
+  // Capture tilt compensation (Panoramax pers:pitch, positive = camera pitched up): the view requested 10° below the horizon in a
+  // panorama shot 20° up samples what a level panorama shows 10° above it (yaw 0, roll 0); roll compensation leaves the central ray untouched.
+  const tilted = reproject(src, 0, -10, 80, 64, 36, { pitch: 20, roll: 0 }), level = reproject(src, 0, 10, 80, 64, 36);
+  const close = (a: number[], b: number[]) => a.every((v, k) => Math.abs(v - b[k]) <= 3);
+  assert.ok(close(centre(tilted), centre(level)), `tilt-compensated ${centre(tilted)} vs level ${centre(level)}`);
+  assert.ok(close(centre(reproject(src, 90, 0, 80, 64, 36, { pitch: 0, roll: 35 })), centre(reproject(src, 90, 0, 80, 64, 36))));
   const relative = await fakeDepth();
   const metres = metricDepth(relative);
   const bottom = metres.data[(OUT_H - 1) * OUT_W + Math.floor(OUT_W * 0.3)];
   assert.ok(bottom > 3 && bottom < 4.5, `road just below a 2 m camera at -4° pitch should be ~3.7 m away, got ${bottom}`);
   assert.ok(metres.data[Math.floor(OUT_W * 0.5)] >= metres.data[(OUT_H - 1) * OUT_W + Math.floor(OUT_W * 0.5)], 'top of frame is farther than the road');
+  // Ground-plane prior: even when the model pushes the whole bottom of the frame far away, rays below the horizon stop at the ground.
+  const far = metricDepth({ data: new Float32Array(OUT_W * OUT_H).fill(0.01), width: OUT_W, height: OUT_H });
+  const row = Math.floor(OUT_H * 0.9), tanY = Math.tan(80 * Math.PI / 360) * OUT_H / OUT_W, p = -4 * Math.PI / 180;
+  const ground = -2 / ((1 - 2 * (row + 0.5) / OUT_H) * tanY * Math.cos(p) + Math.sin(p));
+  assert.ok(far.data[row * OUT_W + Math.floor(OUT_W * 0.7)] <= ground * 1.05 + 1e-6, `bottom-right ray capped at the ground (${ground.toFixed(2)} m)`);
+  assert.equal(far.data[Math.floor(OUT_W * 0.5)], 120, 'rays above the horizon are not capped');
 });
 
 test('/api/rue renders, caches and attributes the nearest panorama, and reports when none is in range', async () => {
@@ -67,13 +80,13 @@ test('/api/rue renders, caches and attributes the nearest panorama, and reports 
     assert.equal(first.status, 200);
     const scene = await first.json();
     assert.equal(scene.live, true);
-    assert.match(scene.url_clean, /^\/cache\/street\/near\/photo_\d+\.jpg$/);
-    assert.match(scene.url_depth, /^\/cache\/street\/near\/depth_\d+\.png$/);
+    assert.match(scene.url_clean, /^\/cache\/street\/near\/photo_\d+_v\d+\.jpg$/);
+    assert.match(scene.url_depth, /^\/cache\/street\/near\/depth_\d+_v\d+\.png$/);
     assert.equal(scene.credit, 'Photo : contributeur Panoramax / Panoramax, CC-BY-SA-4.0');
     assert.equal(scene.license_url, 'https://creativecommons.org/licenses/by-sa/4.0/');
     assert.equal(scene.source_url, 'https://api.panoramax.xyz/#focus=pic&pic=near');
     assert.deepEqual(scene.view, { fov: 80, pitch: -4, camera_height_m: 2 });
-    const depth = await sharp(await readFile(`${cache}near/depth_${scene.yaw}.png`)).metadata();
+    const depth = await sharp(await readFile(`${cache}near/${scene.url_depth.split('/').pop()}`)).metadata();
     assert.deepEqual([depth.width, depth.height], [OUT_W / 2, OUT_H / 2]);
     assert.ok(!JSON.stringify(scene).includes('@'), 'no email in the response');
     const second = await (await fetch(`${url}/api/rue?lat=${address.lat}&lon=${address.lon}`)).json();
@@ -82,6 +95,32 @@ test('/api/rue renders, caches and attributes the nearest panorama, and reports 
     assert.equal((await fetch(`${url}/api/rue?lat=48.80&lon=2.30`)).status, 404);
     assert.equal((await fetch(`${url}/api/rue?lat=abc`)).status, 400);
   });
+});
+
+test('cached renders from an older pipeline version are recomputed', async () => {
+  const cache = `${await mkdtemp(join(tmpdir(), 'zouave-street-'))}/`;
+  const { fetcher, images } = mockFetch([feature('near', 2.38300, 48.84595)]);
+  let estimations = 0;
+  const countingDepth = async () => { estimations++; return fakeDepth(); };
+  await withApp({ fetcher, photosPath: '/nonexistent/manifest.json', street: { estimateDepth: countingDepth, cache, radius_m: 80 } }, async url => {
+    const scene = await (await fetch(`${url}/api/rue?lat=${address.lat}&lon=${address.lon}`)).json();
+    assert.equal(estimations, 1);
+    // Simulate an entry written by the previous pipeline: same files, older version in the metadata.
+    const metaPath = `${cache}near/meta_${scene.yaw}_v${RENDER_VERSION}.json`;
+    const meta = JSON.parse(await readFile(metaPath, 'utf8'));
+    assert.equal(meta.render_version, RENDER_VERSION);
+    await writeFile(metaPath, JSON.stringify({ ...meta, render_version: RENDER_VERSION - 1 }));
+    const fresh = createApp({ fetcher, photosPath: '/nonexistent/manifest.json', street: { estimateDepth: countingDepth, cache, radius_m: 80 } }).listen(0);
+    await new Promise(resolve => fresh.once('listening', resolve));
+    try {
+      const again = await (await fetch(`http://127.0.0.1:${(fresh.address() as { port: number }).port}/api/rue?lat=${address.lat}&lon=${address.lon}`)).json();
+      assert.equal(again.url_depth, scene.url_depth);
+      assert.equal(estimations, 2, 'the stale entry was recomputed');
+      assert.equal(images(), 2);
+      assert.equal(JSON.parse(await readFile(metaPath, 'utf8')).render_version, RENDER_VERSION);
+    } finally { fresh.close(); }
+  });
+  await mkdir(cache, { recursive: true });
 });
 
 test('/api/rue prefers the curated demo photo within 30 m and can be switched off', async () => {
