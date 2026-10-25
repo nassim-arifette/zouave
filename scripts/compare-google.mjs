@@ -60,9 +60,11 @@ async function google3d() {
   tiles = { requests: 0, bytes: 0, failed: 0, root: 0, last: Date.now() };
   const started = Date.now();
   await page.click('#view-3d-toggle');
-  await until(() => { const status = document.getElementById('google-3d-status'); return status.hidden || /missing|unavailable/i.test(status.textContent); });
+  // A view that never reports its tileset is recorded as a problem (and still captured) instead of ending the run.
+  const timedOut = await until(() => { const status = document.getElementById('google-3d-status'); return status.hidden || /missing|unavailable/i.test(status.textContent); }, undefined, 120_000).then(() => false, () => true);
   const loaded = Date.now() - started;
-  const problem = await page.evaluate(() => { const status = document.getElementById('google-3d-status'); return status.hidden ? null : status.textContent; });
+  let problem = await page.evaluate(() => { const status = document.getElementById('google-3d-status'); return status.hidden ? null : status.textContent; });
+  if (timedOut) problem = `status still "${problem}" after 120 s`;
   if (!problem) while (Date.now() - tiles.last < 6000 && Date.now() - started < 150_000) await page.waitForTimeout(1000);
   return { tileset_ms: loaded, settled_ms: Date.now() - started, tile_requests: tiles.requests, root_requests: tiles.root, failed: tiles.failed, megabytes: Math.round(tiles.bytes / 1e5) / 10, problem };
 }
@@ -92,6 +94,14 @@ if (metrics.google.streetview && await page.locator('#show-streetview').count())
   await page.click('#show-streetview');
   await until(() => document.getElementById('streetview-dialog')?.open && document.getElementById('streetview-status').hidden, undefined, 90_000).catch(() => null);
   metrics.views.street = { streetview_ms: Date.now() - started, status: await page.evaluate(() => { const status = document.getElementById('streetview-status'); return status.hidden ? 'loaded' : status.textContent; }) };
+  // Is our water canvas painted above Google's panorama? Hit-test it for a moment (it normally ignores the pointer).
+  metrics.views.street.on_top = await page.evaluate(() => {
+    const canvas = document.getElementById('streetview-water'), box = canvas.getBoundingClientRect();
+    canvas.style.pointerEvents = 'auto';
+    const top = [0.5, 0.85].map(y => { const element = document.elementFromPoint(box.left + box.width / 2, box.top + box.height * y); return element === canvas ? 'water canvas' : `${element?.tagName.toLowerCase()}${element?.id ? '#' + element.id : ''}${element?.className && typeof element.className === 'string' ? '.' + element.className.split(' ')[0] : ''}`; });
+    canvas.style.pointerEvents = '';
+    return { middle: top[0], bottom: top[1], canvas_px: `${Math.round(box.width)}×${Math.round(box.height)}` };
+  });
   await page.waitForTimeout(6000);
   await snap('street-streetview');
   await closeDialogs();

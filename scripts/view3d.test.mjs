@@ -32,6 +32,7 @@ function harness(t) {
   return {
     view,
     legend: elements.legend,
+    status: elements.status,
     async activate() { await view.toggle(true); deck = decks.at(-1); },
     layer(id) {
       const found = deck.props.layers.find(layer => layer.props.id === id);
@@ -107,4 +108,15 @@ test('the rendered extreme scenario keeps the exact SDRIF geometry and excludes 
   const point = [2.297125230468744, 48.8616845];
   assert.equal(aleas.some(f => booleanPointInPolygon(point, f)), true, 'this point would expose the old SDRIF/PPRI union');
   assert.equal(renderedPolygons.some(coordinates => booleanPointInPolygon(point, { type: 'Polygon', coordinates })), false);
+});
+
+test('turning the Google view back on clears the loading status (the tileset does not load twice)', async t => {
+  const view = harness(t);
+  await view.activate();
+  assert.equal(view.status.hidden, false, 'loading status while the first tileset loads');
+  view.layer('google-3d-tiles').onTilesetLoad();
+  assert.equal(view.status.hidden, true);
+  await view.view.toggle(false);
+  await view.view.toggle(true);
+  assert.equal(view.status.hidden, true, 'no stale "Loading Google 3D tiles…" after switching back');
 });
