@@ -21,7 +21,7 @@ export function upstreamTileURL(path: string, query: URLSearchParams, key: strin
   const relative = path.replace(/^\/+/, '');
   if (/^[a-z][a-z0-9+.-]*:/i.test(relative) || relative.startsWith('/') || relative.includes('\\')) throw new TilePathError('Chemin de tuile non autorisé.');
   const url = new URL(relative, tilesOrigin);
-  if (url.origin !== new URL(tilesOrigin).origin || url.protocol !== 'https:' || !allowedPath.test(url.pathname) || url.username || url.password) throw new TilePathError('Chemin de tuile non autorisé.');
+  if (url.origin !== new URL(tilesOrigin).origin || url.protocol !== 'https:' || !allowedPath.test(url.pathname) || url.username || url.password || url.hash) throw new TilePathError('Chemin de tuile non autorisé.');
   url.search = '';
   for (const [name, value] of query) if (name !== 'key') url.searchParams.append(name, value);
   url.searchParams.set('key', key);

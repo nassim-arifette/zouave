@@ -10,7 +10,7 @@
     "dev": "concurrently -k \"node --env-file-if-exists=.env --experimental-strip-types server/index.ts\" \"vite --config web/vite.config.ts\"",
     "build": "tsc --noEmit && vite build --config web/vite.config.ts",
     "start": "npm run build && node --env-file-if-exists=.env --experimental-strip-types server/index.ts",
-    "test": "node --experimental-strip-types --test server/api.test.ts scripts/flood-level.test.mjs && node --experimental-strip-types --experimental-test-module-mocks --test scripts/tools.test.mjs scripts/intent.test.mjs scripts/hero-address.test.mjs scripts/hero-lifecycle.test.mjs && node --experimental-strip-types --test scripts/hero.test.mjs && node --experimental-strip-types --test scripts/streetview.test.mjs scripts/water-footprints.test.mjs"
+    "test": "node --experimental-strip-types --test server/api.test.ts server/google.test.ts scripts/flood-level.test.mjs && node --experimental-strip-types --experimental-test-module-mocks --test scripts/tools.test.mjs scripts/intent.test.mjs scripts/hero-address.test.mjs scripts/hero-lifecycle.test.mjs && node --experimental-strip-types --test scripts/hero.test.mjs && node --experimental-strip-types --test scripts/streetview.test.mjs scripts/water-footprints.test.mjs"
   },
   "dependencies": {
     "@deck.gl/core": "^9.4.0",
