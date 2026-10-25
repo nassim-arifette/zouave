@@ -1,0 +1,183 @@
+{
+  "description": "Street photos for the Zouave flood demo. Originals are rectilinear crops of Panoramax street-level imagery; flood_*.jpg are AI edits (OpenAI Images) simulating a 1910-like Seine flood. Keep the credit when displaying any image; CC BY-SA derivatives are shared under the same licence.",
+  "width": 1600,
+  "height": 896,
+  "locations": [
+    {
+      "slug": "4-rue-traversiere",
+      "label": "4 Rue Traversière, 75012 Paris",
+      "primary": true,
+      "lat": 48.844929,
+      "lon": 2.369632,
+      "heights": [
+        "0.5",
+        "1.5",
+        "2.5"
+      ],
+      "files": {
+        "original": "/photos/4-rue-traversiere/original.jpg",
+        "flood": {
+          "0.5": "/photos/4-rue-traversiere/flood_0.5m.jpg",
+          "1.5": "/photos/4-rue-traversiere/flood_1.5m.jpg",
+          "2.5": "/photos/4-rue-traversiere/flood_2.5m.jpg"
+        }
+      },
+      "credit": "Photo: Lejun / Panoramax, CC BY-SA 4.0",
+      "photo": {
+        "source": "Panoramax",
+        "item_id": "9987621f-b7df-4601-b58d-fd7b27d22402",
+        "collection_id": "b0bee38e-c4bd-4e41-891a-fd0544586090",
+        "page_url": "https://api.panoramax.xyz/#focus=pic&pic=9987621f-b7df-4601-b58d-fd7b27d22402",
+        "api_url": "https://api.panoramax.xyz/api/collections/b0bee38e-c4bd-4e41-891a-fd0544586090/items/9987621f-b7df-4601-b58d-fd7b27d22402",
+        "image_url": "https://panoramax.openstreetmap.fr/images/99/87/62/1f/b7df-4601-b58d-fd7b27d22402.jpg",
+        "author": "Lejun",
+        "license": "CC BY-SA 4.0",
+        "license_spdx": "CC-BY-SA-4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "captured_at": "2025-12-02T15:25:24.579000+01:00",
+        "lat": 48.845321402,
+        "lon": 2.37008404,
+        "projection": "equirectangular",
+        "camera_azimuth": 85,
+        "view": {
+          "yaw": 232,
+          "pitch": -4,
+          "roll": 0,
+          "fov": 80
+        }
+      },
+      "edit": {
+        "model": "gpt-image-2.5-sunburst",
+        "quality": "high",
+        "size": "1600x896",
+        "generated_at": "2026-10-25T09:35:31.474Z",
+        "prompts": {
+          "2.5": "Edit this street photo: add flood water from a major Seine river flood (like the Paris flood of January 1910) up to about 2.5 m above street level. Water depth about 2.5 m: it rises above the top of the ground-floor doors and shop windows (a ground-floor door is about 2.2 m tall): every shop window, door and shutter is completely under water, the waterline runs along the shop sign boards just below the first-floor windows; railings, bollards, street signs' lower poles and parked cars are completely under water. The water is opaque, muddy brown river water covering the entire roadway and both sidewalks with one flat, continuous, level surface, small ripples, realistic reflections of the facades and a few floating leaves and pieces of debris. Overcast grey daylight. Change nothing else: keep exactly the same camera position, framing and perspective, the same buildings, facades, windows, shop fronts, signs (keep every existing word of text exactly as it is), trees, street furniture and parked cars. No people, no boats, no added text. Photorealistic photograph.",
+          "0.5": "Edit this street photo: add flood water from a major Seine river flood (like the Paris flood of January 1910) up to about 0.5 m above street level. Water depth about 0.5 m: it reaches the bottom quarter of the ground-floor doors (knee height of an adult, a ground-floor door is about 2.2 m tall); parked cars are submerged up to the bottom of their doors, wheels hidden. The water is opaque, muddy brown river water covering the entire roadway and both sidewalks with one flat, continuous, level surface, small ripples, realistic reflections of the facades and a few floating leaves and pieces of debris. Overcast grey daylight. Change nothing else: keep exactly the same camera position, framing and perspective, the same buildings, facades, windows, shop fronts, signs, trees, street furniture and parked cars. No people, no boats, no added text. Photorealistic photograph.",
+          "1.5": "Edit this street photo: add flood water from a major Seine river flood (like the Paris flood of January 1910) up to about 1.5 m above street level. Water depth about 1.5 m: it reaches two thirds of the height of the ground-floor doors and shop fronts (chest height of an adult, a ground-floor door is about 2.2 m tall); parked cars are submerged up to their windows, only the upper part of the windows and the roofs stick out. The water is opaque, muddy brown river water covering the entire roadway and both sidewalks with one flat, continuous, level surface, small ripples, realistic reflections of the facades and a few floating leaves and pieces of debris. Overcast grey daylight. Change nothing else: keep exactly the same camera position, framing and perspective, the same buildings, facades, windows, shop fronts, signs, trees, street furniture and parked cars. No people, no boats, no added text. Photorealistic photograph."
+        },
+        "raw": {
+          "0.5": "flood_0.5m.png",
+          "1.5": "flood_1.5m.png",
+          "2.5": "flood_2.5m_v2.png"
+        },
+        "restore": {
+          "0.5": [
+            [
+              10,
+              400,
+              330,
+              440
+            ]
+          ],
+          "2.5": [
+            [
+              10,
+              400,
+              330,
+              440
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "slug": "230-rue-de-bercy",
+      "label": "230 Rue de Bercy, 75012 Paris",
+      "primary": false,
+      "lat": 48.846486,
+      "lon": 2.370073,
+      "heights": [
+        "1.5"
+      ],
+      "files": {
+        "original": "/photos/230-rue-de-bercy/original.jpg",
+        "flood": {
+          "1.5": "/photos/230-rue-de-bercy/flood_1.5m.jpg"
+        }
+      },
+      "credit": "Photo: gaelle.gabriel@paris.fr / Panoramax, Etalab Open Licence 2.0",
+      "photo": {
+        "source": "Panoramax",
+        "item_id": "36b6c9a3-afa5-495b-93f5-f1fba410d144",
+        "collection_id": "3c48a617-0a82-4080-9093-a46b390046ad",
+        "page_url": "https://api.panoramax.xyz/#focus=pic&pic=36b6c9a3-afa5-495b-93f5-f1fba410d144",
+        "api_url": "https://api.panoramax.xyz/api/collections/3c48a617-0a82-4080-9093-a46b390046ad/items/36b6c9a3-afa5-495b-93f5-f1fba410d144",
+        "image_url": "https://panoramax-storage-public-fast.s3.gra.perf.cloud.ovh.net/main-pictures/36/b6/c9/a3/afa5-495b-93f5-f1fba410d144.jpg",
+        "author": "gaelle.gabriel@paris.fr",
+        "license": "Etalab Open Licence 2.0",
+        "license_spdx": "etalab-2.0",
+        "license_url": "https://www.etalab.gouv.fr/licence-ouverte-open-licence/",
+        "captured_at": "2023-12-12T08:19:52+00:00",
+        "lat": 48.8469577,
+        "lon": 2.3693639,
+        "projection": "equirectangular",
+        "camera_azimuth": 126,
+        "view": {
+          "yaw": 315,
+          "pitch": -4,
+          "roll": 0,
+          "fov": 80
+        }
+      },
+      "edit": {
+        "model": "gpt-image-2.5-sunburst",
+        "quality": "high",
+        "size": "1600x896",
+        "generated_at": "2026-10-25T09:33:21.540Z",
+        "prompts": {
+          "1.5": "Edit this street photo: add flood water from a major Seine river flood (like the Paris flood of January 1910) up to about 1.5 m above street level. Water depth about 1.5 m: it reaches two thirds of the height of the ground-floor doors and shop fronts (chest height of an adult, a ground-floor door is about 2.2 m tall); parked cars are submerged up to their windows, only the upper part of the windows and the roofs stick out. The water is opaque, muddy brown river water covering the entire roadway and both sidewalks with one flat, continuous, level surface, small ripples, realistic reflections of the facades and a few floating leaves and pieces of debris. Overcast grey daylight. Change nothing else: keep exactly the same camera position, framing and perspective, the same buildings, facades, windows, shop fronts, signs, trees, street furniture and parked cars. No people, no boats, no added text. Photorealistic photograph."
+        }
+      }
+    },
+    {
+      "slug": "20-quai-de-la-rapee",
+      "label": "20 Quai de la Rapée, 75012 Paris",
+      "primary": false,
+      "lat": 48.840482,
+      "lon": 2.374491,
+      "heights": [
+        "1.5"
+      ],
+      "files": {
+        "original": "/photos/20-quai-de-la-rapee/original.jpg",
+        "flood": {
+          "1.5": "/photos/20-quai-de-la-rapee/flood_1.5m.jpg"
+        }
+      },
+      "credit": "Photo: immergis / Panoramax, Etalab Open Licence 2.0",
+      "photo": {
+        "source": "Panoramax",
+        "item_id": "12a163d4-5bb9-41f4-9758-69449787fc5f",
+        "collection_id": "9fe7f3ab-14e3-4174-8731-b06e31d9577b",
+        "page_url": "https://api.panoramax.xyz/#focus=pic&pic=12a163d4-5bb9-41f4-9758-69449787fc5f",
+        "api_url": "https://api.panoramax.xyz/api/collections/9fe7f3ab-14e3-4174-8731-b06e31d9577b/items/12a163d4-5bb9-41f4-9758-69449787fc5f",
+        "image_url": "https://panoramax-storage-public-fast.s3.gra.perf.cloud.ovh.net/main-pictures/12/a1/63/d4/5bb9-41f4-9758-69449787fc5f.jpg",
+        "author": "immergis",
+        "license": "Etalab Open Licence 2.0",
+        "license_spdx": "etalab-2.0",
+        "license_url": "https://www.etalab.gouv.fr/licence-ouverte-open-licence/",
+        "captured_at": "2025-05-08T06:53:02.142000+02:00",
+        "lat": 48.841006954,
+        "lon": 2.373682963,
+        "projection": "equirectangular",
+        "camera_azimuth": 321,
+        "view": {
+          "yaw": 175,
+          "pitch": -3,
+          "roll": 0,
+          "fov": 80
+        }
+      },
+      "edit": {
+        "model": "gpt-image-2.5-sunburst",
+        "quality": "high",
+        "size": "1600x896",
+        "generated_at": "2026-10-25T09:33:21.544Z",
+        "prompts": {
+          "1.5": "Edit this street photo: add flood water from a major Seine river flood (like the Paris flood of January 1910) up to about 1.5 m above street level. Water depth about 1.5 m: it reaches two thirds of the height of the ground-floor doors and shop fronts (chest height of an adult, a ground-floor door is about 2.2 m tall); parked cars are submerged up to their windows, only the upper part of the windows and the roofs stick out. The water is opaque, muddy brown river water covering the entire roadway and both sidewalks with one flat, continuous, level surface, small ripples, realistic reflections of the facades and a few floating leaves and pieces of debris. Overcast grey daylight. Change nothing else: keep exactly the same camera position, framing and perspective, the same buildings, facades, windows, shop fronts, signs, trees, street furniture and parked cars. No people, no boats, no added text. Photorealistic photograph."
+        }
+      }
+    }
+  ]
+}
