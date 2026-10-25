@@ -387,6 +387,7 @@ const steps: Array<() => Promise<void>> = [
   // 9 · End card.
   async () => {
     hud.hidden = true;
+    resetMeter();
     endCard.hidden = false;
     await say('Zouave. See your flood before it comes.', 2500);
   },

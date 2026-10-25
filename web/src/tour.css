@@ -72,7 +72,7 @@ body.tour-active .dialogue{border-color:#a4d6bc55}
 .tour-progress b{position:absolute;left:50%;bottom:40vh;transform:translateX(-50%);font-size:12px;letter-spacing:3px;color:#edce9d;padding:8px 16px;border-radius:999px;background:rgba(8,19,27,.85);border:1px solid #edce9d66}
 
 /* End card */
-.tour-end{position:fixed;inset:0;z-index:9;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at center,rgba(6,16,26,.78),rgba(2,6,9,.94));animation:tour-fade .8s ease both}
+.tour-end{position:fixed;inset:0;z-index:9;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at center,rgba(6,16,26,.9),rgba(2,6,9,.97));backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);animation:tour-fade .8s ease both}
 .tour-end-card{max-width:560px;text-align:center;display:flex;flex-direction:column;align-items:center}
 .tour-end-card img{width:150px;height:150px;object-fit:contain;filter:drop-shadow(0 16px 30px rgba(0,0,0,.6));-webkit-mask-image:linear-gradient(#000 75%,transparent);mask-image:linear-gradient(#000 75%,transparent);margin-bottom:10px}
 .tour-end h2{font-family:Georgia,serif;font-weight:400;font-size:clamp(32px,4vw,50px);line-height:1.08;letter-spacing:-1.2px;margin:14px 0 18px;color:#eef4f0}

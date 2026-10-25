@@ -397,4 +397,5 @@ dialog::backdrop{background:radial-gradient(ellipse at center,#06101acc,#020609f
   .card .disclaimer{font-size:9px}.checklist p{font-size:10px}
 }
 
+@media(max-width:430px){.brand>span{display:none}.topbar{gap:8px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
