@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Zouave avatar preview</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #0b1a33; color: #e6ecf5;
+         font: 15px/1.4 system-ui, sans-serif; }
+  .panel { display: grid; justify-items: center; gap: 18px; }
+  .zouave-avatar { position: relative; width: 256px; height: 256px; border-radius: 50%; overflow: hidden;
+                   background: radial-gradient(circle at 50% 40%, #1c3358, #0b1a33 70%);
+                   box-shadow: 0 0 0 2px #2a4a7a, 0 10px 40px #0008; }
+  .zouave-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .zouave-avatar .speaking { opacity: 0; }
+  .zouave-avatar.mouth-open .speaking { opacity: 1; }
+  .zouave-avatar.listening { animation: breathe 3.2s ease-in-out infinite; }
+  .zouave-avatar.talking { box-shadow: 0 0 0 2px #4fd1c5, 0 0 30px #4fd1c566; }
+  @keyframes breathe { 50% { transform: scale(1.025); box-shadow: 0 0 0 2px #4fd1c5, 0 10px 40px #0008; } }
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  button { background: #16294a; color: inherit; border: 1px solid #2a4a7a; border-radius: 8px; padding: 6px 12px;
+           cursor: pointer; }
+  button[aria-pressed="true"] { border-color: #4fd1c5; }
+</style>
+</head>
+<body>
+<div class="panel">
+  <div class="zouave-avatar listening" id="avatar">
+    <img class="idle" alt="Le Zouave">
+    <img class="speaking" alt="">
+  </div>
+  <div class="controls" id="variants"></div>
+  <div class="controls">
+    <button id="listen" aria-pressed="true">Listening</button>
+    <button id="talk" aria-pressed="false">Talking</button>
+  </div>
+</div>
+<script>
+  // 2-frame talk animation: swap to the mouth-open frame at irregular, speech-like intervals.
+  const avatar = document.getElementById("avatar");
+  const [idle, speaking] = avatar.querySelectorAll("img");
+  let timer;
+  function setVariant(name) {
+    idle.src = `${name}/avatar@2x.webp`;
+    speaking.src = `${name}/avatar-speaking@2x.webp`;
+    document.querySelectorAll("#variants button").forEach((b) => b.setAttribute("aria-pressed", b.textContent === name));
+  }
+  function setState(talking) {
+    clearTimeout(timer);
+    avatar.classList.toggle("talking", talking);
+    avatar.classList.toggle("listening", !talking);
+    avatar.classList.remove("mouth-open");
+    document.getElementById("talk").setAttribute("aria-pressed", talking);
+    document.getElementById("listen").setAttribute("aria-pressed", !talking);
+    if (!talking) return;
+    const flap = () => {
+      avatar.classList.toggle("mouth-open");
+      timer = setTimeout(flap, 70 + Math.random() * 150);
+    };
+    flap();
+  }
+  fetch("variants.json").then((r) => r.json()).then(({ default: def, variants }) => {
+    const box = document.getElementById("variants");
+    for (const name of Object.keys(variants)) {
+      const b = document.createElement("button");
+      b.textContent = name;
+      b.onclick = () => setVariant(name);
+      box.append(b);
+    }
+    setVariant(def);
+  });
+  document.getElementById("talk").onclick = () => setState(true);
+  document.getElementById("listen").onclick = () => setState(false);
+</script>
+</body>
+</html>

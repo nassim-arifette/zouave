@@ -1,0 +1,17 @@
+{
+  "default": "stone",
+  "variants": {
+    "stone": {
+      "option": 1,
+      "background": "cutout"
+    },
+    "living-stone": {
+      "option": 2,
+      "background": "cutout"
+    },
+    "bronze-flood": {
+      "option": 4,
+      "background": "round"
+    }
+  }
+}
