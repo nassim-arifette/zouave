@@ -21,3 +21,10 @@ test('every suggestion is a question the intent router answers, and quips carry 
   for (const suggestion of all) assert.ok(suggestion.length < 30, suggestion);
   for (const quip of QUIPS) assert.doesNotMatch(quip.replace('1910', ''), /\d/, quip);
 });
+
+test('the new poses follow the answer: soaked over 2 m, a salute for goodbye, pointing at the live gauge', () => {
+  assert.equal(moodFor('Quai de la Rapée: over 2 m of water in the reference scenario.'), 'soaked');
+  assert.equal(moodFor('À bientôt! If the Seine rises, I will be right here.'), 'salute');
+  assert.equal(moodFor('At Austerlitz, the Seine reads 0.97 m, measured 25 Oct, 22:00.'), 'point');
+  assert.equal(moodFor('Reference flood, 1910 type: 8.62 m on the Austerlitz gauge.'), 'surprised');
+});

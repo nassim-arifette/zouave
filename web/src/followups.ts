@@ -1,6 +1,6 @@
 // What the Zouave suggests next, and the mood he answers with. Pure functions of the question and the answer text, so
 // they never add a fact: every suggestion is a question the intent router already answers with a tool.
-export type Pose = 'thinking' | 'worried' | 'reassure' | 'wave' | 'point' | 'facing';
+export type Pose = 'thinking' | 'worried' | 'reassure' | 'wave' | 'point' | 'facing' | 'soaked' | 'present' | 'proud' | 'laugh' | 'surprised' | 'listen' | 'salute';
 
 const has = (pattern: RegExp, ...texts: string[]) => texts.some(text => pattern.test(text));
 
@@ -20,8 +20,14 @@ export function followUps(question: string, answer: string): string[] {
 export function moodFor(answer: string): Pose | null {
   const a = answer.toLowerCase();
   if (/unavailable|not found|invalid|first pick/.test(a)) return 'thinking';
-  if (/over 2 m|1 to 2 m|0 to 1 m|of water|cellar sector exposed|inside the sdrif-e/.test(a)) return 'worried';
-  if (/outside the mapped|outside the sdrif-e|authorities|refuge|with pleasure|bonjour|bientôt/.test(a)) return 'reassure';
+  if (/over 2 m/.test(a)) return 'soaked';
+  if (/1 to 2 m|0 to 1 m|of water|cellar sector exposed|inside the sdrif-e/.test(a)) return 'worried';
+  if (/à bientôt|goodbye/.test(a)) return 'salute';
+  if (/^bonjour/.test(a)) return 'wave';
+  if (/austerlitz, the seine reads/.test(a)) return 'point';
+  if (/reference flood, 1910|extreme scenario/.test(a)) return 'surprised';
+  if (/the zouave of the pont de l’alma|with pleasure/.test(a)) return 'proud';
+  if (/outside the mapped|outside the sdrif-e|authorities|refuge/.test(a)) return 'reassure';
   return null;
 }
 

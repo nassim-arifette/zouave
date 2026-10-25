@@ -371,7 +371,7 @@ const steps: Array<() => Promise<void>> = [
     el('tour-year')!.textContent = 'JANUARY 1910';
     const level = presetLevel('1910');
     const pending = timeline('1910');
-    setPose('worried', 6000);
+    setPose('surprised', 2500); setTimeout(() => { if (run) setPose('laugh', 3000); }, 3200);
     await Promise.all([rise(level, 4500), say(`[dramatic] January 1910: ${metres(level)} m. The reference flood. [laughs] Up to my shoulders!`, 5500)]);
     meterTag(true);
     await capped(pending, 6000);
@@ -420,7 +420,7 @@ const steps: Array<() => Promise<void>> = [
     hud.hidden = true;
     resetMeter();
     endCard.hidden = false;
-    setPose('wave', 2500);
+    setPose('salute', 3500);
     await say('[proud] Zouave. See your flood before it comes.', 2500);
   },
 ];

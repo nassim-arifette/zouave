@@ -16,7 +16,7 @@ const touring = () => document.body.classList.contains('tour-active');
 export function setPose(pose: Pose | null, ms = 3500) {
   const element = ring(); if (!element) return;
   clearTimeout(poseTimer);
-  element.classList.remove('pose-thinking', 'pose-worried', 'pose-reassure', 'pose-wave', 'pose-point', 'pose-facing', 'posed');
+  element.classList.remove(...[...element.classList].filter(name => name.startsWith('pose-')), 'posed');
   const overlay = element.querySelector<HTMLImageElement>('.avatar-pose');
   if (!pose) return;
   void element.offsetWidth; // restart the CSS animation when the same pose comes back
@@ -101,7 +101,7 @@ export async function initializeMascot(mascot: Mascot) {
   element.setAttribute('role', 'button'); element.tabIndex = 0; element.title = 'Poke the Zouave';
   const poke = () => {
     if (mascot.busy()) { setPose('thinking', 1500); return; }
-    setPose('wave', 2600);
+    setPose((['wave', 'laugh', 'surprised', 'salute', 'proud', 'present'] as const)[quip % 6], 2600);
     const line = QUIPS[quip++ % QUIPS.length];
     mascot.say(line);
     reactTo('', line);
@@ -117,4 +117,13 @@ export async function initializeMascot(mascot: Mascot) {
   askAnywhere(mascot);
   const manifest = await fetch(`/zouave/${avatarVariant()}/poses.json`).then(response => response.ok ? response.json() : null).catch(() => null);
   if (manifest?.poses) poseImages = Object.fromEntries(Object.entries(manifest.poses as Record<string, string>).map(([pose, file]) => [pose, `/zouave/${avatarVariant()}/${file}`]));
+  // Preload them, so a pose never appears blank the first time.
+  for (const src of Object.values(poseImages)) new Image().src = src!;
+  // Listening to the microphone: a hand behind the ear.
+  new MutationObserver(() => {
+    const listening = element.classList.contains('listening');
+    const posing = [...element.classList].some(name => name.startsWith('pose-'));
+    if (listening && !posing) setPose('listen', 0);
+    else if (!listening && element.classList.contains('pose-listen')) setPose(null);
+  }).observe(element, { attributes: true, attributeFilter: ['class'] });
 }
