@@ -5,7 +5,7 @@ import { depthAtLevel, evidenceLabel, type Evidence, type FloodClass } from './f
 
 const { state } = tools;
 // Typed questions go through the same announced tool calls as the voice agent, so the conversation shows its sources.
-const { afficher_scenario, afficher_crue, aller_a, exposition, niveau_seine, photo_inondee, consignes } = traced({ afficher_scenario: tools.afficher_scenario, afficher_crue: tools.afficher_crue, aller_a: tools.aller_a, exposition: tools.exposition, niveau_seine: tools.niveau_seine, photo_inondee: tools.photo_inondee, consignes: tools.consignes }, 'local');
+const { afficher_scenario, afficher_crue, aller_a, aller_au_point, exposition, niveau_seine, photo_inondee, consignes } = traced({ afficher_scenario: tools.afficher_scenario, afficher_crue: tools.afficher_crue, aller_a: tools.aller_a, aller_au_point: tools.aller_au_point, exposition: tools.exposition, niveau_seine: tools.niveau_seine, photo_inondee: tools.photo_inondee, consignes: tools.consignes }, 'local');
 
 // English first (the demo language), French keywords kept so Parisian visitors can still type naturally.
 const HOME = /\bmy (?:home|house|address|flat|apartment|place|street|building|cellar|basement)\b|chez moi|mon adresse/;
@@ -15,19 +15,7 @@ export async function routeIntent(message: string) {
   const intent = message.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
   if (HOME.test(intent) || ADDRESS.test(intent)) {
     const address = HOME.test(intent) ? config.demoAddress : message.replace(/^(?:go to|take me to|fly to|va|aller|montre|emmene.moi)\s+(?:to\s+|a\s+|à\s+|au\s+)?/i, '');
-    const point = await aller_a({ adresse: address });
-    if (state.scenario === 'aujourdhui' && !state.timeline) await afficher_scenario({ scenario: '1910' });
-    const result = await exposition({ lat: point.lat, lon: point.lon, scenario: state.scenario });
-    const timeline = state.timeline;
-    if (timeline) {
-      // A timeline level is an estimate derived from the official 1910 classes: say so, and give the official reference.
-      const band = result as unknown as { label?: string; evidence?: Evidence };
-      const reference = result.classe ? depthAtLevel(result.classe as FloodClass, 8.62).label : 'outside the mapped footprint';
-      return `${point.label}: ${band.label ?? result.hauteur_texte} (${evidenceLabel(band.evidence ?? 'Estimé')}) at the ${timeline.label} level, ${timeline.level.toLocaleString('en-GB')} m at Austerlitz. Official 1910 reference here: ${reference}. Source: Paris PPRI.`;
-    }
-    if (state.scenario === 'pire') return `${point.label}: ${result.sdrife_en_zone ? 'inside' : 'outside'} the SDRIF-E extreme footprint. Local depths are not published. Source: Institut Paris Région.`;
-    const photo = result.hauteur_visuelle_m === null ? null : await photo_inondee({ hauteur: result.hauteur_visuelle_m });
-    return `${point.label}: ${result.classe ? `${result.hauteur_texte} of water in the reference scenario` : result.hauteur_texte}. ${result.cave_inondee_1910 ? 'Your address is in a cellar sector exposed in the 1910 scenario.' : 'Outside the mapped cellar sectors; that does not rule out risk.'} Sources: Paris PPRI, City of Paris. ${photo && !photo.affichee ? 'The simulated photo is not available here. Let’s look at the right moves.' : 'Let’s look at the right moves.'}`;
+    return answerAt(await aller_a({ adresse: address }));
   }
   const historical = intent.match(/\b(1658|1740|1955|2016|2026|115)\b/);
   if (historical) return (await afficher_crue({ annee: historical[1] })).description;
@@ -55,4 +43,24 @@ export async function routeIntent(message: string) {
   if (/goodbye|\bbye\b|see you|au revoir|a bientot|bonne (?:journee|soiree)/.test(intent)) return 'À bientôt! If the Seine rises, I will be right here, feet in the water. Keep an eye on Vigicrues!';
   if (/^(?:hello|hi|hey|good (?:morning|evening)|bonjour|bonsoir|salut|coucou)\b|how are you|ca va|comment vas/.test(intent)) return 'Bonjour! Still standing under the Pont de l’Alma, feet in the water, as always. Ask me to show 1910, check your address, or read the Seine level right now.';
   return 'Ah, I am only a stone soldier… but I can show the 1910 flood, check your address, read the Seine level or remind you of the right moves. Your pick?';
+}
+
+/** "What about here?": the same answer as for an address, for a point picked on the map. */
+export async function routePoint(lat: number, lon: number) {
+  return answerAt(await aller_au_point({ lat, lon }));
+}
+
+async function answerAt(point: { lat: number; lon: number; label: string }) {
+  if (state.scenario === 'aujourdhui' && !state.timeline) await afficher_scenario({ scenario: '1910' });
+  const result = await exposition({ lat: point.lat, lon: point.lon, scenario: state.scenario });
+  const timeline = state.timeline;
+  if (timeline) {
+    // A timeline level is an estimate derived from the official 1910 classes: say so, and give the official reference.
+    const band = result as unknown as { label?: string; evidence?: Evidence };
+    const reference = result.classe ? depthAtLevel(result.classe as FloodClass, 8.62).label : 'outside the mapped footprint';
+    return `${point.label}: ${band.label ?? result.hauteur_texte} (${evidenceLabel(band.evidence ?? 'Estimé')}) at the ${timeline.label} level, ${timeline.level.toLocaleString('en-GB')} m at Austerlitz. Official 1910 reference here: ${reference}. Source: Paris PPRI.`;
+  }
+  if (state.scenario === 'pire') return `${point.label}: ${result.sdrife_en_zone ? 'inside' : 'outside'} the SDRIF-E extreme footprint. Local depths are not published. Source: Institut Paris Région.`;
+  const photo = result.hauteur_visuelle_m === null ? null : await photo_inondee({ hauteur: result.hauteur_visuelle_m });
+  return `${point.label}: ${result.classe ? `${result.hauteur_texte} of water in the reference scenario` : result.hauteur_texte}. ${result.cave_inondee_1910 ? 'This address is in a cellar sector exposed in the 1910 scenario.' : 'Outside the mapped cellar sectors; that does not rule out risk.'} Sources: Paris PPRI, City of Paris. ${photo && !photo.affichee ? 'The simulated photo is not available here. Let’s look at the right moves.' : 'Let’s look at the right moves.'}`;
 }

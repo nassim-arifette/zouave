@@ -8,6 +8,11 @@ Scenarios are educational, not forecasts or building-level diagnoses.
 
 - **Story mode** (button *Watch the story* or key **D**): a 90-second guided demo driven by the real tools.
 - **Tool trace**: every answer shows the function calls behind it (function, arguments, official figure, source).
+- **A Zouave that reacts**: he leans towards the pointer, answers a poke (click or Enter), thinks while the tools run,
+  looks worried when the water reaches the address, and suggests three next questions under each answer.
+- **What about here?**: click anywhere on the map and ask; the answer uses the same tools as an address.
+- **New poses** (optional): `OPENAI_API_KEY=... node scripts/avatar/poses_openai.mjs` generates poses of the statue
+  (wave, point, worried, thinking, reassure…) with OpenAI image edits; without them, CSS motion stands in.
 - **Immersion** (key **H**): hide the panels and let the camera drift over the city.
 - **Under the hood** (key **U**): the architecture for the jury, with a QR code to open Zouave on a phone (same network).
 - `npm run record-demo`: records the Story mode as a silent backup video (`zouave-story.webm`).

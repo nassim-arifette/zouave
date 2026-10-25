@@ -1,7 +1,8 @@
 import './style.css';
 import { map, mapReady } from './map.ts';
 import { $, niveau_seine, notify } from './tools.ts';
-import { routeIntent } from './intent.ts';
+import { routeIntent, routePoint } from './intent.ts';
+import { initializeMascot, reactTo, setPose } from './mascot.ts';
 import { initializeTimeline } from './timeline.ts';
 import { initializeImmersion } from './immersion.ts';
 import { initializeTour } from './tour.ts';
@@ -15,15 +16,15 @@ import { browserVoice, setSpeakEnabled, speak, speakEnabled, stopSpeaking } from
 import { initializeAvatar, animateAnswer, setSpeaking } from './avatar.ts';
 import { formatArgs, type ToolTrace } from './trace.ts';
 let running = false;
-/** Moves the Zouave's previous reply into the conversation thread and adds the visitor's message. */
-function pushHistory(message: string) {
+/** Moves the Zouave's previous reply into the conversation thread and adds the visitor's message (if any). */
+function pushHistory(message?: string) {
   const thread = $('thread'), trace = $('trace');
   const bubble = (who: 'user' | 'zouave', text: string) => { const p = document.createElement('p'); p.className = `bubble bubble-${who}`; p.textContent = text; thread.append(p); };
   // The previous answer keeps its tool calls above it in the history: question → tools → answer.
   if (trace.childElementCount) { const calls = document.createElement('div'); calls.className = 'trace trace-past'; calls.append(...trace.children); thread.append(calls); }
   const previous = $('caption').textContent?.trim();
   if (previous) bubble('zouave', previous);
-  bubble('user', message);
+  if (message) bubble('user', message);
   while (thread.children.length > 16) thread.firstElementChild!.remove();
   $('input-caption').hidden = true;
 }
@@ -42,16 +43,23 @@ function reply(text: string) {
   $('caption').textContent = text;
   if (isVoiceSessionActive() || !speak(text)) animateAnswer(text);
 }
-export async function runIntent(message: string) {
+/** One question → the tools → the answer, with the Zouave thinking meanwhile and reacting afterwards. */
+async function answer(message: string, route: () => Promise<string>) {
   if (running || !message.trim()) return;
   running = true;
   setSpeaking(false); stopSpeaking();
   pushHistory(message.trim());
+  $('followups').hidden = true;
   $('caption').textContent = 'Checking the official data…';
-  try { reply(await routeIntent(message)); }
-  catch (error) { const text = error instanceof Error ? error.message : 'That data is unavailable.'; reply(text); notify(text); }
+  setPose('thinking', 0);
+  let text: string;
+  try { text = await route(); }
+  catch (error) { text = error instanceof Error ? error.message : 'That data is unavailable.'; notify(text); }
   finally { running = false; }
+  reply(text);
+  reactTo(message, text);
 }
+export async function runIntent(message: string) { await answer(message, () => routeIntent(message)); }
 window.addEventListener('zouave:heard', event => { void runIntent((event as CustomEvent<string>).detail); });
 const speakToggle = $<HTMLButtonElement>('speak-toggle');
 const syncSpeakToggle = () => { const on = speakEnabled(); speakToggle.setAttribute('aria-pressed', String(on)); speakToggle.title = `Zouave voice: ${on ? 'on' : 'off'}`; };
@@ -66,6 +74,7 @@ $('mic').addEventListener('click', () => { void toggleVoice(); });
 $('photo-close').addEventListener('click', () => $<HTMLDialogElement>('photo-dialog').close());
 $('hero-close').addEventListener('click', () => $<HTMLDialogElement>('hero-dialog').close());
 initializeAvatar();
+void initializeMascot({ say: text => { stopSpeaking(); pushHistory(); reply(text); }, ask: message => { void runIntent(message); }, askHere: (lat, lon) => { void answer('What about here?', () => routePoint(lat, lon)); }, busy: () => running });
 initializeTimeline();
 initializeImmersion(map);
 initializeTour();

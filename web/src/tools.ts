@@ -52,6 +52,13 @@ export async function aller_a({ adresse }: { adresse: string }) {
   await goTo(lon, lat, state.address.label);
   return { ...state.address, source: 'IGN Géoplateforme', source_url: data.source_url, offline: data.offline };
 }
+/** A point picked on the map (no geocoding): the marker moves there and later answers use it. */
+export async function aller_au_point({ lat, lon }: { lat: number; lon: number }) {
+  if (!Number.isFinite(lat) || Math.abs(lat) > 90 || !Number.isFinite(lon) || Math.abs(lon) > 180) throw new Error('Invalid coordinates.');
+  state.address = { label: `The spot you picked (${lat.toFixed(4)}, ${lon.toFixed(4)})`, lat, lon };
+  await goTo(lon, lat, state.address.label);
+  return { ...state.address, source: 'map click' };
+}
 export async function exposition({ lat, lon, scenario }: { lat: number; lon: number; scenario: Scenario }) {
   if (!Number.isFinite(lat) || Math.abs(lat) > 90 || !Number.isFinite(lon) || Math.abs(lon) > 180 || !scenarioSchema.has(scenario)) throw new Error('Invalid coordinates or scenario.');
   await mapReady;

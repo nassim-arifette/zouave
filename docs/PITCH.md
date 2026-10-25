@@ -96,5 +96,6 @@ One person talks, one drives the laptop. Never describe what is already on scree
 - [ ] Play the Story once before going on stage: every narrated line is cached
 - [ ] Projector: Chrome at 125 % zoom; laptop plugged in, sleep disabled, notifications off
 - [ ] `ZOUAVE_HTTPS=1 npm start` if the jury should use voice from their phones (QR code)
+- [ ] Q&A crowd-pleaser: poke the Zouave on screen, or click a juror's street on the map → "What about here?"
 - [ ] Backup: the submitted video, plus `npm run record-demo`
 - [ ] Post with @borvibe @openaidevs #parisdevdayhack

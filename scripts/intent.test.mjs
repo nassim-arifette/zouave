@@ -8,18 +8,19 @@ const afficher_scenario = mock.fn(async ({ scenario }) => {
   state.scenario = scenario;
   return { description: 'Scénario sélectionné', source: 'DRIEAT' };
 });
+const aller_au_point = mock.fn(async ({ lat, lon }) => ({ lat, lon, label: 'The spot you picked' }));
 const exposition = mock.fn(async () => ({ hauteur_visuelle_m: null, hauteur_texte: 'Au sec' }));
 const niveau_seine = mock.fn(async () => ({ hauteur_m: 1.02, date_obs: '2026-10-25T09:00:00Z', source: "Hub'Eau / Vigicrues", stale: false }));
 const consignes = mock.fn(async () => ({ consignes: [{ title: 'Plan a refuge up high', source: 'Géorisques · What to do' }] }));
 mock.module('../web/src/tools.ts', { exports: {
-  state, aller_a, afficher_crue, afficher_scenario, exposition,
+  state, aller_a, aller_au_point, afficher_crue, afficher_scenario, exposition,
   niveau_seine, photo_inondee: mock.fn(), consignes,
 } });
-const { routeIntent } = await import('../web/src/intent.ts');
+const { routeIntent, routePoint } = await import('../web/src/intent.ts');
 
 beforeEach(() => {
   state.scenario = '1910';
-  for (const fn of [aller_a, afficher_crue, afficher_scenario, exposition, niveau_seine, consignes]) fn.mock.resetCalls();
+  for (const fn of [aller_a, aller_au_point, afficher_crue, afficher_scenario, exposition, niveau_seine, consignes]) fn.mock.resetCalls();
 });
 
 for (const address of [
@@ -83,4 +84,12 @@ test('jury questions reach the right tool, and English words are not taken for s
   assert.equal(aller_a.mock.callCount(), 0, 'no geocoding of whole questions');
   await routeIntent('Will my cellar flood?');
   assert.equal(aller_a.mock.callCount(), 1);
+});
+
+test('a point picked on the map gets the same answer as an address, without geocoding', async () => {
+  const answer = await routePoint(48.85, 2.35);
+  assert.equal(aller_a.mock.callCount(), 0);
+  assert.deepEqual(aller_au_point.mock.calls[0].arguments[0], { lat: 48.85, lon: 2.35 });
+  assert.deepEqual(exposition.mock.calls[0].arguments[0], { lat: 48.85, lon: 2.35, scenario: '1910' });
+  assert.match(answer, /^The spot you picked: /);
 });

@@ -14,9 +14,14 @@ export function animateAnswer(text: string) {
   }
 }
 
-export function initializeAvatar() {
+/** The mascot artwork in use (?avatar=stone|bronze-flood, living-stone by default). */
+export function avatarVariant() {
   const requested = new URLSearchParams(location.search).get('avatar');
-  const variant = requested === 'stone' || requested === 'bronze-flood' ? requested : 'living-stone';
+  return requested === 'stone' || requested === 'bronze-flood' ? requested : 'living-stone';
+}
+
+export function initializeAvatar() {
+  const variant = avatarVariant();
   const closed = document.getElementById('avatar') as HTMLImageElement;
   closed.src = `/zouave/${variant}/avatar@2x.webp`;
   const open = new Image();

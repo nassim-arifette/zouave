@@ -421,3 +421,39 @@ dialog::backdrop{background:radial-gradient(ellipse at center,#06101acc,#020609f
 
 @media(max-width:430px){.brand>span{display:none}.topbar{gap:8px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Mascot reactions (mascot.ts): leaning towards the pointer, poses, nudges, follow-ups, "What about here?" */
+.avatar-ring{cursor:pointer}
+.avatar-ring:focus-visible{outline:2px solid var(--mint);outline-offset:4px;border-radius:50%}
+.avatar-ring>img{transform:perspective(700px) rotateY(calc(var(--lean-x,0) * 9deg)) rotateX(calc(var(--lean-y,0) * -5deg));transition:transform .35s ease-out}
+.avatar-ring .avatar-pose{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .3s}
+.avatar-ring.posed .avatar-pose{opacity:1}
+.avatar-ring.posed>img:not(.avatar-pose){visibility:hidden}
+.avatar-ring.pose-wave>img{animation:z-wave .9s var(--ease) 2}
+.avatar-ring.pose-thinking>img{animation:z-think 2.4s ease-in-out infinite}
+.avatar-ring.pose-worried>img{animation:z-shiver .5s ease-in-out 3}
+.avatar-ring.pose-reassure>img{animation:z-nod 1.2s ease-in-out 2}
+.avatar-ring.pose-point>img{animation:z-point 1.6s var(--ease) 1}
+.avatar-ring.pose-worried:before{background:radial-gradient(circle at 50% 55%,#8fd3e277,#5aa9d433 45%,transparent 70%)}
+.avatar-ring.pose-thinking:after{content:'• • •';position:absolute;right:4%;top:6%;z-index:2;padding:3px 10px 5px;border-radius:14px;border:1px solid var(--line-strong);background:var(--glass-strong);color:var(--mint);font:700 16px/1 system-ui,sans-serif;letter-spacing:1px;animation:z-dots 1.2s ease-in-out infinite}
+.avatar-ring.posed>img.avatar-pose{animation:none}
+@keyframes z-wave{0%,100%{rotate:0deg;translate:0 0}30%{rotate:-5deg;translate:0 -10px}60%{rotate:4deg;translate:0 -4px}}
+@keyframes z-think{0%,100%{rotate:0deg;translate:0 0}50%{rotate:-3deg;translate:-4px 0}}
+@keyframes z-shiver{0%,100%{translate:0 0;rotate:0deg}25%{translate:-3px 0;rotate:-1deg}75%{translate:3px 0;rotate:1deg}}
+@keyframes z-nod{0%,100%{translate:0 0;rotate:0deg}40%{translate:0 5px;rotate:1.5deg}}
+@keyframes z-point{0%,100%{rotate:0deg;translate:0 0}35%,75%{rotate:-6deg;translate:-8px -6px}}
+@keyframes z-dots{0%,100%{opacity:.45}50%{opacity:1}}
+@keyframes z-pop{from{opacity:0;transform:translateY(8px) scale(.92)}}
+.zouave-nudge{position:absolute;left:46%;bottom:96%;z-index:3;white-space:nowrap;padding:8px 14px;border-radius:16px 16px 16px 4px;border:1px solid var(--line-strong);background:var(--glass-strong);color:var(--text);font-family:inherit;font-size:13px;font-weight:600;box-shadow:var(--shadow);cursor:pointer;animation:z-pop .4s var(--ease)}
+.zouave-nudge[hidden]{display:none}
+.followups{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.followups[hidden]{display:none}
+.followups button{font-family:inherit;font-size:12px;font-weight:600;line-height:1;color:var(--mint);background:transparent;border:1px solid var(--line-strong);border-radius:999px;padding:7px 11px;cursor:pointer;transition:background .2s,border-color .2s}
+.followups button:hover,.followups button:focus-visible{background:#a4d6bc1f;border-color:var(--mint)}
+.followups button:before{content:'↳ ';opacity:.7}
+.here-popup .maplibregl-popup-content{padding:0;background:transparent;box-shadow:none}
+.here-popup .maplibregl-popup-tip{display:none}
+.here-button{display:flex;align-items:center;gap:8px;padding:5px 14px 5px 5px;border-radius:999px;border:1px solid var(--line-strong);background:var(--glass-strong);color:var(--text);font-family:inherit;font-size:13px;cursor:pointer;box-shadow:var(--shadow);animation:z-pop .3s var(--ease)}
+.here-button img{width:30px;height:30px;border-radius:50%;object-fit:cover;object-position:50% 15%;background:#12303a}
+.here-button b{color:var(--water)}
+@media (prefers-reduced-motion:reduce){.avatar-ring>img{animation:none!important;transform:none}.avatar-ring.pose-thinking:after{animation:none}}

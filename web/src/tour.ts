@@ -4,6 +4,7 @@
 // official thresholds pop as they are crossed, water rises on the mascot (Zouave-meter) and a procedural water
 // soundscape follows the level. Space pauses, → skips a step, Escape quits; every step fails soft.
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
+import { setPose } from './mascot.ts';
 import type { Feature, FeatureCollection, Polygon, MultiPolygon, Position } from 'geojson';
 import './tour.css';
 import { config } from './config.ts';
@@ -329,6 +330,7 @@ const steps: Array<() => Promise<void>> = [
     hook.hidden = false;
     document.body.classList.add('tour-hooked');
     if (!reducedMotion()) map.easeTo({ center: config.initialCenter, zoom: 13.7, pitch: 56, bearing: -32, padding: { top: 40, bottom: 220, left: 0, right: 0 }, duration: 3000 });
+    setPose('wave', 3000);
     await say('[excited] Bonjour! I’m the Zouave of the Alma bridge. [proud] For generations, Parisians have read the Seine’s floods on my body. [dramatic] If 1910 came back today… up to five million people would be hit.', 9000);
   },
   // 2 · Today, live.
@@ -369,6 +371,7 @@ const steps: Array<() => Promise<void>> = [
     el('tour-year')!.textContent = 'JANUARY 1910';
     const level = presetLevel('1910');
     const pending = timeline('1910');
+    setPose('worried', 6000);
     await Promise.all([rise(level, 4500), say(`[dramatic] January 1910: ${metres(level)} m. The reference flood. [laughs] Up to my shoulders!`, 5500)]);
     meterTag(true);
     await capped(pending, 6000);
@@ -387,6 +390,7 @@ const steps: Array<() => Promise<void>> = [
     document.body.classList.add('tour-home');
     const street = config.demoAddress.split(',')[0];
     const flight = aller_a({ adresse: config.demoAddress }).catch(error => { console.warn('Story: address unavailable', error); return null; });
+    setPose('point', 3200);
     await say(`[excited] And your home? Allez, let’s fly to ${street}!`, 3200);
     const point = await capped(flight, 6000);
     const where = point ?? state.address;
@@ -408,6 +412,7 @@ const steps: Array<() => Promise<void>> = [
     document.body.classList.add('tour-home');
     const advice = await capped(consignes({ rez_de_chaussee: true, cave: true, enfants: true }), 5000).catch(() => null);
     const titles = advice?.consignes.map(item => item.title.replace(/\.$/, '')) ?? [];
+    setPose('reassure', 6000);
     await say(titles.length ? `[warm] Three things to do now. ${titles.join('. ')}.` : '[warm] Prepare now: know your refuge, protect your cellar, follow the authorities.', 6000);
   },
   // 9 · End card.
@@ -415,6 +420,7 @@ const steps: Array<() => Promise<void>> = [
     hud.hidden = true;
     resetMeter();
     endCard.hidden = false;
+    setPose('wave', 2500);
     await say('[proud] Zouave. See your flood before it comes.', 2500);
   },
 ];
