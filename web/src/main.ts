@@ -3,22 +3,44 @@ import { map, mapReady } from './map.ts';
 import { $, niveau_seine, notify } from './tools.ts';
 import { routeIntent } from './intent.ts';
 import { initializeTimeline } from './timeline.ts';
+import { initializeImmersion } from './immersion.ts';
 import { attachView3D } from './map.ts';
 import { createView3D } from './view3d.ts';
 import { loadGoogleStatus } from './tools.ts';
-import { initializeVoice, toggleVoice } from './voice.ts';
+import { initializeVoice, isVoiceSessionActive, toggleVoice } from './voice.ts';
+import { browserVoice, setSpeakEnabled, speak, speakEnabled, stopSpeaking } from './speech.ts';
 import { initializeAvatar, animateAnswer, setSpeaking } from './avatar.ts';
 let running = false;
+/** Moves the Zouave's previous reply into the conversation thread and adds the visitor's message. */
+function pushHistory(message: string) {
+  const thread = $('thread');
+  const bubble = (who: 'user' | 'zouave', text: string) => { const p = document.createElement('p'); p.className = `bubble bubble-${who}`; p.textContent = text; thread.append(p); };
+  const previous = $('caption').textContent?.trim();
+  if (previous) bubble('zouave', previous);
+  bubble('user', message);
+  while (thread.children.length > 12) thread.firstElementChild!.remove();
+  $('input-caption').hidden = true;
+}
+function reply(text: string) {
+  $('caption').textContent = text;
+  if (isVoiceSessionActive() || !speak(text)) animateAnswer(text);
+}
 export async function runIntent(message: string) {
   if (running || !message.trim()) return;
   running = true;
-  setSpeaking(false);
+  setSpeaking(false); stopSpeaking();
+  pushHistory(message.trim());
   $('caption').textContent = 'Je consulte les données officielles…';
-  $('input-caption').textContent = `Vous · ${message}`; $('input-caption').hidden = false;
-  try { const answer = await routeIntent(message); $('caption').textContent = answer; animateAnswer(answer); }
-  catch (error) { const text = error instanceof Error ? error.message : 'La donnée est indisponible.'; $('caption').textContent = text; notify(text); }
+  try { reply(await routeIntent(message)); }
+  catch (error) { const text = error instanceof Error ? error.message : 'La donnée est indisponible.'; reply(text); notify(text); }
   finally { running = false; }
 }
+window.addEventListener('zouave:heard', event => { void runIntent((event as CustomEvent<string>).detail); });
+const speakToggle = $<HTMLButtonElement>('speak-toggle');
+const syncSpeakToggle = () => { const on = speakEnabled(); speakToggle.setAttribute('aria-pressed', String(on)); speakToggle.title = `Voix du Zouave : ${on ? 'activée' : 'coupée'}`; };
+if (!browserVoice.canSpeak) speakToggle.hidden = true;
+speakToggle.addEventListener('click', () => { setSpeakEnabled(!speakEnabled()); syncSpeakToggle(); });
+syncSpeakToggle();
 document.querySelectorAll<HTMLButtonElement>('[data-intent]').forEach(button => button.addEventListener('click', () => { void runIntent(button.dataset.intent!); }));
 document.querySelectorAll<HTMLButtonElement>('[data-scenario]').forEach(button => button.addEventListener('click', () => { void runIntent(button.dataset.scenario === 'pire' ? 'pire' : button.dataset.scenario === '1910' ? '1910' : 'aujourd’hui'); }));
 $('chat-form').addEventListener('submit', event => { event.preventDefault(); const input = $<HTMLInputElement>('chat'); const message = input.value; input.value = ''; void runIntent(message); });
@@ -28,6 +50,7 @@ $('photo-close').addEventListener('click', () => $<HTMLDialogElement>('photo-dia
 $('hero-close').addEventListener('click', () => $<HTMLDialogElement>('hero-dialog').close());
 initializeAvatar();
 initializeTimeline();
+initializeImmersion(map);
 void initializeVoice();
 void niveau_seine().catch(error => notify(error.message));
 setInterval(() => { void niveau_seine().catch(error => notify(error.message)); }, 15 * 60_000);

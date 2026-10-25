@@ -26,7 +26,10 @@ Environment variables (optional gitignored `.env`, see `.env.example`):
 | `PORT` | `3000` | Production/Express port; dev proxy targets 3000 |
 
 Without a key, every map, address, exposure and safety feature works via the four
-demo buttons, text input and shortcuts **1–4**. The demo address is configured in
+demo buttons, text input and shortcuts **1–4**. The Zouave still talks without a key: the browser reads his
+answers aloud (Web Speech synthesis, fr-FR, mutable with the speaker button) and, where the
+browser supports speech recognition, the mic turns a spoken sentence into a text intent.
+Press **H** (or the *Immersion* button) to hide the panels and let the camera drift over the city. The demo address is configured in
 `web/src/config.ts`: **4 Rue Traversière, 75012 Paris**. Enter another full address
 in the text input to locate it. Photo assets are supplied by a separate branch;
 missing assets return an explicit 404 and do not interrupt the demo.
@@ -52,6 +55,8 @@ missing assets return an explicit 404 and do not interrupt the demo.
   and real-time Three.js water (planar reflection, screen-space refraction, silt
   absorption, wet band on walls, foam, debris) rises to the requested height; a slider
   lets the user scrub 0–3 m. Falls back to the AI-edited photo when no depth map exists.
+- `web/src/speech.ts`: browser voice fallback (speech synthesis + recognition) for the Zouave.
+- `web/src/immersion.ts`: intro fade-out on first interaction, *Immersion* mode (H) with a slow camera drift.
 - `web/src/voice.ts`: microphone/WebRTC lifecycle, captions, Live nested Responses
   function results and Realtime function results. The mic stops and frees devices;
   idle sessions close after two minutes. Live uses graceful `session.close`.

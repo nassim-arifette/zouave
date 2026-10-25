@@ -50,7 +50,7 @@ test('1910 still selects the classic reference scenario', async () => {
 });
 
 test('empty or unrelated queries do not call address or flood tools', async () => {
-  for (const message of ['', 'bonjour']) assert.match(await routeIntent(message), /Je peux montrer/);
+  for (const [message, reply] of [['', /je sais montrer/], ['bonjour', /^Bonjour/], ['qui es-tu ?', /Zouave du pont de l’Alma/], ['merci', /Avec plaisir/], ['au revoir', /À bientôt/]]) assert.match(await routeIntent(message), reply);
   assert.equal(aller_a.mock.callCount(), 0);
   assert.equal(afficher_crue.mock.callCount(), 0);
 });

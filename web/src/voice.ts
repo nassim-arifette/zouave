@@ -1,5 +1,6 @@
 import { $, api, executeTool, notify } from './tools.ts';
 import { setSpeaking } from './avatar.ts';
+import { browserVoice, isListening, listen, stopListening } from './speech.ts';
 type ToolCall = { type: string; call_id: string; name: string; arguments: string };
 let pc: RTCPeerConnection | undefined;
 let stream: MediaStream | undefined;
@@ -7,6 +8,9 @@ let channel: RTCDataChannel | undefined;
 let mode = 'live';
 let busy = false;
 let stopped = true;
+/** No server voice: the microphone falls back to the browser's speech recognition. */
+let browserMode = false;
+export const isVoiceSessionActive = () => Boolean(pc);
 let idleTimer: ReturnType<typeof setTimeout>;
 const audio = new Audio();
 audio.autoplay = true;
@@ -94,7 +98,19 @@ async function startVoice() {
     await pc.setRemoteDescription({ type: 'answer', sdp: result.sdp });
   } catch (error) { cleanup(); notify(error instanceof Error ? error.message : 'Microphone indisponible.'); }
 }
+function toggleBrowserVoice() {
+  if (isListening()) { stopListening(); return; }
+  const ring = $('avatar-ring');
+  listen({
+    onInterim: text => { const el = $('input-caption'); el.hidden = false; el.textContent = `Vous · ${text}…`; },
+    onText: text => { $('input-caption').hidden = true; window.dispatchEvent(new CustomEvent('zouave:heard', { detail: text })); },
+    onError: message => notify(message),
+    onEnd: () => { ring.classList.remove('listening'); $('mic').setAttribute('aria-pressed', 'false'); $('mic').setAttribute('aria-label', 'Parler au Zouave'); $('voice-state').textContent = 'Votre vigie parisienne'; },
+  });
+  if (isListening()) { ring.classList.add('listening'); $('mic').setAttribute('aria-pressed', 'true'); $('mic').setAttribute('aria-label', 'Arrêter l’écoute'); $('voice-state').textContent = 'Je vous écoute…'; }
+}
 export async function toggleVoice() {
+  if (browserMode) { toggleBrowserVoice(); return; }
   if (busy) return;
   busy = true;
   try { if (pc) await stopVoice(); else await startVoice(); } finally { busy = false; }
@@ -102,7 +118,8 @@ export async function toggleVoice() {
 export async function initializeVoice() {
   try {
     const result = await api('/api/config');
-    if (!result.voice) { $('mic').setAttribute('disabled', ''); $('voice-state').textContent = 'Mode texte · sans micro'; $('connection-label').textContent = 'Mode texte · toutes les fonctions'; }
+    if (!result.voice && browserVoice.canListen) { browserMode = true; $('mic').setAttribute('aria-label', 'Parler au Zouave'); $('connection-label').innerHTML = '<i></i> Voix du navigateur · parlez ou écrivez'; }
+    else if (!result.voice) { $('mic').setAttribute('disabled', ''); $('voice-state').textContent = 'Mode texte · sans micro'; $('connection-label').textContent = browserVoice.canSpeak ? 'Il vous répond à voix haute' : 'Mode texte · toutes les fonctions'; }
   } catch { $('voice-state').textContent = 'Mode texte disponible'; }
   window.addEventListener('pagehide', cleanup);
 }

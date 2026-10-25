@@ -21,7 +21,7 @@ const baseLayers = (layers('basemap', flavor, { lang: 'fr' }) as LayerSpecificat
 for (const layer of baseLayers) {
   if (layer.type === 'symbol' && layer.paint) { layer.paint['text-color'] = '#91a6a8'; layer.paint['text-halo-color'] = '#20343c'; layer.paint['text-opacity'] = 0.65; }
 }
-export const map: Map = new maplibregl.Map({ container: 'map', center: config.initialCenter, zoom: 14.25, pitch: 58, bearing: -24, maxZoom: 19, minZoom: 10, maxBounds: [[2.18, 48.77], [2.52, 48.95]], canvasContextAttributes: { antialias: true }, attributionControl: { compact: true }, style: { version: 8, glyphs: `${location.origin}/fonts/{fontstack}/{range}.pbf`, sprite: `${location.origin}/sprites/dark`, sources: { basemap: { type: 'vector', url: `pmtiles://${location.origin}/data/paris.pmtiles`, attribution: '© OpenStreetMap / Protomaps' } }, layers: baseLayers } });
+export const map: Map = new maplibregl.Map({ container: 'map', center: config.initialCenter, zoom: 14.25, pitch: 58, bearing: -24, maxZoom: 19, minZoom: 10, maxPitch: 72, maxBounds: [[2.18, 48.77], [2.52, 48.95]], canvasContextAttributes: { antialias: true }, attributionControl: { compact: true }, style: { version: 8, glyphs: `${location.origin}/fonts/{fontstack}/{range}.pbf`, sprite: `${location.origin}/sprites/dark`, sources: { basemap: { type: 'vector', url: `pmtiles://${location.origin}/data/paris.pmtiles`, attribution: '© OpenStreetMap / Protomaps' } }, layers: baseLayers, sky: { 'sky-color': '#0b1822', 'horizon-color': '#2a4655', 'fog-color': '#12232e', 'sky-horizon-blend': 0.7, 'horizon-fog-blend': 0.6, 'fog-ground-blend': 0.85, 'atmosphere-blend': 0 } } });
 map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
 let resolveReady: () => void, rejectReady: (error: Error) => void;
 let waterLayer: ReturnType<typeof createWaterLayer> | undefined;
@@ -102,7 +102,8 @@ export async function goTo(lon: number, lat: number, label: string) {
   const element = document.createElement('div'); element.className = 'home-marker';
   marker = new maplibregl.Marker({ element }).setLngLat([lon, lat]).setPopup(new maplibregl.Popup({ closeButton: false, offset: 18 }).setText(label)).addTo(map);
   view3d?.setCamera({ longitude: lon, latitude: lat, pitch: 60, zoom: 17.5, bearing: -26 }, true);
-  map.flyTo({ center: [lon, lat], pitch: 60, zoom: 17.5, bearing: -26, duration: 2400, padding: { left: 200, right: 300, top: 40, bottom: 70 } });
+  // Desktop: keep the address clear of the side rails and of the Zouave at the bottom centre; mobile: above the sheet.
+  map.flyTo({ center: [lon, lat], pitch: 60, zoom: 17.5, bearing: -26, duration: 2400, padding: innerWidth > 900 ? { left: 300, right: 340, top: 40, bottom: 300 } : { left: 20, right: 20, top: 40, bottom: innerHeight * 0.45 } });
 }
 export function showCaves(show: boolean) { map.setLayoutProperty('caves-outline', 'visibility', show ? 'visible' : 'none'); }
 export async function showFloodLevel(level: number) {

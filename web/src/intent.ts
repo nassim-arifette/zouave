@@ -31,5 +31,10 @@ export async function routeIntent(message: string) {
     return photo.affichee ? `Voici une simulation, pas une prévision. Crédit : ${photo.credit}.` : photo.error!;
   }
   if (/1910|crue|monte/.test(intent)) { const result = await afficher_scenario({ scenario: '1910' }); return `${result.description} Source : ${result.source}. Et chez vous ?`; }
-  return 'Je peux montrer le scénario de référence, regarder votre adresse, donner les consignes ou lire le niveau de la Seine. Choisissez un bouton pour commencer.';
+  // Small talk keeps the conversation going without inventing facts: every number still comes from a tool above.
+  if (/qui es|t'?es qui|tu es qui|presente|zouave|alma|statue/.test(intent)) return 'Je suis le Zouave du pont de l’Alma, soldat de pierre planté dans la Seine. Les Parisiens regardent l’eau monter le long de mes jambes ; en 1910, elle m’a atteint aux épaules. Je vous aide à comprendre les crues avec les données officielles. On regarde la crue de 1910 ?';
+  if (/merci|super|genial|parfait|top\b/.test(intent)) return 'Avec plaisir ! Je veille sur la Seine jour et nuit. Voulez-vous voir votre adresse, ou les bons réflexes ?';
+  if (/au revoir|bye|a bientot|bonne (?:journee|soiree)/.test(intent)) return 'À bientôt ! Si la Seine monte, je serai là, les pieds dans l’eau.';
+  if (/^(?:bonjour|bonsoir|salut|coucou|hello|hey)\b|ca va|comment vas/.test(intent)) return 'Bonjour ! Toujours debout sous le pont de l’Alma, les pieds au frais. Demandez-moi de montrer 1910, de regarder votre adresse ou le niveau de la Seine aujourd’hui.';
+  return 'Je ne suis qu’un soldat de pierre, mais je sais montrer la crue de 1910, regarder votre adresse, lire le niveau de la Seine ou rappeler les bons réflexes. Que voulez-vous voir ?';
 }
