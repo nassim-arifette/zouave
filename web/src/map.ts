@@ -6,6 +6,8 @@ import type { FeatureCollection, Polygon, MultiPolygon } from 'geojson';
 import { config } from './config.ts';
 import { createWaterLayer } from './water.ts';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
+import difference from '@turf/difference';
+import { BANKS_ONLY_BELOW, REFERENCE_LEVEL, timelineBands, type FloodClass } from './flood-level.ts';
 export type Polygons = FeatureCollection<Polygon | MultiPolygon>;
 export type Scenario = 'aujourdhui' | '1910' | 'pire';
 export const datasets: Record<string, Polygons> = {};
@@ -25,7 +27,7 @@ export const mapReady = new Promise<void>((resolve, reject) => { resolveReady = 
 void mapReady.catch(() => {});
 map.once('load', async () => {
   try {
-    await Promise.all(['ppri_aleas', 'caves_1910', 'sdrife_zone_inondable'].map(async name => {
+    await Promise.all(['ppri_aleas', 'ppri_zonage', 'caves_1910', 'sdrife_zone_inondable'].map(async name => {
       const res = await fetch(`/data/${name}.geojson`);
       if (!res.ok) throw new Error(`Impossible de charger ${name}`);
       datasets[name] = await res.json();
@@ -45,6 +47,17 @@ map.once('load', async () => {
     map.addLayer({ id: 'extreme-outline', type: 'line', source: 'extreme', layout: { visibility: 'none' }, paint: { 'line-color': '#a0d7e6', 'line-width': 1.5, 'line-opacity': 0.7 } }, before);
     map.addSource('caves', { type: 'geojson', data: datasets.caves_1910 });
     map.addLayer({ id: 'caves-outline', type: 'line', source: 'caves', layout: { visibility: 'none' }, paint: { 'line-color': '#d7c598', 'line-width': 1.4, 'line-dasharray': [1, 2], 'line-opacity': 0.8 } }, before);
+    map.addSource('timeline-depths', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    const hatch = new Uint8Array(8 * 8 * 4);
+    for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) { const i = (y * 8 + x) * 4; hatch.set([150, 217, 228, (x + y) % 8 < 3 ? 210 : 25], i); }
+    map.addImage('timeline-hatching', { width: 8, height: 8, data: hatch });
+    map.addLayer({ id: 'timeline-solid', type: 'fill', source: 'timeline-depths', layout: { visibility: 'none' }, filter: ['==', ['get', 'status'], 'flooded'], paint: { 'fill-color': ['match', ['get', 'classe'], '0-1', '#86d6e5', '1-2', '#3aabc9', '#2573c4'], 'fill-opacity': 0.6 } }, before);
+    map.addLayer({ id: 'timeline-possible', type: 'fill', source: 'timeline-depths', layout: { visibility: 'none' }, filter: ['==', ['get', 'status'], 'possible'], paint: { 'fill-pattern': 'timeline-hatching', 'fill-opacity': 0.9 } }, before);
+    map.addSource('timeline-banks', { type: 'geojson', data: { type: 'FeatureCollection', features: datasets.ppri_zonage.features.filter(f => f.properties?.nom === 'Zone rouge') } });
+    map.addLayer({ id: 'timeline-banks', type: 'fill', source: 'timeline-banks', layout: { visibility: 'none' }, paint: { 'fill-color': '#7cd2df', 'fill-opacity': 0.65 } }, before);
+    const extra = difference({ type: 'FeatureCollection', features: [...datasets.sdrife_zone_inondable.features, ...datasets.ppri_aleas.features] });
+    map.addSource('timeline-extra', { type: 'geojson', data: { type: 'FeatureCollection', features: extra ? [extra] : [] } });
+    map.addLayer({ id: 'timeline-extra', type: 'fill', source: 'timeline-extra', layout: { visibility: 'none' }, paint: { 'fill-pattern': 'timeline-hatching', 'fill-opacity': 0.75 } }, before);
     resolveReady();
   } catch (error) { rejectReady(error instanceof Error ? error : new Error('Carte indisponible')); }
 });
@@ -52,6 +65,7 @@ let animation = 0;
 let waterProgress = 0;
 export async function showScenario(scenario: Scenario) {
   await mapReady;
+  for (const id of ['timeline-solid', 'timeline-possible', 'timeline-banks', 'timeline-extra']) map.setLayoutProperty(id, 'visibility', 'none');
   cancelAnimationFrame(animation);
   if (waterLayer) waterLayer.enabled = scenario === '1910';
   map.setLayoutProperty('flood-3d', 'visibility', scenario === '1910' && !waterLayer ? 'visible' : 'none');
@@ -78,3 +92,11 @@ export async function goTo(lon: number, lat: number, label: string) {
   map.flyTo({ center: [lon, lat], pitch: 60, zoom: 17.5, bearing: -26, duration: 2400, padding: { left: 200, right: 300, top: 40, bottom: 70 } });
 }
 export function showCaves(show: boolean) { map.setLayoutProperty('caves-outline', 'visibility', show ? 'visible' : 'none'); }
+export async function showFloodLevel(level: number) {
+  await showScenario('aujourdhui');
+  const bands = timelineBands(level);
+  (map.getSource('timeline-depths') as maplibregl.GeoJSONSource).setData({ type: 'FeatureCollection', features: datasets.ppri_aleas.features.map(feature => ({ ...feature, properties: { ...feature.properties, ...bands[feature.properties?.classe as FloodClass] } })) });
+  for (const id of ['timeline-solid', 'timeline-possible']) map.setLayoutProperty(id, 'visibility', 'visible');
+  map.setLayoutProperty('timeline-banks', 'visibility', level >= 3.2 && level < BANKS_ONLY_BELOW ? 'visible' : 'none');
+  map.setLayoutProperty('timeline-extra', 'visibility', level > REFERENCE_LEVEL ? 'visible' : 'none');
+}

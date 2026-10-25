@@ -1,17 +1,20 @@
 import './style.css';
 import { config } from './config.ts';
 import { map, mapReady } from './map.ts';
-import { $, state, afficher_scenario, aller_a, exposition, niveau_seine, photo_inondee, consignes, notify } from './tools.ts';
+import { $, state, afficher_scenario, afficher_crue, aller_a, exposition, niveau_seine, photo_inondee, consignes, notify } from './tools.ts';
+import { initializeTimeline } from './timeline.ts';
 import { initializeVoice, toggleVoice } from './voice.ts';
 import { initializeAvatar, animateAnswer, setSpeaking } from './avatar.ts';
 let running = false;
 async function routeIntent(message: string) {
   const intent = message.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const historical = intent.match(/\b(1658|1740|1799|1802|1924|1945|1955|1959|1982|2001|2016|2018|2026|115)\b/);
+  if (historical) return (await afficher_crue({ annee: historical[1] })).description;
   if (/pire|extreme/.test(intent)) { const result = await afficher_scenario({ scenario: 'pire' }); return result.description; }
   if (/aujourd|actuel/.test(intent)) { const result = await afficher_scenario({ scenario: 'aujourdhui' }); return result.description; }
   if (/chez moi|adresse|rue|quai|avenue|boulevard/.test(intent)) {
     const address = /chez moi|mon adresse/.test(intent) ? config.demoAddress : message.replace(/^(?:va|aller|montre|emmene.moi)\s+(?:a|à|au)\s+/i, '');
-    if (state.scenario === 'aujourdhui') await afficher_scenario({ scenario: '1910' });
+    if (state.scenario === 'aujourdhui' && !state.timeline) await afficher_scenario({ scenario: '1910' });
     const point = await aller_a({ adresse: address });
     const result = await exposition({ lat: point.lat, lon: point.lon, scenario: state.scenario });
     if (state.scenario === 'pire') return `${point.label} : ${result.sdrife_en_zone ? 'dans' : 'hors'} l’emprise SDRIF-E. Hauteurs locales non publiées. Source : Institut Paris Région.`;
@@ -52,6 +55,7 @@ window.addEventListener('keydown', event => { if ((event.target as HTMLElement)?
 $('mic').addEventListener('click', () => { void toggleVoice(); });
 $('photo-close').addEventListener('click', () => $<HTMLDialogElement>('photo-dialog').close());
 initializeAvatar();
+initializeTimeline();
 void initializeVoice();
 void niveau_seine().catch(error => notify(error.message));
 setInterval(() => { void niveau_seine().catch(error => notify(error.message)); }, 15 * 60_000);

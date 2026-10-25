@@ -57,9 +57,17 @@ Source CRS, verified from `.prj`: **EPSG:2154 (Lambert-93)**.
 **Schema decision:** the open-ended `2+` class has no finite upper bound. JSON
 cannot encode infinity; null is deliberately used instead of inventing a numeric
 maximum. This is the one exception to the requested numeric `h_max` contract.
-The source contains qualitative labels, not explicit numeric depth fields; the
-depth mapping follows the requested class interpretation and still needs an
-authoritative Paris hazard-map legend cross-check before use beyond this demo.
+The source contains qualitative labels, not explicit numeric depth fields.
+**Owner-confirmed mapping:** 0–1 / 1–2 / >2 m, termed **modéré / fort / très fort**
+in the regional convention. The UI displays depths, never “aléa moyen”.
+The 1 m boundary is directly verified in the Ville de Paris presentation and
+the 2003 presentation p.22 (dark blue: potentially more than one metre).
+The 2 m boundary is confirmed by consistency, not an independently read numeric
+legend in the source shapefile. The owner's spatial cross-check of hazards against
+zoning found faible 72% light blue, moyen 76% dark blue, fort 59% red. These
+percentages are corroboration, not a substitute for a parcel-level assessment.
+Ville de Paris presentation:
+https://cdn.paris.fr/paris/2019/07/24/64f1ae7872a6521d629e5b8e2e432143.pdf
 Class counts: `0-1`: 50, `1-2`: 78, `2+`: 74.
 
 Reference report, successfully downloaded:
@@ -100,8 +108,8 @@ that a particular cellar actually flooded in 1910. Full source coverage is kept
 - The 2003 Paris PPRI presentation, **page 4**, also lists 8.62 m for 1910;
   **page 8** explains the hydraulic/terrain interpolation and ±30 cm vertical,
   ±25 m horizontal indicative precision. The 2007 regulation and 2003 presentation
-  were downloaded and checked; the presentation text does not explicitly pair
-  the source's qualitative labels with all three requested numeric intervals.
+  were downloaded and checked. Page 22 explicitly separates light/dark blue at
+  one metre. The complete class mapping is now owner-confirmed as described above.
 - Safety wording was checked against https://www.paris.fr/pages/crues-5472,
   https://www.georisques.gouv.fr/me-preparer-me-proteger/que-faire-en-cas-d-inondation
   and the Paris DICRIM https://www.georisques.gouv.fr/DICRIM/75056.
