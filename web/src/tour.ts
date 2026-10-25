@@ -9,9 +9,10 @@ import './tour.css';
 import { config } from './config.ts';
 import { map, mapReady, datasets } from './map.ts';
 import { afficher_crue, aller_a, exposition, photo_inondee, consignes, state } from './tools.ts';
-import { floodPresets, consequences, timelineBands, sceneHeight, REFERENCE_LEVEL, type DepthBand } from './flood-level.ts';
+import { floodPresets, consequences, timelineBands, sceneHeight, BANKS_ONLY_BELOW, REFERENCE_LEVEL, type DepthBand } from './flood-level.ts';
 import { flattenFootprints, timelineFootprints, type WaterFeature } from './water-footprints.ts';
-import { isSpeaking, pauseSpeaking, resumeSpeaking, speak, speakEnabled, stopSpeaking } from './speech.ts';
+import { isSpeaking, pauseSpeaking, resumeSpeaking, speak, speakEnabled, stopListening, stopSpeaking } from './speech.ts';
+import { isVoiceSessionActive, stopVoice } from './voice.ts';
 import { animateAnswer, setSpeaking } from './avatar.ts';
 
 const OECD = 'https://www.oecd.org/fr/publications/mieux-prevenir-les-inondations-de-la-seine-en-ile-de-france_9789264290082-fr';
@@ -192,7 +193,7 @@ function buildOverlay() {
           <div><strong>€30 billion</strong><span>in direct damage, at most</span></div>
         </div>
         <p class="tour-odds">A <b>1-in-100</b> chance, every year.</p>
-        <a class="tour-source" href="${OECD}" target="_blank" rel="noreferrer">Source: OECD, 2014 ↗</a>
+        <a class="tour-source" href="${OECD}" target="_blank" rel="noreferrer">Source: OECD ↗</a>
       </div>
     </section>
     <aside class="tour-hud" id="tour-hud" aria-live="polite" hidden>
@@ -202,7 +203,7 @@ function buildOverlay() {
       <div class="tour-gauge" aria-hidden="true"><i id="tour-gauge-fill"></i><b style="bottom:${(REFERENCE_LEVEL / 10) * 100}%">1910</b></div>
       <div class="tour-counters">
         <p><strong id="tour-buildings">0</strong><span>buildings inside the flood footprint<em id="tour-possible"></em></span></p>
-        <p><strong id="tour-area">0.0</strong><span>km² of Paris under water (PPRI footprint)</span></p>
+        <p><strong id="tour-area">0.0</strong><span id="tour-area-caption">km² of Paris under water (PPRI footprint)</span></p>
       </div>
       <p class="tour-scope">Buildings: IGN BD TOPO centroids in the mapped area (central Paris) · footprint: Paris PPRI hazard classes at this level</p>
       <ol class="tour-thresholds" id="tour-thresholds"></ol>
@@ -234,9 +235,13 @@ function showLevel(level: number) {
 let shownCount: Count = { flooded: 0, possible: 0, km2: 0 };
 function showCount(count: Count) {
   shownCount = count;
-  el('tour-buildings')!.textContent = Math.round(count.flooded).toLocaleString('en-GB');
-  el('tour-possible')!.textContent = count.possible >= 1 ? ` · +${Math.round(count.possible).toLocaleString('en-GB')} possibly` : '';
-  el('tour-area')!.textContent = count.km2.toLocaleString('en-GB', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  // From the first riverside closures up to 6.62 m only banks and low quays flood (indicative footprint, not counted):
+  // printing 0 buildings / 0.0 km² there would contradict the map and the narration.
+  const banksOnly = shownLevel >= consequences[0].level && shownLevel < BANKS_ONLY_BELOW;
+  el('tour-buildings')!.textContent = banksOnly ? '–' : Math.round(count.flooded).toLocaleString('en-GB');
+  el('tour-possible')!.textContent = !banksOnly && count.possible >= 1 ? ` · +${Math.round(count.possible).toLocaleString('en-GB')} possibly` : '';
+  el('tour-area')!.textContent = banksOnly ? '–' : count.km2.toLocaleString('en-GB', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  el('tour-area-caption')!.textContent = banksOnly ? 'riverbanks and low quays only (indicative footprint)' : 'km² of Paris under water (PPRI footprint)';
 }
 const crossed = new Set<number>();
 function thresholds(level: number) {
@@ -324,12 +329,18 @@ const steps: Array<() => Promise<void>> = [
     hook.hidden = true;
     document.body.classList.remove('tour-hooked');
     hud.hidden = false;
-    el('tour-year')!.textContent = 'TODAY · LIVE';
-    const today = await capped(timeline('today'), 8000);
-    const level = Number(today && 'level' in today ? today.level : state.timeline?.level ?? 1);
-    showLevel(level); thresholds(level);
-    showCount(await capped(countAt(level), 6000) ?? shownCount);
-    await say(`This is the Seine right now: ${metres(level)} m at Austerlitz. Now, watch it rise.`, 3500);
+    el('tour-year')!.textContent = 'TODAY';
+    // Only this run's reading may be narrated: no reuse of an earlier timeline level, no invented default.
+    const today = await capped(timeline('today'), 9000);
+    const level = today && 'level' in today && Number.isFinite(Number(today.level)) ? Number(today.level) : null;
+    if (level === null) await say('Here is the Seine in Paris today. Now, watch it rise.', 3500);
+    else {
+      const stale = Boolean(today && 'stale' in today && today.stale);
+      el('tour-year')!.textContent = stale ? 'LAST KNOWN READING' : 'TODAY · LIVE';
+      showLevel(level); thresholds(level);
+      showCount(await capped(countAt(level), 6000) ?? shownCount);
+      await say(stale ? `My last known reading: ${metres(level)} m at Austerlitz. Now, watch it rise.` : `This is the Seine right now: ${metres(level)} m at Austerlitz. Now, watch it rise.`, 3500);
+    }
     if (!reducedMotion()) map.easeTo({ bearing: map.getBearing() + 26, duration: 34_000, easing: t => t });
   },
   // 3 · June 2016.
@@ -364,7 +375,7 @@ const steps: Array<() => Promise<void>> = [
     await say(`And your home? Let’s fly to ${street}.`, 3200);
     const point = await capped(flight, 6000);
     const where = point ?? state.address;
-    exposure = await capped(exposition({ lat: where.lat, lon: where.lon, scenario: state.scenario }) as unknown as Promise<typeof exposure>, 8000).catch(() => null);
+    exposure = await capped(exposition({ lat: where.lat, lon: where.lon, scenario: state.timeline ? state.scenario : '1910' }) as unknown as Promise<typeof exposure>, 8000).catch(() => null);
     const label = exposure?.hauteur_texte ?? exposure?.label;
     if (label) await say(`Here, in a 1910-type flood: ${label} of water.`, 3500);
   },
@@ -411,14 +422,26 @@ function onKey(event: KeyboardEvent) {
     run.skip = true; stopSpeaking();
   } else if (event.key === 'Escape') {
     event.preventDefault(); event.stopPropagation();
+    if (closeHood()) return; // Escape first closes the Under the hood overlay, as everywhere else
     run.aborted = true; stopSpeaking(); closeDialogs();
-  } else if (/^[0-9dh]$/i.test(event.key) && !(event.target as HTMLElement)?.matches?.('input,textarea')) {
+  } else if (/^[0-9dhu]$/i.test(event.key) && !(event.target as HTMLElement)?.matches?.('input,textarea')) {
     event.stopPropagation();
   }
 }
 
+function closeHood() {
+  const hood = el('hood');
+  if (!hood || hood.hidden) return false;
+  el('hood-close')?.click();
+  return true;
+}
+
 function begin() {
   if (document.body.classList.contains('ui-hidden')) el('immersion-exit')?.click();
+  closeHood();
+  // The story narrates alone: end a live OpenAI voice session and browser listening (the mic is hidden meanwhile).
+  if (isVoiceSessionActive()) void stopVoice();
+  stopListening();
   closeDialogs();
   endCard.hidden = true;
   document.body.classList.add('engaged', 'tour-active');

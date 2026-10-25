@@ -10,7 +10,7 @@
 @media(max-width:900px){.tour-start{height:34px;padding:0 11px}.tour-start span,.tour-start kbd{display:none}}
 
 /* While the story plays: a clean stage, only the city, the water, the Zouave and his caption */
-body.tour-active .legend,body.tour-active #flood-timeline,body.tour-active .console,body.tour-active .view-toggle,body.tour-active .maplibregl-ctrl-top-right,body.tour-active #immersion-toggle,body.tour-active .intro,body.tour-active .thread,body.tour-active .input-caption{opacity:0!important;visibility:hidden!important;pointer-events:none!important;transition:opacity .6s,visibility .6s}
+body.tour-active .hood-toggle,body.tour-active .legend,body.tour-active #flood-timeline,body.tour-active .console,body.tour-active .view-toggle,body.tour-active .maplibregl-ctrl-top-right,body.tour-active #immersion-toggle,body.tour-active .intro,body.tour-active .thread,body.tour-active .input-caption{opacity:0!important;visibility:hidden!important;pointer-events:none!important;transition:opacity .6s,visibility .6s}
 body.tour-active:not(.tour-home) .cards{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
 body.tour-active .caption{font-size:14px;line-height:1.6;color:#f1f6f2}
 body.tour-active .dialogue{border-color:#a4d6bc55}
@@ -87,3 +87,6 @@ body.tour-active .dialogue{border-color:#a4d6bc55}
 @keyframes tour-pop{from{opacity:0;transform:scale(.92) translateY(6px)}to{opacity:1;transform:none}}
 @keyframes tour-wave{to{background-position:40px 0}}
 @media(prefers-reduced-motion:reduce){.tour-start,.tour-hook,.tour-hook h2,.tour-stats,.tour-odds,.tour-thresholds li,.tour-meter-tag,.tour-end,.tour-water:after{animation:none!important}.tour-water:before,.tour-water:after{transition:none}}
+
+body.tour-hooked .dialogue{opacity:0;visibility:hidden}
+@media(max-height:820px) and (min-width:901px){.tour-hook h2{font-size:clamp(28px,3.4vw,44px);margin:10px 0 14px}.tour-stats strong{font-size:clamp(26px,3vw,40px)}.tour-odds{margin:12px 0 4px}}

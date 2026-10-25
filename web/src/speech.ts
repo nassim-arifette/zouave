@@ -25,13 +25,14 @@ function zouaveVoice() {
 /** With OPENAI_API_KEY on the server, the Zouave speaks with OpenAI text-to-speech (cached server-side); otherwise the browser voice. */
 let serverVoice = false;
 export function useServerVoice(on: boolean) { serverVoice = on; }
-let playing: HTMLAudioElement | undefined, fetching: AbortController | undefined, serverBusy = false;
+let playing: HTMLAudioElement | undefined, fetching: AbortController | undefined, serverBusy = false, paused = false;
 const clean = (text: string) => text.replace(/https?:\/\/\S+/g, '').replace(/[↗↑·]/g, ' ').replace(/\s+/g, ' ').trim();
 
 /** Reads `text` aloud with the mouth animation synced to the voice; returns false when it cannot speak. */
 export function speak(text: string) {
   if (!speakEnabled() || !text.trim()) return false;
   stopSpeaking();
+  paused = false;
   if (serverVoice) { void speakWithServer(clean(text)); return true; }
   return speakWithBrowser(clean(text));
 }
@@ -55,24 +56,25 @@ async function speakWithServer(text: string) {
     if (controller.signal.aborted) { URL.revokeObjectURL(url); return; }
     const audio = playing = new Audio(url);
     const done = () => { if (playing === audio) { playing = undefined; serverBusy = false; } setSpeaking(false); URL.revokeObjectURL(url); };
-    audio.onplaying = audio.ontimeupdate = () => setSpeaking(true);
+    // Only an audible, playing line moves the mouth (pause() still fires a last timeupdate).
+    audio.onplaying = audio.ontimeupdate = () => { if (playing === audio && !audio.paused) setSpeaking(true); };
     audio.onended = audio.onerror = done;
-    await audio.play();
+    if (!paused) await audio.play(); // paused while loading: resumeSpeaking() starts it
   } catch (error) {
     if (controller.signal.aborted && fetching !== controller) return;
     serverBusy = false;
     console.warn('Narrated voice unavailable, using the browser voice:', error);
-    speakWithBrowser(text);
+    if (speakWithBrowser(text) && paused) synth?.pause();
   }
 }
 /** True while the Zouave is speaking or about to (narrated audio still loading counts). */
 export function isSpeaking() { return serverBusy || Boolean(synth && (synth.speaking || synth.pending)); }
-export function pauseSpeaking() { playing?.pause(); synth?.pause(); }
-export function resumeSpeaking() { void playing?.play().catch(() => {}); synth?.resume(); }
+export function pauseSpeaking() { paused = true; playing?.pause(); synth?.pause(); setSpeaking(false); }
+export function resumeSpeaking() { paused = false; void playing?.play().catch(() => {}); synth?.resume(); if (synth?.speaking) setSpeaking(true); }
 export function stopSpeaking() {
   fetching?.abort(); fetching = undefined;
-  if (playing) { playing.onended = playing.onerror = null; playing.pause(); playing.removeAttribute('src'); playing = undefined; }
-  serverBusy = false;
+  if (playing) { playing.onended = playing.onerror = playing.onplaying = playing.ontimeupdate = null; playing.pause(); playing.removeAttribute('src'); playing = undefined; }
+  serverBusy = false; paused = false;
   if (synth?.speaking || synth?.pending) synth.cancel();
   setSpeaking(false);
 }

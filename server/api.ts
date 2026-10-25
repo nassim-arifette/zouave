@@ -85,7 +85,7 @@ export function createApp(options: { fetcher?: typeof fetch; photosPath?: string
       res.json(value);
     } catch {
       const fallback = levelCache?.value ?? JSON.parse(await readFile(`${publicDir}data/niveau-fallback.json`, 'utf8'));
-      res.json({ ...fallback, stale: true });
+      res.json({ ...fallback, station_label: 'The Seine at Paris [Austerlitz]', source: "Hub'Eau / Vigicrues · offline snapshot", stale: true });
     }
   });
   app.get('/api/geocode', async (req, res) => {
@@ -105,7 +105,7 @@ export function createApp(options: { fetcher?: typeof fetch; photosPath?: string
       res.json(value);
     } catch {
       const fallbacks = JSON.parse(await readFile(`${publicDir}data/geocode-fallback.json`, 'utf8'));
-      const found = fallbacks.find((entry: { aliases: string[] }) => entry.aliases.includes(normalized));
+      const found = fallbacks.find((entry: { aliases: string[] }) => entry.aliases.includes(normalized) || entry.aliases.includes(`${normalized} paris`));
       if (!found) { res.status(503).json({ error: 'Geocoding unavailable. Try 4 Rue Traversière, Paris (demo address).' }); return; }
       res.json({ type: 'FeatureCollection', features: [found.feature], source: 'Géoplateforme IGN', source_url: geocodeURL, offline: true });
     }

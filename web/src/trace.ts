@@ -19,7 +19,7 @@ export function summarize(name: string, result: unknown): string {
   switch (name) {
     case 'niveau_seine': return `${Number(r.hauteur_m).toLocaleString('en-GB', { maximumFractionDigits: 2 })} m at Austerlitz${r.stale ? ' (last known)' : ''} · ${r.source ?? 'Hub’Eau'}`;
     case 'aller_a': return `${r.label} · ${r.source ?? 'IGN'}${r.offline ? ' (offline)' : ''}`;
-    case 'exposition': return `${r.hauteur_texte ?? r.label ?? '—'}${r.cave_inondee_1910 ? ' · cellar sector' : ''} · PPRI`;
+    case 'exposition': return r.scenario === 'pire' ? `SDRIF-E footprint: ${r.sdrife_en_zone ? 'inside' : 'outside'} · depths not published` : `${r.hauteur_texte ?? r.label ?? '—'}${r.cave_inondee_1910 ? ' · cellar sector' : ''} · PPRI`;
     case 'afficher_scenario': return `${r.scenario === 'pire' ? 'extreme' : r.scenario === 'aujourdhui' ? 'today' : r.scenario} · ${r.source ?? ''}`;
     case 'afficher_crue': return `${Number(r.level).toLocaleString('en-GB')} m · ${r.label ?? ''} · ${r.exposure?.hauteur_texte ?? ''}`;
     case 'consignes': return `${r.consignes?.length ?? 0} official actions · ${r.source ?? ''}`;

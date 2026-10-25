@@ -9,15 +9,17 @@ const afficher_scenario = mock.fn(async ({ scenario }) => {
   return { description: 'Scénario sélectionné', source: 'DRIEAT' };
 });
 const exposition = mock.fn(async () => ({ hauteur_visuelle_m: null, hauteur_texte: 'Au sec' }));
+const niveau_seine = mock.fn(async () => ({ hauteur_m: 1.02, date_obs: '2026-10-25T09:00:00Z', source: "Hub'Eau / Vigicrues", stale: false }));
+const consignes = mock.fn(async () => ({ consignes: [{ title: 'Plan a refuge up high', source: 'Géorisques · What to do' }] }));
 mock.module('../web/src/tools.ts', { exports: {
   state, aller_a, afficher_crue, afficher_scenario, exposition,
-  niveau_seine: mock.fn(), photo_inondee: mock.fn(), consignes: mock.fn(),
+  niveau_seine, photo_inondee: mock.fn(), consignes,
 } });
 const { routeIntent } = await import('../web/src/intent.ts');
 
 beforeEach(() => {
   state.scenario = '1910';
-  for (const fn of [aller_a, afficher_crue, afficher_scenario, exposition]) fn.mock.resetCalls();
+  for (const fn of [aller_a, afficher_crue, afficher_scenario, exposition, niveau_seine, consignes]) fn.mock.resetCalls();
 });
 
 for (const address of [
@@ -71,4 +73,14 @@ test('English demo chips reach the same tools', async () => {
   await routeIntent('And the worst case?');
   assert.deepEqual(afficher_scenario.mock.calls.at(-1).arguments, [{ scenario: 'pire' }]);
   assert.equal(afficher_crue.mock.callCount(), 0);
+});
+
+test('jury questions reach the right tool, and English words are not taken for street names', async () => {
+  for (const question of ['How high is the Seine today?', 'Is the Seine rising?', 'Seine level now']) await routeIntent(question);
+  assert.equal(niveau_seine.mock.callCount(), 3);
+  for (const question of ['Where is a safe place for my kids?', 'What should I do today?', 'Is there an evacuation route for children?']) await routeIntent(question);
+  assert.equal(consignes.mock.callCount(), 3);
+  assert.equal(aller_a.mock.callCount(), 0, 'no geocoding of whole questions');
+  await routeIntent('Will my cellar flood?');
+  assert.equal(aller_a.mock.callCount(), 1);
 });

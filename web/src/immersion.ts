@@ -36,7 +36,7 @@ export function initializeImmersion(map: Map, body = document.body) {
   toggle.addEventListener('click', () => set(true));
   exit.addEventListener('click', () => set(false));
   window.addEventListener('keydown', event => {
-    if ((event.target as HTMLElement)?.matches('input,textarea,[contenteditable]') || event.ctrlKey || event.metaKey || event.altKey || document.querySelector('dialog[open]')) return;
+    if ((event.target as HTMLElement)?.matches('input,textarea,[contenteditable]') || event.ctrlKey || event.metaKey || event.altKey || document.querySelector('dialog[open]') || document.getElementById('hood')?.hidden === false) return;
     const hidden = body.classList.contains('ui-hidden');
     if (event.key.toLowerCase() === 'h' || (event.key === 'Escape' && hidden)) { event.preventDefault(); set(!hidden); }
   });

@@ -61,7 +61,9 @@ Backup: if anything stalls during recording, press **Esc**, reload, and press **
 - One person talks, one drives: **D** story · **Space** pause · **→** next step · **Esc** stop · **U** under the hood ·
   **H** immersion · **1–4** demo questions.
 - End on the QR code (end card or **U**): the jury scans it and checks their own address (laptop and phones on the
-  same Wi-Fi; set `ZOUAVE_PUBLIC_URL` if the venue isolates clients).
+  same Wi-Fi). Over plain HTTP phones get text mode only (browsers allow the microphone on HTTPS); for voice on
+  phones, or if the venue isolates Wi-Fi clients, expose the server through an HTTPS tunnel (cloudflared or ngrok)
+  and set `ZOUAVE_PUBLIC_URL` to it.
 - Backup: `npm run record-demo` (silent video of the Story mode), plus your submitted 2-minute video.
 
 ## Submission checklist

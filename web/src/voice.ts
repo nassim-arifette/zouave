@@ -100,7 +100,7 @@ async function startVoice() {
     const result = await api('/api/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sdp: offer.sdp }) });
     if (stopped || !pc) return;
     await pc.setRemoteDescription({ type: 'answer', sdp: result.sdp });
-  } catch (error) { cleanup(); notify(error instanceof Error ? error.message : 'Microphone indisponible.'); }
+  } catch (error) { cleanup(); notify(error instanceof Error ? error.message : 'Microphone unavailable.'); }
 }
 function toggleBrowserVoice() {
   if (isListening()) { stopListening(); return; }
@@ -123,6 +123,8 @@ export async function initializeVoice() {
   try {
     const result = await api('/api/config');
     if (result.tts) { useServerVoice(true); $('speak-toggle').hidden = false; }
+    // Phones opening the LAN address (QR code) are not a secure context: no microphone API at all.
+    if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) { $('mic').setAttribute('disabled', ''); $('mic').title = 'Voice needs HTTPS on this device: type your question instead'; $('connection-label').textContent = 'Type your question · voice needs HTTPS here'; return; }
     if (!result.voice && browserVoice.canListen) { browserMode = true; $('mic').setAttribute('aria-label', 'Talk to the Zouave'); $('connection-label').innerHTML = '<i></i> Browser voice · talk or type'; }
     else if (!result.voice) { $('mic').setAttribute('disabled', ''); $('voice-state').textContent = 'Text mode · no microphone'; $('connection-label').textContent = browserVoice.canSpeak ? 'He answers out loud' : 'Text mode · every feature works'; }
   } catch { $('voice-state').textContent = 'Text mode available'; }

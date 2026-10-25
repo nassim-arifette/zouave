@@ -354,11 +354,19 @@ dialog::backdrop{background:radial-gradient(ellipse at center,#06101acc,#020609f
   :root{--left-w:270px;--right-w:270px;--gutter:14px;--mascot:140px;--dialogue-h:150px}
   .level-line>span{max-width:130px;line-height:1.5;font-size:9px}#level-source{display:none}
   .brand{min-width:190px}.topbar{gap:18px}.river-status,.reference{padding-left:18px}.reference{min-width:150px}
-  .immersion-toggle span{display:none}
+  .immersion-toggle span,.tour-start span{display:none}
   .timeline-heading output{font-size:17px}.timeline-ticks button{font-size:8px}
   .chips{grid-template-columns:repeat(2,auto)}
   .dialogue{margin-bottom:22px}.caption{font-size:12px}
 }
+
+/* ── Mid-size desktops (1280–1400 px projectors): icon buttons keep the live reading in the bar ── */
+@media(max-width:1400px) and (min-width:1181px){
+  .tour-start span,.hood-toggle span,.immersion-toggle span{display:none}
+  .topbar{gap:18px}.brand{min-width:200px}.river-status,.reference{padding-left:18px}.reference{min-width:150px}
+}
+.level-line strong{white-space:nowrap;flex-shrink:0}
+@media(min-width:901px){.river-status{min-width:200px}}
 
 /* ── Mobile: the map is the stage, the Zouave rises from the sheet ──────── */
 @media(max-width:900px){
