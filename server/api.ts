@@ -13,7 +13,7 @@ export function distance(lat: number, lon: number, entry: { lat: number; lon: nu
   const a = Math.sin((entry.lat - lat) * radians / 2) ** 2 + Math.cos(lat * radians) * Math.cos(entry.lat * radians) * Math.sin((entry.lon - lon) * radians / 2) ** 2;
   return 6371000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
-export interface PhotoEntry { lat: number; lon: number; label?: string; address_label?: string; address?: string; credit?: string; license?: string; license_url?: string; photo?: { license?: string; license_url?: string; page_url?: string }; files?: { original?: string; flood?: Record<string, string> }; url_clean?: string; clean?: string; heights: Record<string, string | { file?: string; url?: string }> | string[]; }
+export interface PhotoEntry { lat: number; lon: number; label?: string; address_label?: string; address?: string; credit?: string; license?: string; license_url?: string; photo?: { author?: string; source?: string; license?: string; license_url?: string; page_url?: string }; files?: { original?: string; flood?: Record<string, string> }; url_clean?: string; clean?: string; heights: Record<string, string | { file?: string; url?: string }> | string[]; }
 export function selectPhoto(manifest: Record<string, PhotoEntry> | { photos: PhotoEntry[] } | { locations: PhotoEntry[] } | PhotoEntry[], lat: number, lon: number, height: number) {
   const entries = Array.isArray(manifest) ? manifest : 'locations' in manifest && Array.isArray(manifest.locations) ? manifest.locations : 'photos' in manifest && Array.isArray(manifest.photos) ? manifest.photos : Object.values(manifest) as PhotoEntry[];
   const entry = entries.filter(e => Number.isFinite(e.lat) && Number.isFinite(e.lon) && e.heights).sort((a, b) => distance(lat, lon, a) - distance(lat, lon, b))[0];
@@ -25,7 +25,11 @@ export function selectPhoto(manifest: Record<string, PhotoEntry> | { photos: Pho
   const url = typeof path === 'string' ? path : path.url ?? path.file;
   if (!url) return null;
   const photoPath = (value: string | undefined) => value ? value.startsWith('/') || value.startsWith('https://') ? value : `/photos/${value.replace(/^photos\//, '')}` : null;
-  return { url: photoPath(url), url_clean: photoPath(entry.files?.original ?? entry.url_clean ?? entry.clean), hauteur_m: Number(key), address_label: entry.label ?? entry.address_label ?? entry.address ?? '', credit: (entry.credit ?? '').replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, 'contributeur Panoramax'), license: entry.license ?? entry.photo?.license ?? '', license_url: entry.license_url ?? entry.photo?.license_url ?? null, source_url: entry.photo?.page_url ?? null, simulation: true };
+  const anonymize = (value: string) => value.replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, 'contributeur Panoramax');
+  const license = entry.photo?.license ?? entry.license ?? '';
+  const author = anonymize(entry.photo?.author ?? '');
+  const credit = author ? `Photo : ${author}${entry.photo?.source && !author.includes(entry.photo.source) ? ` / ${entry.photo.source}` : ''}, ${license}` : anonymize(entry.credit ?? '');
+  return { url: photoPath(url), url_clean: photoPath(entry.files?.original ?? entry.url_clean ?? entry.clean), hauteur_m: Number(key), address_label: entry.label ?? entry.address_label ?? entry.address ?? '', credit, license, license_url: entry.photo?.license_url ?? entry.license_url ?? null, source_url: entry.photo?.page_url ?? null, simulation: true };
 }
 export function createApp(options: { fetcher?: typeof fetch; photosPath?: string; apiKey?: string; mode?: string } = {}) {
   const app = express();

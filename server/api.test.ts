@@ -59,14 +59,19 @@ test('photo supports the street-photo locations/files schema and nested license'
   assert.equal(result?.address_label, '4 Rue Traversière, 75012 Paris');
   assert.equal(selectPhoto({ locations: [] }, 48.84, 2.37, 1.5), null);
 });
-test('bundled photos never expose an email and Bercy returns anonymous derivative credit with its original source', async () => {
+test('bundled photos never expose an email and credits use each original photo license', async () => {
   const manifest = JSON.parse(await readFile(new URL('../web/public/photos/manifest.json', import.meta.url), 'utf8'));
   for (const entry of manifest.locations) {
-    assert.doesNotMatch(JSON.stringify(selectPhoto(manifest, entry.lat, entry.lon, 1.5)), /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+    const result = selectPhoto(manifest, entry.lat, entry.lon, 1.5);
+    assert.doesNotMatch(JSON.stringify(result), /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+    assert.equal(result?.license, entry.photo.license);
+    assert.equal(result?.license_url, entry.photo.license_url);
+    assert.ok(result?.credit.endsWith(entry.photo.license));
+    assert.equal(selectPhoto([{ ...entry, license: 'Incorrect license', license_url: 'https://example.org/wrong', credit: 'Incorrect credit' }], entry.lat, entry.lon, 1.5)?.credit, result?.credit);
   }
   const photo = selectPhoto(manifest, 48.846486, 2.370073, 1.5);
-  assert.equal(photo?.credit, 'Photo : contributeur Panoramax, CC BY-SA 4.0');
-  assert.equal(photo?.license, 'CC BY-SA 4.0');
+  assert.equal(photo?.credit, 'Photo : contributeur Panoramax, Etalab Open Licence 2.0');
+  assert.equal(photo?.license, 'Etalab Open Licence 2.0');
   assert.equal(photo?.source_url, 'https://api.panoramax.xyz/#focus=pic&pic=36b6c9a3-afa5-495b-93f5-f1fba410d144');
   const legacy = selectPhoto([{ lat: 48, lon: 2, heights: { '1': '/photos/example.jpg' }, credit: 'Photo: author@example.org' }], 48, 2, 1);
   assert.equal(legacy?.credit, 'Photo: contributeur Panoramax');

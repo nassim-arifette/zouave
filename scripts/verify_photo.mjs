@@ -23,10 +23,18 @@ try {
   await page.waitForFunction(() => document.querySelector('#photo-image').naturalWidth > 0 && document.querySelector('#photo-image').src.includes('230-rue-de-bercy'));
   await page.waitForFunction(() => !document.querySelector('#caption').textContent.includes('Je consulte'));
   assert.match(await page.locator('#photo-label').innerText(), /230 Rue de Bercy.*1.5 m simulés/);
-  assert.equal((await page.locator('#photo-credit').innerText()).split(' · Photo originale')[0], 'Photo : contributeur Panoramax, CC BY-SA 4.0');
+  assert.equal((await page.locator('#photo-credit').innerText()).split(' · Photo originale')[0], 'Photo : contributeur Panoramax, Etalab Open Licence 2.0');
   assert.equal(await page.locator('#photo-credit a').getAttribute('href'), 'https://api.panoramax.xyz/#focus=pic&pic=36b6c9a3-afa5-495b-93f5-f1fba410d144');
   assert.doesNotMatch(await page.locator('body').innerText(), /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
   await page.screenshot({ path: `${homedir()}/zouave-notes/shots/08-bercy-photo.png` });
+  await page.getByRole('button', { name: 'Fermer la photo' }).click();
+  await page.locator('#chat').fill('20 Quai de la Rapée, 75012 Paris');
+  await page.locator('#chat').press('Enter');
+  await page.locator('#photo-dialog').waitFor({ state: 'visible' });
+  await page.waitForFunction(() => document.querySelector('#photo-image').naturalWidth > 0 && document.querySelector('#photo-image').src.includes('20-quai-de-la-rapee'));
+  assert.equal((await page.locator('#photo-credit').innerText()).split(' · Photo originale')[0], 'Photo : immergis / Panoramax, Etalab Open Licence 2.0');
+  assert.doesNotMatch(await page.locator('body').innerText(), /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+  console.log('PASS source licenses: Traversière — CC BY-SA 4.0; Bercy and Rapée — Etalab Open Licence 2.0.');
   console.log('PASS photo: actual images, true 1.5 m height, no badge/disclaimer, address + credit retained, anonymous Bercy credit/license + original Panoramax link, no email in UI, modal close.');
   console.log(`Screenshot: ${homedir()}/zouave-notes/shots/06-photo-simulation.png`);
 } finally { await browser.close(); }
