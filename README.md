@@ -1,8 +1,15 @@
 # Zouave
 
-A French-language flood-awareness demo: explore Paris in 3D, compare a 1910-type
-flood with an extreme footprint, locate an address and read official precautions.
+A flood-awareness demo for Paris, built for the Paris DevDay Community Hackathon (Impact → Climate action):
+explore Paris in 3D, compare a 1910-type flood with an extreme footprint, locate an address and read official
+precautions — guided by the Zouave of the Pont de l'Alma, a voice agent that only speaks through tool calls on
+official data. The interface is in English; the underlying datasets are French open data.
 Scenarios are educational, not forecasts or building-level diagnoses.
+
+- **Story mode** (button *Watch the story* or key **D**): a 90-second guided demo driven by the real tools.
+- **Tool trace**: every answer shows the function calls behind it (function, arguments, official figure, source).
+- **Immersion** (key **H**): hide the panels and let the camera drift over the city.
+- Pitch, demo script and Q&A notes: [`docs/PITCH.md`](docs/PITCH.md).
 
 ## Run
 
@@ -56,6 +63,8 @@ missing assets return an explicit 404 and do not interrupt the demo.
   absorption, wet band on walls, foam, debris) rises to the requested height; a slider
   lets the user scrub 0–3 m. Falls back to the AI-edited photo when no depth map exists.
 - `web/src/speech.ts`: browser voice fallback (speech synthesis + recognition) for the Zouave.
+- `web/src/trace.ts`: announces every tool call (typed intents and the OpenAI voice agent) for the on-screen tool trace.
+- `web/src/tour.ts`: the Story mode, a scripted 90-second walkthrough that calls the same tools as the agent.
 - `web/src/immersion.ts`: intro fade-out on first interaction, *Immersion* mode (H) with a slow camera drift.
 - `web/src/voice.ts`: microphone/WebRTC lifecycle, captions, Live nested Responses
   function results and Realtime function results. The mic stops and frees devices;

@@ -4,6 +4,7 @@ import { $, niveau_seine, notify } from './tools.ts';
 import { routeIntent } from './intent.ts';
 import { initializeTimeline } from './timeline.ts';
 import { initializeImmersion } from './immersion.ts';
+import { initializeTour } from './tour.ts';
 import { attachView3D } from './map.ts';
 import { createView3D } from './view3d.ts';
 import { loadGoogleStatus } from './tools.ts';
@@ -65,6 +66,7 @@ $('hero-close').addEventListener('click', () => $<HTMLDialogElement>('hero-dialo
 initializeAvatar();
 initializeTimeline();
 initializeImmersion(map);
+initializeTour();
 void initializeVoice();
 void niveau_seine().catch(error => notify(error.message));
 setInterval(() => { void niveau_seine().catch(error => notify(error.message)); }, 15 * 60_000);

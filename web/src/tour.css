@@ -1,0 +1,89 @@
+/* Story mode (tour.ts): start button, hook card, live HUD, Zouave-meter, progress and end card. */
+
+/* Start button, in the top bar next to Immersion */
+.tour-start{display:flex;align-items:center;gap:8px;height:36px;padding:0 14px 0 12px;border-radius:999px;background:var(--mint,#a4d6bc);color:#0b1f22;font-size:11px;font-weight:700;letter-spacing:.6px;white-space:nowrap;box-shadow:0 0 0 5px #a4d6bc1f,0 8px 26px #a4d6bc40;animation:tour-call 2.8s ease-in-out infinite;transition:transform .2s}
+.tour-start:hover{transform:translateY(-1px) scale(1.03)}
+.tour-start svg{width:15px;height:15px}
+.tour-start kbd{font:inherit;font-size:8px;font-weight:600;border:1px solid #0b1f2240;border-radius:3px;padding:1px 4px}
+.tour-start[aria-pressed=true]{animation:none;opacity:.55}
+@keyframes tour-call{50%{box-shadow:0 0 0 10px #a4d6bc00,0 8px 26px #a4d6bc55}}
+@media(max-width:900px){.tour-start{height:34px;padding:0 11px}.tour-start span,.tour-start kbd{display:none}}
+
+/* While the story plays: a clean stage, only the city, the water, the Zouave and his caption */
+body.tour-active .legend,body.tour-active #flood-timeline,body.tour-active .console,body.tour-active .view-toggle,body.tour-active .maplibregl-ctrl-top-right,body.tour-active #immersion-toggle,body.tour-active .intro,body.tour-active .thread,body.tour-active .input-caption{opacity:0!important;visibility:hidden!important;pointer-events:none!important;transition:opacity .6s,visibility .6s}
+body.tour-active:not(.tour-home) .cards{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
+body.tour-active .caption{font-size:14px;line-height:1.6;color:#f1f6f2}
+body.tour-active .dialogue{border-color:#a4d6bc55}
+
+/* 1 · Hook card over the darkened map (under the Zouave, who stays visible) */
+.tour-hook{position:fixed;inset:0;z-index:2;display:flex;align-items:flex-start;justify-content:center;padding:calc(var(--top,78px) + 4vh) 24px 0;background:radial-gradient(ellipse 90% 70% at 50% 30%,rgba(4,10,15,.72),rgba(4,10,15,.9));pointer-events:none;animation:tour-fade .9s ease both}
+.tour-hook-inner{max-width:760px;text-align:center;pointer-events:auto}
+.tour-eyebrow{display:inline-flex;align-items:center;gap:9px;margin:0;font-size:10px;letter-spacing:2.6px;color:var(--mint,#a4d6bc)}
+.tour-eyebrow span{width:24px;height:1px;background:currentColor}
+.tour-hook h2{font-family:Georgia,serif;font-weight:400;font-size:clamp(34px,4.6vw,64px);line-height:1.04;letter-spacing:-1.5px;margin:16px 0 26px;color:#eef4f0;animation:tour-rise 1.1s .15s ease both}
+.tour-hook h2 em,.tour-end h2 em{color:#9fd8e6}
+.tour-stats{display:flex;justify-content:center;gap:clamp(18px,5vw,64px);animation:tour-rise 1.1s .45s ease both}
+.tour-stats div{display:flex;flex-direction:column;gap:6px}
+.tour-stats strong{font-size:clamp(32px,4vw,54px);font-weight:500;letter-spacing:-1.5px;color:#9fd8e6;text-shadow:0 0 34px #8fd3e255}
+.tour-stats span{font-size:12px;color:#c4d2d3}
+.tour-odds{margin:24px 0 8px;font-size:14px;color:#dbe6e1;animation:tour-rise 1.1s .75s ease both}
+.tour-odds b{color:#edce9d;font-weight:600}
+.tour-source{font-size:10px;color:#9fb6b8;letter-spacing:.3px}
+
+/* 2-5 · Live HUD: level, gauge, counters and the official thresholds as they are crossed */
+.tour-hud{position:fixed;z-index:5;left:var(--gutter,22px);top:calc(var(--top,78px) + 14px);width:min(330px,calc(100vw - 28px));padding:16px 18px 14px;border-radius:18px;background:rgba(8,19,27,.72);border:1px solid rgba(190,220,215,.16);box-shadow:0 18px 50px rgba(0,0,0,.35);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);animation:tour-fade .6s ease both}
+.tour-hud p{margin:0}
+.tour-hud-year{font-size:10px;letter-spacing:2.4px;color:var(--mint,#a4d6bc)}
+.tour-hud-level{display:flex;align-items:baseline;gap:6px;margin-top:4px!important}
+.tour-hud-level strong{font-size:58px;font-weight:500;letter-spacing:-2.5px;line-height:1;color:#a8e0ec;font-variant-numeric:tabular-nums;text-shadow:0 0 30px #8fd3e244}
+.tour-hud-level span{font-size:18px;color:#a8c4c6}
+.tour-hud-sub{font-size:10px;color:#9db0b3;margin-top:4px!important}
+.tour-gauge{position:absolute;right:18px;top:18px;width:8px;height:96px;border-radius:5px;background:rgba(255,255,255,.07);overflow:visible}
+.tour-gauge i{position:absolute;left:0;right:0;bottom:0;height:0;border-radius:5px;background:linear-gradient(#9fd8e6,#2573c4)}
+.tour-gauge b{position:absolute;right:13px;transform:translateY(50%);font-size:8px;font-weight:500;color:#edce9d;white-space:nowrap}
+.tour-gauge b:after{content:'';position:absolute;left:calc(100% + 3px);top:50%;width:10px;height:1px;background:#edce9d}
+.tour-counters{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 8px;padding-top:12px;border-top:1px solid rgba(190,220,215,.14)}
+.tour-counters p{display:flex;flex-direction:column;gap:3px}
+.tour-counters strong{font-size:26px;font-weight:500;letter-spacing:-.8px;color:#eef4f0;font-variant-numeric:tabular-nums}
+.tour-counters span{font-size:9.5px;line-height:1.35;color:#a9bcbe}
+.tour-counters em{font-style:normal;color:#edce9d}
+.tour-scope{font-size:8.5px;color:#7f979c;line-height:1.5}
+.tour-thresholds{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:5px}
+.tour-thresholds li{font-size:10.5px;line-height:1.4;color:#dce8e3;padding:6px 9px;border-radius:9px;background:rgba(143,211,226,.1);border:1px solid rgba(143,211,226,.22);animation:tour-pop .5s cubic-bezier(.2,.9,.3,1.3) both}
+.tour-thresholds b{color:#9fd8e6;font-weight:600;margin-right:4px}
+@media(max-width:900px){.tour-hud{top:calc(var(--top,64px) + 8px);padding:11px 13px}.tour-hud-level strong{font-size:40px}.tour-thresholds li:not(:last-child){display:none}.tour-counters strong{font-size:20px}}
+
+/* Zouave-meter: water clipped to the statue, rising to the shoulders at 1910 */
+.tour-water{position:absolute;inset:0;z-index:2;pointer-events:none;-webkit-mask-size:contain,100% 100%;mask-size:contain,100% 100%;-webkit-mask-position:center;mask-position:center;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-composite:source-in;mask-composite:intersect}
+.tour-water:before{content:'';position:absolute;left:0;right:0;bottom:0;height:var(--tour-water,0%);background:linear-gradient(rgba(150,215,232,.62),rgba(37,115,196,.78));transition:height .2s linear}
+.tour-water:after{content:'';position:absolute;left:-20%;right:-20%;bottom:calc(var(--tour-water,0%) - 5px);height:10px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='10'%3E%3Cpath d='M0 5 Q10 0 20 5 T40 5' fill='none' stroke='%23d8f3fa' stroke-width='2'/%3E%3C/svg%3E") repeat-x;background-size:40px 10px;animation:tour-wave 2.2s linear infinite;transition:bottom .2s linear}
+.tour-water.is-dry:after{display:none}
+.tour-meter-tag{position:absolute;z-index:3;right:88%;transform:translateY(50%);margin:0;padding:7px 10px;border-radius:10px;background:rgba(8,19,27,.85);border:1px solid #edce9d66;width:max-content;max-width:220px;display:flex;flex-direction:column;gap:3px;pointer-events:auto;animation:tour-pop .6s cubic-bezier(.2,.9,.3,1.3) both}
+.tour-meter-tag:after{content:'';position:absolute;left:100%;top:50%;width:26px;height:1px;background:#edce9d}
+.tour-meter-tag strong{font-size:11px;font-weight:600;color:#edce9d;line-height:1.3}
+.tour-meter-tag small{font-size:8.5px;color:#a9bcbe;line-height:1.4}
+.tour-meter-tag a{color:#cfe5d8;text-decoration:underline}
+@media(max-width:900px){.tour-meter-tag{right:auto;left:70%;max-width:150px}.tour-meter-tag:after{left:auto;right:100%}}
+
+/* Progress line and controls hint */
+.tour-progress{position:fixed;left:0;right:0;bottom:0;z-index:8;height:3px;background:rgba(255,255,255,.06)}
+.tour-progress i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#a4d6bc,#9fd8e6);transition:width .8s ease}
+.tour-progress span{position:absolute;right:14px;bottom:8px;font-size:9px;letter-spacing:.6px;color:#8fa6aa;white-space:nowrap}
+.tour-progress b{position:absolute;left:50%;bottom:40vh;transform:translateX(-50%);font-size:12px;letter-spacing:3px;color:#edce9d;padding:8px 16px;border-radius:999px;background:rgba(8,19,27,.85);border:1px solid #edce9d66}
+
+/* End card */
+.tour-end{position:fixed;inset:0;z-index:9;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at center,rgba(6,16,26,.78),rgba(2,6,9,.94));animation:tour-fade .8s ease both}
+.tour-end-card{max-width:560px;text-align:center;display:flex;flex-direction:column;align-items:center}
+.tour-end-card img{width:150px;height:150px;object-fit:contain;filter:drop-shadow(0 16px 30px rgba(0,0,0,.6));-webkit-mask-image:linear-gradient(#000 75%,transparent);mask-image:linear-gradient(#000 75%,transparent);margin-bottom:10px}
+.tour-end h2{font-family:Georgia,serif;font-weight:400;font-size:clamp(32px,4vw,50px);line-height:1.08;letter-spacing:-1.2px;margin:14px 0 18px;color:#eef4f0}
+.tour-built{font-size:13px;line-height:1.6;color:#c9d7d4;margin:0 0 22px}
+.tour-built small{font-size:10px;color:#8ea5a8}
+.tour-end-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.tour-end-actions button{padding:11px 18px;border-radius:999px;font-size:12px;border:1px solid #a4d6bc66;background:rgba(164,214,188,.08);color:#d6ebdf}
+.tour-end-actions button.primary{background:var(--mint,#a4d6bc);color:#0b1f22;font-weight:700;border-color:transparent}
+
+@keyframes tour-fade{from{opacity:0}to{opacity:1}}
+@keyframes tour-rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes tour-pop{from{opacity:0;transform:scale(.92) translateY(6px)}to{opacity:1;transform:none}}
+@keyframes tour-wave{to{background-position:40px 0}}
+@media(prefers-reduced-motion:reduce){.tour-start,.tour-hook,.tour-hook h2,.tour-stats,.tour-odds,.tour-thresholds li,.tour-meter-tag,.tour-end,.tour-water:after{animation:none!important}.tour-water:before,.tour-water:after{transition:none}}
