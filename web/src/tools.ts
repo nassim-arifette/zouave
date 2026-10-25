@@ -243,7 +243,7 @@ export async function afficher_crue({ annee, niveau_m }: { annee?: string | null
   await showFloodLevel(level);
   $('legend-depths').hidden = true; $('legend-note').hidden = false;
   $('legend-title').textContent = 'LA CARTE DU NIVEAU CHOISI';
-  $('legend-note').innerHTML = `Aplat : inondé · Hachures : peut-être. ${badge(level === 8.62 ? 'Officiel' : 'Estimé')}<br>${level < 6.62 ? 'Berges/quais bas : zone rouge du PPRI utilisée comme emprise indicative.' : level > 8.62 ? 'Hors PPRI, dans SDRIF-E : moins de 50 cm (estimation).' : 'Classes du PPRI décalées selon le niveau à Austerlitz.'}`;
+  $('legend-note').innerHTML = `Aplat : inondé · <span class="legend-map-only">Hachures</span><span class="legend-google-only">Contour translucide</span> : peut-être. ${badge(level === 8.62 ? 'Officiel' : 'Estimé')}<br>${level < 6.62 ? 'Berges/quais bas : zone rouge du PPRI utilisée comme emprise indicative.' : level > 8.62 ? 'Hors PPRI, dans SDRIF-E : moins de 50 cm (estimation).' : 'Classes du PPRI décalées selon le niveau à Austerlitz.'}`;
   window.dispatchEvent(new CustomEvent('zouave:timeline', { detail: state.timeline }));
   const exposure = await timelineExposure(state.address.lat, state.address.lon);
   return { ...state.timeline, bands, exposure, delta_m: Math.round((level - 8.62) * 100) / 100, delta_evidence: 'Estimé', reference_m: 8.62, reference_evidence: 'Officiel', future: '1 chance sur 100 par an, environ 26 % sur 30 ans', future_evidence: 'Estimé', description: `Niveau à Austerlitz : ${level.toLocaleString('fr-FR')} m (${state.timeline!.evidence}). À votre adresse : ${exposure.hauteur_texte} (${exposure.evidence}).` };
@@ -254,3 +254,4 @@ export async function executeTool(name: string, args: unknown): Promise<unknown>
   if (!tool) throw new Error(`Outil inconnu : ${name}`);
   return (tool as (args: unknown) => Promise<unknown>)(args);
 }
+
