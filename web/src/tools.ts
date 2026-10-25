@@ -1,7 +1,8 @@
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 import { config } from './config.ts';
+import { createHero } from './hero.ts';
 import { mapReady, showScenario, showFloodLevel, goTo, showCaves, datasets, type Scenario } from './map.ts';
-import { floodPresets, depthAtLevel, outsidePpri, photoHeight, timelineBands, type Evidence, type FloodClass } from './flood-level.ts';
+import { floodPresets, depthAtLevel, outsidePpri, photoHeight, sceneHeight, timelineBands, type Evidence, type FloodClass } from './flood-level.ts';
 export const state = { scenario: 'aujourdhui' as Scenario, address: { label: config.demoAddress, ...config.demoPosition }, exposureShown: false, timeline: null as null | { id: string; label: string; level: number; evidence: Evidence; source?: string; note?: string; stale?: boolean } };
 export const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 export function escape(value: unknown) { return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!); }
@@ -83,10 +84,28 @@ export async function niveau_seine() {
   $('level-source').setAttribute('href', result.source_url);
   return result;
 }
-export async function photo_inondee({ hauteur }: { hauteur: number }) {
+/**
+ * One counter owns every step of opening the street scene (HTTP, textures, render install, fallback). A new request,
+ * closing the dialog or animating the current scene bumps it; anything older is dropped, and a scene load still in
+ * flight is invalidated so it can never install itself or open its fallback later.
+ */
+let heroRequest = 0;
+const supersede = () => { heroRequest++; hero?.cancelPending(); return heroRequest; };
+const superseded = () => ({ affichee: false, remplacee: true, error: 'Demande remplacée par une nouvelle sélection.', source: 'Catalogue local de simulations' });
+/** `origin` pins the request to an address so a late answer for an older address is never shown as the current one. */
+export async function photo_inondee({ hauteur }: { hauteur: number }, origin: { lat: number; lon: number } = state.address) {
   if (!Number.isFinite(hauteur) || hauteur < 0 || hauteur > 10) throw new Error('Hauteur de simulation invalide.');
+  const request = supersede();
+  const stale = () => request !== heroRequest;
   try {
-    const result = await api(`/api/photo?${new URLSearchParams({ lat: String(state.address.lat), lon: String(state.address.lon), h: String(hauteur) })}`);
+    const result = await api(`/api/photo?${new URLSearchParams({ lat: String(origin.lat), lon: String(origin.lon), h: String(hauteur) })}`);
+    if (stale()) return superseded();
+    const credit = `${escape(result.credit)}${result.credit.includes(result.license) ? '' : ` · ${escape(result.license)}`}${result.source_url ? ` · ${source('Photo originale · Panoramax', result.source_url)}` : ''}`;
+    if (result.url_depth) {
+      const shown = await showHero({ ...result, hauteur_m: hauteur }, credit, origin, request);
+      if (stale()) return superseded();
+      if (shown) return { affichee: true, ...result, hauteur_m: hauteur, rendu: 'relief-3d' };
+    }
     const image = $<HTMLImageElement>('photo-image'); image.src = hauteur === 0 ? result.url_clean ?? result.url : result.url;
     $('photo-label').textContent = hauteur === 0 ? `${result.address_label} · Vue originale` : `${result.address_label} · Eau à ${Number(result.hauteur_m).toLocaleString('fr-FR')} m`;
     if (hauteur !== 0) $('photo-label').insertAdjacentHTML('beforeend', ` ${badge('Estimé')}`);
@@ -94,7 +113,7 @@ export async function photo_inondee({ hauteur }: { hauteur: number }) {
     image.onerror = () => { $<HTMLDialogElement>('photo-dialog').close(); notify('Image indisponible. La simulation ne peut pas être affichée.'); };
     $<HTMLDialogElement>('photo-dialog').showModal();
     return { affichee: true, ...result };
-  } catch (error) { return { affichee: false, error: error instanceof Error ? error.message : 'Photo indisponible.', source: 'Catalogue local de simulations (absent ou indisponible)' }; }
+  } catch (error) { if (stale()) return superseded(); return { affichee: false, error: error instanceof Error ? error.message : 'Photo indisponible.', source: 'Catalogue local de simulations (absent ou indisponible)' }; }
 }
 export async function consignes(args: { rez_de_chaussee: boolean; cave: boolean; enfants: boolean }) {
   if (!['rez_de_chaussee', 'cave', 'enfants'].every(key => typeof args[key as keyof typeof args] === 'boolean')) throw new Error('Précisez le profil du foyer.');
@@ -132,6 +151,28 @@ export async function streetView(hauteur: number) {
     return { affichee: false, error: error instanceof Error ? error.message : String(error) };
   }
 }
+let hero: ReturnType<typeof createHero> | undefined;
+/** The scene actually rendering (set once its textures are installed, cleared while a load is in flight or after closing). */
+let heroScene: { lat: number; lon: number; url_depth: string } | undefined;
+async function showHero(result: { url_clean: string; url_depth: string; address_label: string; hauteur_m: number; view: { fov: number; pitch: number; camera_height_m: number } }, credit: string, origin: { lat: number; lon: number }, request: number) {
+  const dialog = $<HTMLDialogElement>('hero-dialog');
+  const slider = $<HTMLInputElement>('hero-slider');
+  const format = (level: number) => `${level.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m`;
+  heroScene = undefined;
+  try {
+    hero ??= createHero($('hero-view'));
+    const shown = await hero.show({ photoUrl: result.url_clean, depthUrl: result.url_depth, fov: result.view.fov, pitch: result.view.pitch, cameraHeight: result.view.camera_height_m, target: result.hauteur_m, onLevel: level => { slider.value = String(level); $('hero-level').textContent = format(level); } });
+    if (!shown || request !== heroRequest) return true; // superseded by a newer request, which owns the dialog
+  } catch (error) { if (request !== heroRequest) return true; console.warn('3D street scene unavailable, falling back to the photo:', error); hero?.stop(); return false; }
+  heroScene = { lat: origin.lat, lon: origin.lon, url_depth: result.url_depth };
+  $('hero-label').innerHTML = `${escape(result.address_label)} · Eau à ${format(result.hauteur_m)} ${badge('Estimé')}`;
+  $('hero-credit').innerHTML = credit;
+  slider.oninput = () => hero?.setLevel(Number(slider.value));
+  $('hero-replay').onclick = () => { hero?.setLevel(0); hero?.animateTo(result.hauteur_m); };
+  dialog.onclose = () => { heroRequest++; heroScene = undefined; hero?.stop(); };
+  if (!dialog.open) dialog.showModal();
+  return true;
+}
 let toastTimer: ReturnType<typeof setTimeout>;
 export function notify(message: string) { $('toast').textContent = message; $('toast').hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { $('toast').hidden = true; }, 6500); }
 export function badge(evidence: Evidence) { return `<span class="evidence evidence-${evidence === 'Officiel' ? 'official' : evidence === 'Mesuré' ? 'measured' : 'estimated'}">${evidence}</span>`; }
@@ -143,6 +184,11 @@ export async function timelineExposure(lat: number, lon: number) {
   const classe = (hazards[0]?.properties?.classe ?? null) as FloodClass | null;
   const band = classe ? depthAtLevel(classe, selected.level) : outsidePpri(selected.level, contains('sdrife_zone_inondable').length > 0);
   const requestedPhoto = photoHeight(band, selected.level);
+  if (hero && $<HTMLDialogElement>('hero-dialog').open) {
+    // Only the scene actually rendering this very address may be animated in place; otherwise (other address, or a load still in flight) reload the right photo and relief.
+    if (heroScene && Math.abs(heroScene.lat - lat) < 1e-6 && Math.abs(heroScene.lon - lon) < 1e-6) { supersede(); hero.animateTo(sceneHeight(band)); $('hero-label').innerHTML = `${escape(state.address.label)} · ${escape(selected.label)} · Eau à ${sceneHeight(band).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m ${badge(band.evidence)}`; }
+    else void photo_inondee({ hauteur: sceneHeight(band) }, { lat, lon }).then(photo => { if (!photo.affichee && !('remplacee' in photo)) $<HTMLDialogElement>('hero-dialog').close(); });
+  }
   let photo;
   try { photo = await api(`/api/photo?${new URLSearchParams({ lat: String(lat), lon: String(lon), h: String(requestedPhoto) })}`); } catch { photo = null; }
   if (state.timeline !== selected) throw new Error('Niveau remplacé par une nouvelle sélection.');
@@ -152,7 +198,7 @@ export async function timelineExposure(lat: number, lon: number) {
   $('cave-key').hidden = selected.level !== 8.62;
   const image = photo ? requestedPhoto === 0 ? photo.url_clean : photo.url : null;
   showCard('exposure-card', `<div class="card-eyebrow"><i></i>VOTRE RUE · ${escape(selected.label)}</div><h2>Le temps passe.<br>Le risque se précise.</h2><p class="address">${escape(state.address.label)}</p><div class="timeline-depth" data-status="${band.status}">${escape(band.label)} ${badge(band.evidence)}</div><p class="timeline-verdict">${band.status === 'possible' ? 'Peut-être inondé · hachures sur la carte' : band.status === 'flooded' ? 'Dans la zone inondée · aplat sur la carte' : 'Pas d’eau estimée à cette adresse. Les berges peuvent être touchées.'}</p><p class="timeline-reference">Référence PPRI : ${classe ? escape(depthAtLevel(classe, 8.62).label) : 'hors emprise'} ${badge('Officiel')}</p><p class="disclaimer">${selected.level === 8.62 ? 'Classe officielle du PPRI, pas un diagnostic du logement.' : 'Décalage des classes du PPRI : estimation pédagogique, pas une carte historique ni une prévision.'}</p>${image ? `<button class="timeline-photo-button" id="timeline-enlarge" aria-label="Agrandir la photo de la rue"><img id="timeline-photo" src="${escape(image)}" alt="${requestedPhoto === 0 ? 'Photo originale' : 'Rue inondée'}"></button><p class="timeline-image-label">${requestedPhoto === 0 ? 'Vue originale' : `Eau à ${Number(photo.hauteur_m).toLocaleString('fr-FR')} m ${badge('Estimé')}`}</p><p class="timeline-photo-credit">${escape(photo.credit)} · ${photo.source_url ? source('Photo originale', photo.source_url) : ''}</p>` : '<p>Photo indisponible ; les données restent consultables.</p>'}`, source('PPRI · DRIEAT', config.sources.ppri) + source('Emprise SDRIF-E · Officiel', config.sources.sdrif));
-  $('timeline-enlarge')?.addEventListener('click', () => { void photo_inondee({ hauteur: requestedPhoto }); });
+  $('timeline-enlarge')?.addEventListener('click', () => { void photo_inondee({ hauteur: photo?.url_depth ? sceneHeight(band) : requestedPhoto }); });
   return { ...band, classe, hauteur_texte: band.label, hauteur_visuelle_m: requestedPhoto, cave_inondee_1910: contains('caves_1910').length > 0, sdrife_en_zone: contains('sdrife_zone_inondable').length > 0, sources: [config.sources.ppri, config.sources.sdrif], photo_height_m: requestedPhoto, photo_available_height_m: photo?.hauteur_m, address: state.address };
 }
 export async function afficher_crue({ annee, niveau_m }: { annee?: string | null; niveau_m?: number | null }) {

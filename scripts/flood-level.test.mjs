@@ -46,3 +46,13 @@ test('seineAltitude turns an Austerlitz gauge level into an ellipsoidal altitude
   assert.equal(seineAltitude(8.62), 26.0 + 8.62 + 44.5);
   assert.equal(seineAltitude(0, { austerlitzZeroNgf: 26.2, geoidUndulationM: 44.4 }), 70.6);
 });
+
+test('sceneHeight maps an estimated band to a continuous 0–2.5 m water height for the 3D street scene', async () => {
+  const { sceneHeight, depthAtLevel, outsidePpri } = await import('../web/src/flood-level.ts');
+  assert.equal(sceneHeight(depthAtLevel('1-2', 8.62)), 1.5);
+  assert.equal(sceneHeight(depthAtLevel('0-1', 8.62)), 0.5);
+  assert.equal(sceneHeight(depthAtLevel('2+', 8.62)), 2.5);
+  assert.equal(sceneHeight(depthAtLevel('1-2', 6.1)), 0);
+  assert.equal(sceneHeight(outsidePpri(9.1, true)), 0.3);
+  assert.ok(sceneHeight(depthAtLevel('1-2', 9.1)) > 1.5 && sceneHeight(depthAtLevel('1-2', 9.1)) <= 2.5);
+});

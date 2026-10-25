@@ -60,4 +60,11 @@ export function photoHeight(band: DepthBand, level: number) {
 export function seineAltitude(level: number, seine = { austerlitzZeroNgf: 26.0, geoidUndulationM: 44.5 }) {
   return seine.austerlitzZeroNgf + level + seine.geoidUndulationM;
 }
+/** Continuous water height (m) for the 3D street scene: the middle of the estimated band, capped at 2.5 m. */
+export function sceneHeight(band: DepthBand) {
+  if (band.status === 'dry') return 0;
+  if (band.max === null) return 2.5;
+  if (band.status === 'possible') return Math.min(2.5, Math.max(0.3, band.max / 2));
+  return Math.min(2.5, Math.max(0.1, (band.min + band.max) / 2));
+}
 export function timelineBands(level: number) { return Object.fromEntries((['0-1', '1-2', '2+'] as const).map(classe => [classe, depthAtLevel(classe, level)])) as Record<FloodClass, DepthBand>; }
