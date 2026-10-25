@@ -39,7 +39,7 @@ export async function routeIntent(message: string) {
   if (/\b1910\b/.test(intent)) { const result = await afficher_scenario({ scenario: '1910' }); return `${result.description} Source: ${result.source}. What about your home?`; }
   if (/level|how high|gauge|niveau|hauteur.*seine|seine.*hauteur|\b(?:rising|rise|monte)\b.*\b(?:seine|now|today)\b|seine.*\b(?:rising|rise|monte)\b/.test(intent)) {
     const result = await niveau_seine();
-    return `At Austerlitz, the Seine reads ${Number(result.hauteur_m).toLocaleString('en-GB', { maximumFractionDigits: 2 })} m, measured ${new Date(result.date_obs).toLocaleString('en-GB', { timeZone: 'Europe/Paris', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}. ${result.stale ? 'Careful: last known reading, the live connection is unavailable. ' : ''}Source: ${result.source}. That is not a water depth in your street.`;
+    return `At Austerlitz, the Seine reads ${Number(result.hauteur_m).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m, measured ${new Date(result.date_obs).toLocaleString('en-GB', { timeZone: 'Europe/Paris', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}. ${result.stale ? 'Careful: last known reading, the live connection is unavailable. ' : ''}Source: ${result.source}. That is not a water depth in your street.`;
   }
   if (/^today\b|current situation|aujourd|actuel/.test(intent)) { const result = await afficher_scenario({ scenario: 'aujourdhui' }); return result.description; }
   if (/photo|picture|image|simulation/.test(intent)) {

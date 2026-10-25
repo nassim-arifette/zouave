@@ -208,7 +208,7 @@ function buildOverlay() {
       <p class="tour-scope">Buildings: IGN BD TOPO centroids in the mapped area (central Paris) · footprint: Paris PPRI hazard classes at this level</p>
       <ol class="tour-thresholds" id="tour-thresholds"></ol>
     </aside>
-    <div class="tour-progress" id="tour-progress" hidden><i id="tour-progress-bar"></i><span>Space pause · → next · Esc exit</span><b id="tour-paused" hidden>PAUSED</b></div>
+    <div class="tour-progress" id="tour-progress" hidden><i id="tour-progress-bar"></i><span class="tour-keys">Space pause · → next · Esc exit</span><span class="tour-touch"><button type="button" id="tour-pause">Pause</button><button type="button" id="tour-next">Next</button><button type="button" id="tour-stop">Exit</button></span><b id="tour-paused" hidden>PAUSED</b></div>
     <section class="tour-end" id="tour-end" hidden>
       <div class="tour-end-card">
         <img id="tour-end-avatar" alt="" src="/zouave/living-stone/avatar@2x.webp">
@@ -219,7 +219,11 @@ function buildOverlay() {
       </div>
     </section>`);
   hud = el('tour-hud')!; hook = el('tour-hook')!; endCard = el('tour-end')!; progressBar = el('tour-progress')!; pausedBadge = el('tour-paused')!;
-  el('tour-replay')!.addEventListener('click', () => { endCard.hidden = true; void play(); });
+  // Replay also works while the last line is still being spoken: stop the current run, then start again.
+  el('tour-replay')!.addEventListener('click', () => { endCard.hidden = true; if (run) { abort(); setTimeout(() => void play(), 300); } else void play(); });
+  el('tour-pause')!.addEventListener('click', togglePause);
+  el('tour-next')!.addEventListener('click', skip);
+  el('tour-stop')!.addEventListener('click', abort);
   el('tour-explore')!.addEventListener('click', () => { endCard.hidden = true; });
   endCard.addEventListener('click', event => { if (event.target === endCard) endCard.hidden = true; });
 }
@@ -408,22 +412,31 @@ function closeDialogs() {
   for (const id of ['hero-dialog', 'photo-dialog', 'streetview-dialog']) { const dialog = el<HTMLDialogElement>(id); if (dialog?.open) dialog.close(); }
 }
 
+// Keyboard (Space, →, Esc) and touch buttons share the same three controls.
+function togglePause() {
+  if (!run) return;
+  run.paused = !run.paused;
+  pausedBadge.hidden = !run.paused;
+  document.body.classList.toggle('tour-paused', run.paused);
+  el('tour-pause')!.textContent = run.paused ? 'Resume' : 'Pause';
+  if (run.paused) pauseSpeaking(); else resumeSpeaking();
+  if (audio) void (run.paused ? audio.ctx.suspend() : audio.ctx.resume());
+}
+function skip() { if (run) { run.skip = true; stopSpeaking(); } }
+function abort() { if (run) { run.aborted = true; stopSpeaking(); closeDialogs(); } }
+
 function onKey(event: KeyboardEvent) {
   if (!run) return;
   if (event.key === ' ' || event.code === 'Space') {
     event.preventDefault(); event.stopPropagation();
-    run.paused = !run.paused;
-    pausedBadge.hidden = !run.paused;
-    document.body.classList.toggle('tour-paused', run.paused);
-    if (run.paused) pauseSpeaking(); else resumeSpeaking();
-    if (audio) void (run.paused ? audio.ctx.suspend() : audio.ctx.resume());
+    togglePause();
   } else if (event.key === 'ArrowRight') {
     event.preventDefault(); event.stopPropagation();
-    run.skip = true; stopSpeaking();
+    skip();
   } else if (event.key === 'Escape') {
     event.preventDefault(); event.stopPropagation();
     if (closeHood()) return; // Escape first closes the Under the hood overlay, as everywhere else
-    run.aborted = true; stopSpeaking(); closeDialogs();
+    abort();
   } else if (/^[0-9dhu]$/i.test(event.key) && !(event.target as HTMLElement)?.matches?.('input,textarea')) {
     event.stopPropagation();
   }
@@ -449,7 +462,7 @@ function begin() {
   el('tour-thresholds')!.replaceChildren();
   shownLevel = 0; shownCount = { flooded: 0, possible: 0, km2: 0 }; showCount(shownCount);
   exposure = null;
-  progressBar.hidden = false; pausedBadge.hidden = true;
+  progressBar.hidden = false; pausedBadge.hidden = true; el('tour-pause')!.textContent = 'Pause';
   stopSpeaking(); setSpeaking(false);
   startAudio();
   startButton.setAttribute('aria-pressed', 'true');
@@ -493,7 +506,7 @@ export function initializeTour() {
   startButton.setAttribute('aria-pressed', 'false');
   startButton.title = 'Watch the 90-second story (key D)';
   startButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg><span>Watch the story</span><kbd>D</kbd>';
-  startButton.addEventListener('click', () => { if (!run) void play(); });
+  startButton.addEventListener('click', () => { if (run) abort(); else void play(); });
   const anchor = el('immersion-toggle');
   if (anchor?.parentElement) anchor.parentElement.insertBefore(startButton, anchor); else document.body.append(startButton);
   window.addEventListener('keydown', event => {

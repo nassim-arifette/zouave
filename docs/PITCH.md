@@ -56,7 +56,8 @@ Backup: if anything stalls during recording, press **Esc**, reload, and press **
 ## Live finale (Monday 26 October, Hexa, 18:00–22:00)
 
 - Run `npm start` with `OPENAI_API_KEY` in `.env`, then play the Story mode once before going on stage: every narrated
-  line is cached, so the live run does not wait on the network.
+  line is cached (except the live reading, which changes), so the live run barely waits on the network; if the
+  narrated voice fails once, the browser voice takes over for the rest of the session.
 - Projector: Chrome at 125 % zoom (Ctrl/Cmd +) keeps the text readable from the back of the room.
 - One person talks, one drives: **D** story · **Space** pause · **→** next step · **Esc** stop · **U** under the hood ·
   **H** immersion · **1–4** demo questions.

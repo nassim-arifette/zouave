@@ -62,8 +62,9 @@ export async function exposition({ lat, lon, scenario }: { lat: number; lon: num
   const classe = (hazards[0]?.properties?.classe ?? null) as '0-1' | '1-2' | '2+' | null;
   const cave = contains('caves_1910').length > 0;
   const extreme = contains('sdrife_zone_inondable').length > 0;
+  // Street simulations use the same water height as the timeline and the Story: the middle of the official class.
   const height = classe === '2+' ? 'over 2 m' : classe === '1-2' ? '1 to 2 m' : classe === '0-1' ? '0 to 1 m' : 'outside the mapped PPRI footprint';
-  const result = { lat, lon, scenario, en_zone: scenario === '1910' ? Boolean(classe) : scenario === 'pire' ? extreme : null, classe, hauteur_texte: scenario === '1910' ? height : scenario === 'pire' ? 'Footprint only — depths not published' : 'No simulation', hauteur_1910_texte: height, hauteur_visuelle_m: classe === '2+' ? 3 : classe === '1-2' ? 2 : classe === '0-1' ? 1 : null, cave_inondee_1910: cave, sdrife_en_zone: extreme, sources: [{ label: 'Paris PPRI · Prefecture / DRIEAT', url: config.sources.ppri }, { label: 'Cellars · City of Paris · ODbL', url: config.sources.caves }, { label: 'SDRIF-E · Institut Paris Région', url: config.sources.sdrif }], precision: 'Reading of simplified layers, not a building survey. PPRI: estimated planimetric accuracy ±25 m, altitude ±30 cm.' };
+  const result = { lat, lon, scenario, en_zone: scenario === '1910' ? Boolean(classe) : scenario === 'pire' ? extreme : null, classe, hauteur_texte: scenario === '1910' ? height : scenario === 'pire' ? 'Footprint only — depths not published' : 'No simulation', hauteur_1910_texte: height, hauteur_visuelle_m: classe ? sceneHeight(depthAtLevel(classe, 8.62)) : null, cave_inondee_1910: cave, sdrife_en_zone: extreme, sources: [{ label: 'Paris PPRI · Prefecture / DRIEAT', url: config.sources.ppri }, { label: 'Cellars · City of Paris · ODbL', url: config.sources.caves }, { label: 'SDRIF-E · Institut Paris Région', url: config.sources.sdrif }], precision: 'Reading of simplified layers, not a building survey. PPRI: estimated planimetric accuracy ±25 m, altitude ±30 cm.' };
   state.exposureShown = true;
   $('scenario-card').hidden = true;
   showCaves(scenario === '1910');
@@ -238,7 +239,7 @@ export async function afficher_crue({ annee, niveau_m }: { annee?: string | null
   const level = live ? Number(live.hauteur_m) : preset?.level ?? niveau_m!;
   const bands = timelineBands(level);
   await syncScenario(level === 8.62 ? '1910' : level === 9.1 ? 'pire' : 'aujourdhui');
-  state.timeline = { id: preset?.id ?? 'custom', label: preset?.label ?? 'Chosen level', level, evidence: preset?.evidence ?? 'Estimé', source: live?.source_url ?? preset?.source, note: live ? `Observed: ${live.date_obs}.` : preset?.note, stale: live?.stale };
+  state.timeline = { id: preset?.id ?? 'custom', label: preset?.label ?? 'Chosen level', level, evidence: preset?.evidence ?? 'Estimé', source: live?.source_url ?? preset?.source, note: live ? `Observed ${new Date(live.date_obs).toLocaleString('en-GB', { timeZone: 'Europe/Paris', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}.` : preset?.note, stale: live?.stale };
   if (!['1910', '115', 'today'].includes(state.timeline.id)) document.querySelectorAll<HTMLButtonElement>('[data-scenario]').forEach(button => { button.classList.toggle('active', false); button.setAttribute('aria-pressed', 'false'); });
   await showFloodLevel(level);
   $('legend-depths').hidden = true; $('legend-note').hidden = false;
@@ -246,7 +247,7 @@ export async function afficher_crue({ annee, niveau_m }: { annee?: string | null
   $('legend-note').innerHTML = `Solid: flooded · <span class="legend-map-only">Hatched</span><span class="legend-google-only">Translucent outline</span>: possibly. ${badge(level === 8.62 ? 'Officiel' : 'Estimé')}<br>${level < 6.62 ? 'Banks and low quays: the PPRI red zone is used as an indicative footprint.' : level > 8.62 ? 'Outside the PPRI, inside SDRIF-E: under 50 cm (estimate).' : 'PPRI classes shifted by the Austerlitz level.'}`;
   window.dispatchEvent(new CustomEvent('zouave:timeline', { detail: state.timeline }));
   const exposure = await timelineExposure(state.address.lat, state.address.lon);
-  return { ...state.timeline, bands, exposure, delta_m: Math.round((level - 8.62) * 100) / 100, delta_evidence: 'Estimé', reference_m: 8.62, reference_evidence: 'Officiel', future: '1-in-100 chance each year, about 26% over 30 years', future_evidence: 'Estimé', description: `Level at Austerlitz: ${level.toLocaleString('en-GB')} m (${evidenceLabel(state.timeline!.evidence)}). At your address: ${exposure.hauteur_texte} (${evidenceLabel(exposure.evidence)}).` };
+  return { ...state.timeline, bands, exposure, delta_m: Math.round((level - 8.62) * 100) / 100, delta_evidence: 'Estimé', reference_m: 8.62, reference_evidence: 'Officiel', future: '1-in-100 chance each year, about 26% over 30 years', future_evidence: 'Estimé', description: `Level at Austerlitz: ${level.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m (${evidenceLabel(state.timeline!.evidence)}). At your address: ${exposure.hauteur_texte} (${evidenceLabel(exposure.evidence)}).` };
 }
 export const browserTools = { afficher_scenario, afficher_crue, aller_a, exposition, niveau_seine, photo_inondee, consignes };
 export async function executeTool(name: string, args: unknown): Promise<unknown> {

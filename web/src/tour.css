@@ -69,6 +69,8 @@ body.tour-active .dialogue{border-color:#a4d6bc55}
 .tour-progress{position:fixed;left:0;right:0;bottom:0;z-index:8;height:3px;background:rgba(255,255,255,.06)}
 .tour-progress i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#a4d6bc,#9fd8e6);transition:width .8s ease}
 .tour-progress span{position:absolute;right:14px;bottom:8px;font-size:9px;letter-spacing:.6px;color:#8fa6aa;white-space:nowrap}
+.tour-touch{display:none!important}
+@media(pointer:coarse){.tour-keys{display:none}.tour-touch{display:flex!important;gap:6px;bottom:10px!important}.tour-touch button{pointer-events:auto;padding:8px 13px;border-radius:999px;border:1px solid #a4d6bc66;background:rgba(8,19,27,.85);color:#d6ebdf;font-size:12px;letter-spacing:.3px}}
 .tour-progress b{position:absolute;left:50%;bottom:40vh;transform:translateX(-50%);font-size:12px;letter-spacing:3px;color:#edce9d;padding:8px 16px;border-radius:999px;background:rgba(8,19,27,.85);border:1px solid #edce9d66}
 
 /* End card */

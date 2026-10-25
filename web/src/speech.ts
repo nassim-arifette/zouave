@@ -50,7 +50,7 @@ async function speakWithServer(text: string) {
   const controller = fetching = new AbortController();
   serverBusy = true;
   try {
-    const response = await fetch('/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }), signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15_000)]) });
+    const response = await fetch('/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }), signal: AbortSignal.any([controller.signal, AbortSignal.timeout(6000)]) });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const url = URL.createObjectURL(await response.blob());
     if (controller.signal.aborted) { URL.revokeObjectURL(url); return; }
@@ -63,6 +63,8 @@ async function speakWithServer(text: string) {
   } catch (error) {
     if (controller.signal.aborted && fetching !== controller) return;
     serverBusy = false;
+    // One failure (network, quota) switches the session to the browser voice: no more waits on stage.
+    if (browserVoice.canSpeak) serverVoice = false;
     console.warn('Narrated voice unavailable, using the browser voice:', error);
     if (speakWithBrowser(text) && paused) synth?.pause();
   }
