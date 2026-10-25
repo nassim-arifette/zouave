@@ -18,11 +18,13 @@ words = lambda n: json.load(open(f'{VO}/{n}.words.json'))
 
 order = ['01-hook', '02-intro', '03-rise', '04-home'] + (['05-memory'] if MEMORY else []) + ['06-agent', '07-tech', '08-close']
 GAP, t = 0.45, 0.8
+GCREDIT = 'Google Maps · Photorealistic 3D Tiles · Map data ©Google · Data SIO, NOAA, U.S. Navy, NGA, GEBCO · IBCAO · Landsat / Copernicus'
+HOLD = {'04-home': 3.2, '07-tech': 1.6}  # seconds of picture after a voice-over line (the water keeps rising)
 segments = []
 for n in order:
     d = dur(n)
     segments.append({'name': n, 'vo': t, 'd': d, 'words': words(n)})
-    t += d + GAP
+    t += d + GAP + HOLD.get(n, 0)
 END = round(t + 2.2, 2)
 
 def at(seg, needle, fallback=0.0):
@@ -63,13 +65,13 @@ def pop(sel, start, d=0.6, y=40):
 def out(sel, start, d=0.4):
     tl.append(f'tl.to("{sel}", {{opacity: 0, duration: {d}, ease: "power2.in"}}, {start:.2f});')
 
-seg_end = lambda n: S[n]['vo'] + S[n]['d'] + GAP * 0.7
+seg_end = lambda n: S[n]['vo'] + S[n]['d'] + GAP * 0.7 + HOLD.get(n, 0)
 
 # 1 · Hook
 h = S['01-hook']; s0 = 0.0; e0 = seg_end('01-hook')
-bg = 'assets/img/memory-1910.jpg' if MEMORY else 'assets/shots/05-1910.jpg'
+bg = 'assets/img/memory-1910.jpg' if MEMORY else 'assets/img/g-overview.jpg'
 scene('hook', s0, e0, f'''<img class="bg {'sepia' if MEMORY else 'dim'}" src="{bg}" alt="">
-<div class="veil"></div>
+<div class="veil"></div>{'' if MEMORY else '<p class="credit on">' + GCREDIT + '</p>'}
 <div class="hook-stack">
   <p class="eyebrow" id="h-date">JANUARY 1910 · PARIS</p>
   <p class="big" id="h-level">8.62&nbsp;m</p><p class="small" id="h-level-sub">the Seine at the Austerlitz gauge</p>
@@ -84,10 +86,10 @@ pop('#h-q', at(h, 'most'), 0.8)
 
 # 2 · Intro (the Zouave talks)
 i = S['02-intro']; s1 = e0 - 0.4; e1 = seg_end('02-intro')
-scene('intro', s1, e1, '''<img class="bg" src="assets/shots/01-landing.jpg" alt="">
-<div class="veil soft"></div>
+scene('intro', s1, e1, '''<img class="bg" src="assets/img/g-alma.jpg" alt="">
+<div class="veil soft"></div><p class="credit on">Google Maps · Photorealistic 3D Tiles · Map data ©Google · Data SIO, NOAA, U.S. Navy, NGA, GEBCO · IBCAO · Landsat / Copernicus</p>
 <div class="intro-card"><img src="assets/img/zouave.png" alt=""><div><p class="eyebrow">MEET</p><h1>Zouave</h1><p>The stone soldier Parisians read the floods on.<br><b>Now he talks.</b></p><p class="tag">Any address · official data only</p></div></div>''', 2)
-kb('#intro .bg', s1, e1 - s1, 1.0, 1.18, 0, 4, 0, 6, '45% 75%')
+kb('#intro .bg', s1, e1 - s1, 1.0, 1.14, 0, -3, 0, 2, '60% 55%')
 pop('#intro .intro-card', i['vo'] + 0.2, 0.9)
 out('#intro .intro-card', at(i, 'ask') - 0.2)
 
@@ -97,22 +99,33 @@ t16, t10 = at(r, '2016', 4.5), at(r, '1910', 8.5)
 scene('rise', s2, e2, '''<img class="bg" id="r-today" src="assets/shots/03-today.jpg" alt="">
 <img class="bg" id="r-2016" src="assets/shots/04-2016.jpg" alt="">
 <img class="bg" id="r-1910" src="assets/shots/05-1910.jpg" alt="">
+<img class="bg" id="r-google" src="assets/img/g-overview.jpg" alt=""><p class="credit" id="r-credit">Google Maps · Photorealistic 3D Tiles · Map data ©Google · Data SIO, NOAA, U.S. Navy, NGA, GEBCO · IBCAO · Landsat / Copernicus</p>
 <div class="chip" id="c-today">TODAY</div><div class="chip" id="c-2016">JUNE 2016 · quays closed</div><div class="chip warn" id="c-1910">JANUARY 1910 · 7,505 buildings in the flood zone (mapped area)</div>''', 3)
 for sel, a, b in [('#r-today', s2, t16), ('#r-2016', t16 - 0.3, t10), ('#r-1910', t10 - 0.3, e2)]:
     tl.append(f'tl.fromTo("{sel}", {{opacity: 0}}, {{opacity: 1, duration: 0.5}}, {a:.2f});')
     kb(sel, a, b - a + 0.6, 1.0, 1.06)
 pop('#c-today', s2 + 0.4); out('#c-today', t16 - 0.3); pop('#c-2016', t16); out('#c-2016', t10 - 0.3); pop('#c-1910', t10)
+tg = t10 + 2.2
+tl.append(f'tl.fromTo("#r-google", {{opacity: 0}}, {{opacity: 1, duration: 0.9, ease: "sine.inOut"}}, {tg:.2f});')
+kb('#r-google', tg, e2 - tg + 0.6, 1.0, 1.1, 0, 0, 0, 0, '45% 60%')
+pop('#r-credit', tg + 0.3, 0.5, 0)
 
 # 4 · Your home
 m = S['04-home']; s3 = e2 - 0.4; e3 = seg_end('04-home')
 tstreet = at(m, 'this', 6.0)
-scene('home', s3, e3, '''<img class="bg" id="m-card" src="assets/shots/06-home.jpg" alt="">
-<img class="bg" id="m-street" src="assets/shots/07-street.jpg" alt="">
-<div class="chip" id="c-home">4 Rue Traversière · 1 to 2 m of water</div><div class="chip warn" id="c-sim">Simulation, not a forecast</div>''', 4)
-kb('#m-card', s3, tstreet - s3 + 0.6, 1.0, 1.1, 0, -3, 0, 0, '70% 40%')
+scene('home', s3, e3, '''<img class="bg" id="m-card" src="assets/img/g-home.jpg" alt=""><p class="credit on" id="m-gcredit">Google Maps · Photorealistic 3D Tiles · Map data ©Google · Data SIO, NOAA, U.S. Navy, NGA, GEBCO · IBCAO · Landsat / Copernicus</p>
+<div class="street" id="m-street"><img class="bg" src="assets/img/street-dry.jpg" alt=""><img class="bg" id="m-05" src="assets/img/street-0.5.jpg" alt=""><img class="bg" id="m-15" src="assets/img/street-1.5.jpg" alt=""></div>
+<div class="chip" id="c-home">4 Rue Traversière · 1 to 2 m of water</div><div class="chip warn" id="c-sim">Simulation, not a forecast</div>
+<div class="chip right" id="c-d05">Rising… 0.5 m</div><div class="chip right" id="c-d15">1.5 m · Estimated (official class 1–2 m)</div>
+<p class="credit" id="m-credit">Flood: OpenAI image edit · Photo: Lejun / Panoramax, CC BY-SA 4.0</p>''', 4)
+kb('#m-card', s3, tstreet - s3 + 0.6, 1.0, 1.12, 0, 0, 0, 0, '62% 35%')
+t05, t15 = tstreet + 1.6, tstreet + 3.6
 tl.append(f'tl.fromTo("#m-street", {{opacity: 0}}, {{opacity: 1, duration: 0.6}}, {tstreet - 0.3:.2f});')
-kb('#m-street', tstreet - 0.3, e3 - tstreet + 0.4, 1.0, 1.07)
+kb('#m-street', tstreet - 0.3, e3 - tstreet + 0.4, 1.0, 1.12, 0, 0, 0, 0, '55% 60%')
+tl.append(f'tl.fromTo("#m-05", {{opacity: 0}}, {{opacity: 1, duration: 1.4, ease: "sine.inOut"}}, {t05:.2f});')
+tl.append(f'tl.fromTo("#m-15", {{opacity: 0}}, {{opacity: 1, duration: 1.8, ease: "sine.inOut"}}, {t15:.2f});')
 pop('#c-home', at(m, 'four', 2.0)); out('#c-home', tstreet - 0.3); pop('#c-sim', at(m, 'simulation', 8.0))
+out('#m-gcredit', tstreet - 0.3); pop('#c-d05', t05 + 0.2, 0.5, 20); out('#c-d05', t15); pop('#c-d15', t15 + 0.4, 0.6, 20); pop('#m-credit', tstreet + 0.4, 0.5, 0)
 last_end = e3
 
 # 5 · Memory of 1910 (real photograph), when fetched
@@ -141,11 +154,13 @@ scene('tech', s6, e6, '''<img class="bg" src="assets/shots/11-hood.jpg" alt=""><
 <div class="stack">
   <div class="pill" id="k1"><b>OpenAI Realtime</b> voice agent · function calling</div>
   <div class="pill" id="k2"><b>French open data</b> · PPRI flood plan · IGN buildings · Hub’Eau live gauge</div>
-  <div class="pill" id="k3"><b>Three.js + MapLibre</b> · 3D city and water</div>
+  <div class="pill" id="k3"><b>Google Photorealistic 3D + Three.js</b> · the real city under the official water</div>
   <div class="pill" id="k4"><b>ElevenLabs</b> · the Zouave’s French accent</div>
+  <div class="pill" id="k5"><b>OpenAI image edits</b> · your street under water, from a real photo</div>
 </div>''', 7)
 kb('#tech .bg', s6, e6 - s6, 1.04, 1.0)
 for sel, word, fb in [('#k1', 'openai', 1.5), ('#k2', 'french', 4.5), ('#k3', 'three', 6.5), ('#k4', 'eleven', 8.5)]: pop(sel, at(k, word, fb), 0.5, 24)
+pop('#k5', at(k, 'eleven', 8.5) + 0.7, 0.5, 24)
 
 # 8 · Close
 c = S['08-close']; s7 = e6 - 0.4; e7 = END
@@ -203,7 +218,11 @@ html, body {{ width:1920px; height:1080px; overflow:hidden; background:var(--gro
 .intro-card .tag {{ display:inline-block; font-size:26px; color:var(--mint); border:2px solid rgba(164,214,188,.5); border-radius:999px; padding:10px 22px; margin-top:26px; }}
 .chip {{ position:absolute; left:80px; top:80px; font-size:40px; font-weight:700; letter-spacing:1px; color:#0b1a22; background:var(--mint); border-radius:16px; padding:16px 28px; box-shadow:0 20px 60px rgba(0,0,0,.45); opacity:0; }}
 .chip.warn {{ background:var(--amber); }}
-.stack {{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); display:flex; flex-direction:column; gap:22px; width:1400px; }}
+.chip.right {{ left:auto; right:80px; }}
+.street {{ position:absolute; inset:0; opacity:0; }}
+.credit {{ position:absolute; right:40px; bottom:18px; z-index:45; font-size:17px; color:rgba(238,244,240,.88); background:rgba(4,10,15,.62); padding:6px 12px; border-radius:8px; opacity:0; }}
+.credit.on {{ opacity:1; }}
+.stack {{ position:absolute; left:50%; top:47%; transform:translate(-50%,-50%); display:flex; flex-direction:column; gap:18px; width:1400px; }}
 .pill {{ font-size:42px; color:#dfeee6; background:rgba(8,19,27,.82); border:2px solid rgba(164,214,188,.35); border-radius:22px; padding:22px 34px; opacity:0; }}
 .pill b {{ color:var(--water); font-weight:700; }}
 .end {{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; background: radial-gradient(ellipse at 50% 40%, #12303a 0%, #081219 70%); }}

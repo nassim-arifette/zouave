@@ -12,6 +12,8 @@ Scene by scene script: [`docs/PITCH.md`](../docs/PITCH.md).
 | `assets/vo/lines.json` | The voice-over script, with ElevenLabs v3 audio tags (`[excited]`…); subtitles strip them |
 | `assets/vo/*.mp3` | Voice-over, one file per scene · `*.words.json`: word timings (ElevenLabs speech-to-text) |
 | `assets/shots/*.jpg` | App screenshots, 1920×1080 |
+| `assets/img/g-*.jpg` | Google Photorealistic 3D views from `docs/google-compare/` (`scripts/compare-google.mjs`); the aerial ones are cropped below the HUD, and the Google attribution is drawn on the frame |
+| `assets/img/street-*.jpg` | The demo street dry, at 0.5 m and at 1.5 m: OpenAI image edits of a Panoramax photo (Lejun, CC BY-SA 4.0), from `web/public/photos/4-rue-traversiere/` |
 
 ## Render
 

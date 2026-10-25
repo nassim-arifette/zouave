@@ -11,20 +11,21 @@ their street and what to do about it, voiced by the stone soldier Parisians alre
 
 ## 1. The 2-minute video (submission, before Sunday midnight Paris time)
 
-Rendered with **HyperFrames** (HTML + GSAP → MP4) from real screenshots of the app, voiced by the Zouave
+Rendered with **HyperFrames** (HTML + GSAP → MP4) from real screenshots of the app (MapLibre and Google Photorealistic 3D
+views, from `docs/google-compare/`) and the OpenAI image edits of the demo street, voiced by the Zouave
 (**ElevenLabs** v3, "Jamie", French accent) with burned-in subtitles. Source: [`video/`](../video) ·
-render: `cd video && npx hyperframes render -o zouave-pitch.mp4` (1 min 37 s). To rebuild from fresh screenshots:
+render: `cd video && npx hyperframes render -o zouave-pitch.mp4` (1 min 42 s). To rebuild from fresh screenshots:
 `npm start`, then `node video/capture.mjs && python3 video/build.py`.
 
 | Time | Scene | Voice-over (the Zouave) |
 | --- | --- | --- |
-| 0:00 | **Hook**: 8.62 m, 5 million, €30 billion | "January 1910. The Seine rises to 8.62 metres in Paris. If it happened today: up to five million people hit. Up to thirty billion euros of damage. And most Parisians have no idea what it would mean for their street." |
-| 0:18 | **Meet Zouave**: the mascot over the 3D city | "Bonjour! I'm the Zouave, the stone soldier of the Alma bridge. For generations, Parisians have read the floods on my body. Now, I talk. Ask me about any address, and I show you your flood, with official data only." |
-| 0:36 | **The Seine rises**: today → 2016 → 1910 | "Watch. Here is the Seine today. Now it rises! 2016: the quays close, the trains stop. 1910: thousands of buildings in the flood zone. Up to my shoulders!" |
-| 0:51 | **Your street**: 1 to 2 m, then the flooded street | "And your home? Four, rue Traversière: one to two metres of water. This is your street. A simulation, not a forecast." |
-| 1:03 | **The agent shows its work**: tool trace, official advice | "Talk to me, or type. Every answer shows the tools I called: the live gauge, the official flood map, the safety advice. I never invent a number." |
-| 1:15 | **Under the hood** | "Under the hood: an OpenAI Realtime voice agent with function calling, French open data, a Three.js city, and my French accent by ElevenLabs." |
-| 1:27 | **Close** | "Zouave. See your flood… before it comes. À bientôt!" |
+| 0:00 | **Hook**: 8.62 m, 5 million, €30 billion, over the flooded city in Google 3D | "January 1910. The Seine rises to 8.62 metres in Paris. If it happened today: up to five million people hit. Up to thirty billion euros of damage. And most Parisians have no idea what it would mean for their street." |
+| 0:18 | **Meet Zouave**: the Alma bridge under 1910 water, Google Photorealistic 3D | "Bonjour! I'm the Zouave, the stone soldier of the Alma bridge. For generations, Parisians have read the floods on my body. Now, I talk. Ask me about any address, and I show you your flood, with official data only." |
+| 0:36 | **The Seine rises**: today → 2016 → 1910, then the same flood in Google 3D | "Watch. Here is the Seine today. Now it rises! 2016: the quays close, the trains stop. 1910: thousands of buildings in the flood zone. Up to my shoulders!" |
+| 0:51 | **Your street**: the address in Google 3D (1 to 2 m), then the real street photo going from dry to 0.5 m to 1.5 m (OpenAI image edits, labelled Simulation / Estimated) | "And your home? Four, rue Traversière: one to two metres of water. This is your street. A simulation, not a forecast." |
+| 1:06 | **The agent shows its work**: tool trace, official advice | "Talk to me, or type. Every answer shows the tools I called: the live gauge, the official flood map, the safety advice. I never invent a number." |
+| 1:19 | **Under the hood**: OpenAI Realtime, open data, Google 3D + Three.js, ElevenLabs, OpenAI image edits | "Under the hood: an OpenAI Realtime voice agent with function calling, French open data, a Three.js city, and my French accent by ElevenLabs." |
+| 1:31 | **Close** | "Zouave. See your flood… before it comes. À bientôt!" |
 
 (If the real 1910 photographs are fetched, a "This is not a simulation: Bercy, January 1910" scene is inserted after
 "Your street".)

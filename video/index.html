@@ -34,7 +34,11 @@ html, body { width:1920px; height:1080px; overflow:hidden; background:var(--grou
 .intro-card .tag { display:inline-block; font-size:26px; color:var(--mint); border:2px solid rgba(164,214,188,.5); border-radius:999px; padding:10px 22px; margin-top:26px; }
 .chip { position:absolute; left:80px; top:80px; font-size:40px; font-weight:700; letter-spacing:1px; color:#0b1a22; background:var(--mint); border-radius:16px; padding:16px 28px; box-shadow:0 20px 60px rgba(0,0,0,.45); opacity:0; }
 .chip.warn { background:var(--amber); }
-.stack { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); display:flex; flex-direction:column; gap:22px; width:1400px; }
+.chip.right { left:auto; right:80px; }
+.street { position:absolute; inset:0; opacity:0; }
+.credit { position:absolute; right:40px; bottom:18px; z-index:45; font-size:17px; color:rgba(238,244,240,.88); background:rgba(4,10,15,.62); padding:6px 12px; border-radius:8px; opacity:0; }
+.credit.on { opacity:1; }
+.stack { position:absolute; left:50%; top:47%; transform:translate(-50%,-50%); display:flex; flex-direction:column; gap:18px; width:1400px; }
 .pill { font-size:42px; color:#dfeee6; background:rgba(8,19,27,.82); border:2px solid rgba(164,214,188,.35); border-radius:22px; padding:22px 34px; opacity:0; }
 .pill b { color:var(--water); font-weight:700; }
 .end { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; background: radial-gradient(ellipse at 50% 40%, #12303a 0%, #081219 70%); }
@@ -48,9 +52,9 @@ html, body { width:1920px; height:1080px; overflow:hidden; background:var(--grou
 </style>
 </head>
 <body>
-<div id="root" data-composition-id="main" data-start="0" data-duration="96.82" data-width="1920" data-height="1080">
-<section id="hook" class="clip scene" data-start="0.00" data-duration="18.75" data-track-index="1" style="z-index:1"><img class="bg dim" src="assets/shots/05-1910.jpg" alt="">
-<div class="veil"></div>
+<div id="root" data-composition-id="main" data-start="0" data-duration="101.62" data-width="1920" data-height="1080">
+<section id="hook" class="clip scene" data-start="0.00" data-duration="18.75" data-track-index="1" style="z-index:1"><img class="bg dim" src="assets/img/g-overview.jpg" alt="">
+<div class="veil"></div><p class="credit on">Google Maps · Photorealistic 3D Tiles · Map data ©Google · Data SIO, NOAA, U.S. Navy, NGA, GEBCO · IBCAO · Landsat / Copernicus</p>
 <div class="hook-stack">
   <p class="eyebrow" id="h-date">JANUARY 1910 · PARIS</p>
   <p class="big" id="h-level">8.62&nbsp;m</p><p class="small" id="h-level-sub">the Seine at the Austerlitz gauge</p>
@@ -58,33 +62,37 @@ html, body { width:1920px; height:1080px; overflow:hidden; background:var(--grou
   <p class="question" id="h-q">What would it mean for <em>your street?</em></p>
   <p class="source" id="h-src">If 1910 happened today · OECD estimates</p>
 </div></section>
-<section id="intro" class="clip scene" data-start="18.35" data-duration="18.09" data-track-index="2" style="z-index:2"><img class="bg" src="assets/shots/01-landing.jpg" alt="">
-<div class="veil soft"></div>
+<section id="intro" class="clip scene" data-start="18.35" data-duration="18.09" data-track-index="2" style="z-index:2"><img class="bg" src="assets/img/g-alma.jpg" alt="">
+<div class="veil soft"></div><p class="credit on">Google Maps · Photorealistic 3D Tiles · Map data ©Google · Data SIO, NOAA, U.S. Navy, NGA, GEBCO · IBCAO · Landsat / Copernicus</p>
 <div class="intro-card"><img src="assets/img/zouave.png" alt=""><div><p class="eyebrow">MEET</p><h1>Zouave</h1><p>The stone soldier Parisians read the floods on.<br><b>Now he talks.</b></p><p class="tag">Any address · official data only</p></div></div></section>
 <section id="rise" class="clip scene" data-start="36.04" data-duration="15.77" data-track-index="3" style="z-index:3"><img class="bg" id="r-today" src="assets/shots/03-today.jpg" alt="">
 <img class="bg" id="r-2016" src="assets/shots/04-2016.jpg" alt="">
 <img class="bg" id="r-1910" src="assets/shots/05-1910.jpg" alt="">
+<img class="bg" id="r-google" src="assets/img/g-overview.jpg" alt=""><p class="credit" id="r-credit">Google Maps · Photorealistic 3D Tiles · Map data ©Google · Data SIO, NOAA, U.S. Navy, NGA, GEBCO · IBCAO · Landsat / Copernicus</p>
 <div class="chip" id="c-today">TODAY</div><div class="chip" id="c-2016">JUNE 2016 · quays closed</div><div class="chip warn" id="c-1910">JANUARY 1910 · 7,505 buildings in the flood zone (mapped area)</div></section>
-<section id="home" class="clip scene" data-start="51.40" data-duration="11.85" data-track-index="4" style="z-index:4"><img class="bg" id="m-card" src="assets/shots/06-home.jpg" alt="">
-<img class="bg" id="m-street" src="assets/shots/07-street.jpg" alt="">
-<div class="chip" id="c-home">4 Rue Traversière · 1 to 2 m of water</div><div class="chip warn" id="c-sim">Simulation, not a forecast</div></section>
-<section id="agent" class="clip scene" data-start="62.85" data-duration="12.97" data-track-index="6" style="z-index:6"><img class="bg" id="g-trace" src="assets/shots/10-trace.jpg" alt="">
+<section id="home" class="clip scene" data-start="51.40" data-duration="15.05" data-track-index="4" style="z-index:4"><img class="bg" id="m-card" src="assets/img/g-home.jpg" alt=""><p class="credit on" id="m-gcredit">Google Maps · Photorealistic 3D Tiles · Map data ©Google · Data SIO, NOAA, U.S. Navy, NGA, GEBCO · IBCAO · Landsat / Copernicus</p>
+<div class="street" id="m-street"><img class="bg" src="assets/img/street-dry.jpg" alt=""><img class="bg" id="m-05" src="assets/img/street-0.5.jpg" alt=""><img class="bg" id="m-15" src="assets/img/street-1.5.jpg" alt=""></div>
+<div class="chip" id="c-home">4 Rue Traversière · 1 to 2 m of water</div><div class="chip warn" id="c-sim">Simulation, not a forecast</div>
+<div class="chip right" id="c-d05">Rising… 0.5 m</div><div class="chip right" id="c-d15">1.5 m · Estimated (official class 1–2 m)</div>
+<p class="credit" id="m-credit">Flood: OpenAI image edit · Photo: Lejun / Panoramax, CC BY-SA 4.0</p></section>
+<section id="agent" class="clip scene" data-start="66.05" data-duration="12.97" data-track-index="6" style="z-index:6"><img class="bg" id="g-trace" src="assets/shots/10-trace.jpg" alt="">
 <img class="bg" id="g-advice" src="assets/shots/08-advice.jpg" alt="">
 <div class="chip" id="c-tools">Every answer shows its tool calls</div><div class="chip warn" id="c-never">No number without a tool result</div></section>
-<section id="tech" class="clip scene" data-start="75.42" data-duration="11.61" data-track-index="7" style="z-index:7"><img class="bg" src="assets/shots/11-hood.jpg" alt=""><div class="veil"></div>
+<section id="tech" class="clip scene" data-start="78.62" data-duration="13.21" data-track-index="7" style="z-index:7"><img class="bg" src="assets/shots/11-hood.jpg" alt=""><div class="veil"></div>
 <div class="stack">
   <div class="pill" id="k1"><b>OpenAI Realtime</b> voice agent · function calling</div>
   <div class="pill" id="k2"><b>French open data</b> · PPRI flood plan · IGN buildings · Hub’Eau live gauge</div>
-  <div class="pill" id="k3"><b>Three.js + MapLibre</b> · 3D city and water</div>
+  <div class="pill" id="k3"><b>Google Photorealistic 3D + Three.js</b> · the real city under the official water</div>
   <div class="pill" id="k4"><b>ElevenLabs</b> · the Zouave’s French accent</div>
+  <div class="pill" id="k5"><b>OpenAI image edits</b> · your street under water, from a real photo</div>
 </div></section>
-<section id="close" class="clip scene" data-start="86.64" data-duration="10.18" data-track-index="8" style="z-index:8"><div class="end">
+<section id="close" class="clip scene" data-start="91.44" data-duration="10.18" data-track-index="8" style="z-index:8"><div class="end">
   <img src="assets/img/zouave.png" alt="" id="z-end">
   <h1 id="z-name">Zouave</h1>
   <p class="claim" id="z-claim">See your flood <em>before it comes.</em></p>
   <p class="meta" id="z-meta">Paris DevDay Community Hackathon · Impact → Climate action<br>github.com/nassim-arifette/zouave</p>
 </div></section>
-<p id="brand" class="clip brand" data-start="18.35" data-duration="68.29" data-track-index="30">ZOUAVE</p>
+<p id="brand" class="clip brand" data-start="18.35" data-duration="73.09" data-track-index="30">ZOUAVE</p>
 <p id="sub-01-hook-0" class="clip sub" data-start="0.92" data-duration="6.15" data-track-index="21">January 1910. The Seine rises to eight point six two metres in Paris.</p>
 <p id="sub-01-hook-1" class="clip sub" data-start="7.76" data-duration="1.17" data-track-index="21">If it happened today:</p>
 <p id="sub-01-hook-2" class="clip sub" data-start="9.26" data-duration="1.95" data-track-index="21">up to five million people hit.</p>
@@ -105,20 +113,20 @@ html, body { width:1920px; height:1080px; overflow:hidden; background:var(--grou
 <p id="sub-04-home-1" class="clip sub" data-start="54.04" data-duration="3.69" data-track-index="21">rue Traversière: one to two metres of water.</p>
 <p id="sub-04-home-2" class="clip sub" data-start="58.70" data-duration="1.25" data-track-index="21">This is your street.</p>
 <p id="sub-04-home-3" class="clip sub" data-start="60.32" data-duration="2.73" data-track-index="21">A simulation, not a forecast.</p>
-<p id="sub-06-agent-0" class="clip sub" data-start="63.49" data-duration="1.81" data-track-index="21">Talk to me, or type.</p>
-<p id="sub-06-agent-1" class="clip sub" data-start="65.85" data-duration="2.39" data-track-index="21">Every answer shows the tools I called:</p>
-<p id="sub-06-agent-2" class="clip sub" data-start="68.55" data-duration="2.83" data-track-index="21">the live gauge, the official flood map,</p>
-<p id="sub-06-agent-3" class="clip sub" data-start="71.59" data-duration="4.05" data-track-index="21">the safety advice. I never invent a number.</p>
-<p id="sub-07-tech-0" class="clip sub" data-start="76.06" data-duration="4.61" data-track-index="21">Under the hood: an OpenAI Realtime voice agent with function calling,</p>
-<p id="sub-07-tech-1" class="clip sub" data-start="81.02" data-duration="3.13" data-track-index="21">French open data, a Three.js city,</p>
-<p id="sub-07-tech-2" class="clip sub" data-start="84.36" data-duration="2.51" data-track-index="21">and my French accent by ElevenLabs.</p>
+<p id="sub-06-agent-0" class="clip sub" data-start="66.69" data-duration="1.81" data-track-index="21">Talk to me, or type.</p>
+<p id="sub-06-agent-1" class="clip sub" data-start="69.05" data-duration="2.39" data-track-index="21">Every answer shows the tools I called:</p>
+<p id="sub-06-agent-2" class="clip sub" data-start="71.75" data-duration="2.83" data-track-index="21">the live gauge, the official flood map,</p>
+<p id="sub-06-agent-3" class="clip sub" data-start="74.79" data-duration="4.05" data-track-index="21">the safety advice. I never invent a number.</p>
+<p id="sub-07-tech-0" class="clip sub" data-start="79.26" data-duration="4.61" data-track-index="21">Under the hood: an OpenAI Realtime voice agent with function calling,</p>
+<p id="sub-07-tech-1" class="clip sub" data-start="84.22" data-duration="3.13" data-track-index="21">French open data, a Three.js city,</p>
+<p id="sub-07-tech-2" class="clip sub" data-start="87.56" data-duration="2.51" data-track-index="21">and my French accent by ElevenLabs.</p>
 <audio id="vo-01-hook" class="clip" src="assets/vo/01-hook.mp3" data-start="0.80" data-duration="17.63" data-track-index="20"></audio>
 <audio id="vo-02-intro" class="clip" src="assets/vo/02-intro.mp3" data-start="18.88" data-duration="17.24" data-track-index="20"></audio>
 <audio id="vo-03-rise" class="clip" src="assets/vo/03-rise.mp3" data-start="36.57" data-duration="14.92" data-track-index="20"></audio>
 <audio id="vo-04-home" class="clip" src="assets/vo/04-home.mp3" data-start="51.94" data-duration="11.00" data-track-index="20"></audio>
-<audio id="vo-06-agent" class="clip" src="assets/vo/06-agent.mp3" data-start="63.39" data-duration="12.12" data-track-index="20"></audio>
-<audio id="vo-07-tech" class="clip" src="assets/vo/07-tech.mp3" data-start="75.96" data-duration="10.76" data-track-index="20"></audio>
-<audio id="vo-08-close" class="clip" src="assets/vo/08-close.mp3" data-start="87.17" data-duration="7.00" data-track-index="20"></audio>
+<audio id="vo-06-agent" class="clip" src="assets/vo/06-agent.mp3" data-start="66.59" data-duration="12.12" data-track-index="20"></audio>
+<audio id="vo-07-tech" class="clip" src="assets/vo/07-tech.mp3" data-start="79.16" data-duration="10.76" data-track-index="20"></audio>
+<audio id="vo-08-close" class="clip" src="assets/vo/08-close.mp3" data-start="91.97" data-duration="7.00" data-track-index="20"></audio>
 </div>
 <script>
 window.__timelines = window.__timelines || {};
@@ -133,7 +141,7 @@ tl.fromTo("#h-cost", {opacity: 0, y: 40, filter: "blur(10px)"}, {opacity: 1, y: 
 tl.fromTo("#h-src", {opacity: 0, y: 10, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out"}, 10.24);
 tl.fromTo("#h-q", {opacity: 0, y: 40, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.8, ease: "power3.out"}, 14.90);
 tl.fromTo("#intro", {opacity: 0}, {opacity: 1, duration: 0.45, ease: "power2.out"}, 18.35);
-tl.fromTo("#intro .bg", {scale: 1.0, xPercent: 0, yPercent: 0, transformOrigin: "45% 75%"}, {scale: 1.18, xPercent: 4, yPercent: 6, duration: 18.09, ease: "none"}, 18.35);
+tl.fromTo("#intro .bg", {scale: 1.0, xPercent: 0, yPercent: 0, transformOrigin: "60% 55%"}, {scale: 1.14, xPercent: -3, yPercent: 2, duration: 18.09, ease: "none"}, 18.35);
 tl.fromTo("#intro .intro-card", {opacity: 0, y: 40, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.9, ease: "power3.out"}, 19.08);
 tl.to("#intro .intro-card", {opacity: 0, duration: 0.4, ease: "power2.in"}, 30.26);
 tl.fromTo("#rise", {opacity: 0}, {opacity: 1, duration: 0.45, ease: "power2.out"}, 36.04);
@@ -148,31 +156,42 @@ tl.to("#c-today", {opacity: 0, duration: 0.4, ease: "power2.in"}, 41.15);
 tl.fromTo("#c-2016", {opacity: 0, y: 40, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "power3.out"}, 41.45);
 tl.to("#c-2016", {opacity: 0, duration: 0.4, ease: "power2.in"}, 45.49);
 tl.fromTo("#c-1910", {opacity: 0, y: 40, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "power3.out"}, 45.79);
+tl.fromTo("#r-google", {opacity: 0}, {opacity: 1, duration: 0.9, ease: "sine.inOut"}, 47.99);
+tl.fromTo("#r-google", {scale: 1.0, xPercent: 0, yPercent: 0, transformOrigin: "45% 60%"}, {scale: 1.1, xPercent: 0, yPercent: 0, duration: 4.41, ease: "none"}, 47.99);
+tl.fromTo("#r-credit", {opacity: 0, y: 0, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out"}, 48.29);
 tl.fromTo("#home", {opacity: 0}, {opacity: 1, duration: 0.45, ease: "power2.out"}, 51.40);
-tl.fromTo("#m-card", {scale: 1.0, xPercent: 0, yPercent: 0, transformOrigin: "70% 40%"}, {scale: 1.1, xPercent: -3, yPercent: 0, duration: 7.90, ease: "none"}, 51.40);
+tl.fromTo("#m-card", {scale: 1.0, xPercent: 0, yPercent: 0, transformOrigin: "62% 35%"}, {scale: 1.12, xPercent: 0, yPercent: 0, duration: 7.90, ease: "none"}, 51.40);
 tl.fromTo("#m-street", {opacity: 0}, {opacity: 1, duration: 0.6}, 58.40);
-tl.fromTo("#m-street", {scale: 1.0, xPercent: 0, yPercent: 0, transformOrigin: "50% 50%"}, {scale: 1.07, xPercent: 0, yPercent: 0, duration: 4.95, ease: "none"}, 58.40);
+tl.fromTo("#m-street", {scale: 1.0, xPercent: 0, yPercent: 0, transformOrigin: "55% 60%"}, {scale: 1.12, xPercent: 0, yPercent: 0, duration: 8.15, ease: "none"}, 58.40);
+tl.fromTo("#m-05", {opacity: 0}, {opacity: 1, duration: 1.4, ease: "sine.inOut"}, 60.30);
+tl.fromTo("#m-15", {opacity: 0}, {opacity: 1, duration: 1.8, ease: "sine.inOut"}, 62.30);
 tl.fromTo("#c-home", {opacity: 0, y: 40, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "power3.out"}, 53.94);
 tl.to("#c-home", {opacity: 0, duration: 0.4, ease: "power2.in"}, 58.40);
 tl.fromTo("#c-sim", {opacity: 0, y: 40, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "power3.out"}, 60.52);
-tl.fromTo("#agent", {opacity: 0}, {opacity: 1, duration: 0.45, ease: "power2.out"}, 62.85);
-tl.fromTo("#g-trace", {scale: 1.0, xPercent: 0, yPercent: 0, transformOrigin: "58% 70%"}, {scale: 1.35, xPercent: 0, yPercent: 0, duration: 9.50, ease: "none"}, 62.85);
-tl.fromTo("#g-advice", {opacity: 0}, {opacity: 1, duration: 0.6}, 71.45);
-tl.fromTo("#g-advice", {scale: 1.0, xPercent: 0, yPercent: 0, transformOrigin: "50% 50%"}, {scale: 1.06, xPercent: 0, yPercent: 0, duration: 4.47, ease: "none"}, 71.45);
-tl.fromTo("#c-tools", {opacity: 0, y: 40, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "power3.out"}, 65.85);
-tl.to("#c-tools", {opacity: 0, duration: 0.4, ease: "power2.in"}, 71.45);
-tl.fromTo("#c-never", {opacity: 0, y: 40, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "power3.out"}, 73.85);
-tl.fromTo("#tech", {opacity: 0}, {opacity: 1, duration: 0.45, ease: "power2.out"}, 75.42);
-tl.fromTo("#tech .bg", {scale: 1.04, xPercent: 0, yPercent: 0, transformOrigin: "50% 50%"}, {scale: 1.0, xPercent: 0, yPercent: 0, duration: 11.61, ease: "none"}, 75.42);
-tl.fromTo("#k1", {opacity: 0, y: 24, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out"}, 77.38);
-tl.fromTo("#k2", {opacity: 0, y: 24, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out"}, 81.02);
-tl.fromTo("#k3", {opacity: 0, y: 24, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out"}, 82.82);
-tl.fromTo("#k4", {opacity: 0, y: 24, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out"}, 85.96);
-tl.fromTo("#close", {opacity: 0}, {opacity: 1, duration: 0.45, ease: "power2.out"}, 86.64);
-tl.fromTo("#z-end", {opacity: 0, y: 60, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.9, ease: "power3.out"}, 86.84);
-tl.fromTo("#z-name", {opacity: 0, y: 40, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "power3.out"}, 87.27);
-tl.fromTo("#z-claim", {opacity: 0, y: 40, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.8, ease: "power3.out"}, 89.33);
-tl.fromTo("#z-meta", {opacity: 0, y: 10, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.8, ease: "power3.out"}, 91.17);
+tl.to("#m-gcredit", {opacity: 0, duration: 0.4, ease: "power2.in"}, 58.40);
+tl.fromTo("#c-d05", {opacity: 0, y: 20, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out"}, 60.50);
+tl.to("#c-d05", {opacity: 0, duration: 0.4, ease: "power2.in"}, 62.30);
+tl.fromTo("#c-d15", {opacity: 0, y: 20, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "power3.out"}, 62.70);
+tl.fromTo("#m-credit", {opacity: 0, y: 0, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out"}, 59.10);
+tl.fromTo("#agent", {opacity: 0}, {opacity: 1, duration: 0.45, ease: "power2.out"}, 66.05);
+tl.fromTo("#g-trace", {scale: 1.0, xPercent: 0, yPercent: 0, transformOrigin: "58% 70%"}, {scale: 1.35, xPercent: 0, yPercent: 0, duration: 9.50, ease: "none"}, 66.05);
+tl.fromTo("#g-advice", {opacity: 0}, {opacity: 1, duration: 0.6}, 74.65);
+tl.fromTo("#g-advice", {scale: 1.0, xPercent: 0, yPercent: 0, transformOrigin: "50% 50%"}, {scale: 1.06, xPercent: 0, yPercent: 0, duration: 4.47, ease: "none"}, 74.65);
+tl.fromTo("#c-tools", {opacity: 0, y: 40, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "power3.out"}, 69.05);
+tl.to("#c-tools", {opacity: 0, duration: 0.4, ease: "power2.in"}, 74.65);
+tl.fromTo("#c-never", {opacity: 0, y: 40, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "power3.out"}, 77.05);
+tl.fromTo("#tech", {opacity: 0}, {opacity: 1, duration: 0.45, ease: "power2.out"}, 78.62);
+tl.fromTo("#tech .bg", {scale: 1.04, xPercent: 0, yPercent: 0, transformOrigin: "50% 50%"}, {scale: 1.0, xPercent: 0, yPercent: 0, duration: 13.21, ease: "none"}, 78.62);
+tl.fromTo("#k1", {opacity: 0, y: 24, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out"}, 80.58);
+tl.fromTo("#k2", {opacity: 0, y: 24, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out"}, 84.22);
+tl.fromTo("#k3", {opacity: 0, y: 24, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out"}, 86.02);
+tl.fromTo("#k4", {opacity: 0, y: 24, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out"}, 89.16);
+tl.fromTo("#k5", {opacity: 0, y: 24, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out"}, 89.86);
+tl.fromTo("#close", {opacity: 0}, {opacity: 1, duration: 0.45, ease: "power2.out"}, 91.44);
+tl.fromTo("#z-end", {opacity: 0, y: 60, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.9, ease: "power3.out"}, 91.64);
+tl.fromTo("#z-name", {opacity: 0, y: 40, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "power3.out"}, 92.07);
+tl.fromTo("#z-claim", {opacity: 0, y: 40, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.8, ease: "power3.out"}, 94.13);
+tl.fromTo("#z-meta", {opacity: 0, y: 10, filter: "blur(10px)"}, {opacity: 1, y: 0, filter: "blur(0px)", duration: 0.8, ease: "power3.out"}, 95.97);
 tl.fromTo("#sub-01-hook-0", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 0.92);
 tl.fromTo("#sub-01-hook-1", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 7.76);
 tl.fromTo("#sub-01-hook-2", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 9.26);
@@ -193,13 +212,13 @@ tl.fromTo("#sub-04-home-0", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.
 tl.fromTo("#sub-04-home-1", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 54.04);
 tl.fromTo("#sub-04-home-2", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 58.70);
 tl.fromTo("#sub-04-home-3", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 60.32);
-tl.fromTo("#sub-06-agent-0", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 63.49);
-tl.fromTo("#sub-06-agent-1", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 65.85);
-tl.fromTo("#sub-06-agent-2", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 68.55);
-tl.fromTo("#sub-06-agent-3", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 71.59);
-tl.fromTo("#sub-07-tech-0", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 76.06);
-tl.fromTo("#sub-07-tech-1", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 81.02);
-tl.fromTo("#sub-07-tech-2", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 84.36);
+tl.fromTo("#sub-06-agent-0", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 66.69);
+tl.fromTo("#sub-06-agent-1", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 69.05);
+tl.fromTo("#sub-06-agent-2", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 71.75);
+tl.fromTo("#sub-06-agent-3", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 74.79);
+tl.fromTo("#sub-07-tech-0", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 79.26);
+tl.fromTo("#sub-07-tech-1", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 84.22);
+tl.fromTo("#sub-07-tech-2", {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.18}, 87.56);
 window.__timelines["main"] = tl;
 tl.seek(0);
 </script>
