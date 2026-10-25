@@ -128,25 +128,30 @@ export async function consignes(args: { rez_de_chaussee: boolean; cave: boolean;
 let googleStreetView: string | null = null;
 export async function loadGoogleStatus() { try { const status = await (await fetch('/api/google/status')).json(); googleStreetView = status.streetview ? status.browser_key : null; } catch { googleStreetView = null; } return googleStreetView; }
 let streetViewHandle: { close: () => void; overlay: { setLevel: (level: number) => void } } | undefined;
+let streetViewRequest = 0;
 /** Official Street View panorama at the current address with our water overlay, in an opaque panel (see data/README.md, Google Maps Platform). */
 export async function streetView(hauteur: number) {
   if (!googleStreetView) { notify('Street View indisponible : clé Google manquante.'); return { affichee: false }; }
   const dialog = $<HTMLDialogElement>('streetview-dialog'), slider = $<HTMLInputElement>('streetview-slider');
   const format = (level: number) => `${level.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m`;
+  const request = ++streetViewRequest;
   streetViewHandle?.close(); streetViewHandle = undefined;
+  // installed before any await: closing during the load invalidates the request, and a late result is disposed
+  dialog.onclose = () => { streetViewRequest++; streetViewHandle?.close(); streetViewHandle = undefined; };
   $('streetview-label').textContent = `${state.address.label} · Eau à ${format(hauteur)} (hauteur de caméra fixe, sans relief)`;
   $('streetview-credit').textContent = '';
   if (!dialog.open) dialog.showModal();
   try {
     const { openStreetView } = await import('./streetview.ts');
     const opened = await openStreetView({ panorama: $('streetview-panorama'), canvas: $<HTMLCanvasElement>('streetview-water'), status: $('streetview-status') }, { lat: state.address.lat, lng: state.address.lon }, { key: googleStreetView, level: hauteur });
+    if (request !== streetViewRequest) { opened.close(); return { affichee: false, remplacee: true }; }
     streetViewHandle = opened;
     $('streetview-credit').textContent = `${opened.copyright} · Street View, Google · panorama à ${opened.distance_m} m`;
     slider.value = String(hauteur); $('streetview-level').textContent = format(hauteur);
     slider.oninput = () => { opened.overlay.setLevel(Number(slider.value)); $('streetview-level').textContent = format(Number(slider.value)); };
-    dialog.onclose = () => { opened.close(); streetViewHandle = undefined; };
     return { affichee: true, source: 'Street View (Google)', hauteur_m: hauteur, distance_m: opened.distance_m };
   } catch (error) {
+    if (request !== streetViewRequest) return { affichee: false, remplacee: true };
     $('streetview-status').hidden = false; $('streetview-status').textContent = error instanceof Error && /ZERO_RESULTS|not found/i.test(error.message) ? 'Aucun panorama Street View à proximité.' : 'Street View indisponible.';
     return { affichee: false, error: error instanceof Error ? error.message : String(error) };
   }

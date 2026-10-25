@@ -9,6 +9,7 @@ import { createView3D, type View3D } from './view3d.ts';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import difference from '@turf/difference';
 import { BANKS_ONLY_BELOW, REFERENCE_LEVEL, timelineBands, type FloodClass } from './flood-level.ts';
+import { scenarioFootprints, timelineFootprints, type WaterFeature } from './water-footprints.ts';
 export type Polygons = FeatureCollection<Polygon | MultiPolygon>;
 export type Scenario = 'aujourdhui' | '1910' | 'pire';
 export const datasets: Record<string, Polygons> = {};
@@ -64,10 +65,12 @@ map.once('load', async () => {
     map.addLayer({ id: 'timeline-banks', type: 'fill', source: 'timeline-banks', layout: { visibility: 'none' }, paint: { 'fill-color': '#7cd2df', 'fill-opacity': 0.65 } }, before);
     const extra = difference({ type: 'FeatureCollection', features: [...datasets.sdrife_zone_inondable.features, ...datasets.ppri_aleas.features] });
     map.addSource('timeline-extra', { type: 'geojson', data: { type: 'FeatureCollection', features: extra ? [extra] : [] } });
+    footprints = { aleas: datasets.ppri_aleas.features as WaterFeature[], banks: datasets.ppri_zonage.features.filter(f => f.properties?.nom === 'Zone rouge') as WaterFeature[], extra: (extra ? [extra] : []) as WaterFeature[] };
     map.addLayer({ id: 'timeline-extra', type: 'fill', source: 'timeline-extra', layout: { visibility: 'none' }, paint: { 'fill-pattern': 'timeline-hatching', 'fill-opacity': 0.75 } }, before);
     resolveReady();
   } catch (error) { rejectReady(error instanceof Error ? error : new Error('Carte indisponible')); }
 });
+let footprints: { aleas: WaterFeature[]; banks: WaterFeature[]; extra: WaterFeature[] } = { aleas: [], banks: [], extra: [] };
 let animation = 0;
 let waterProgress = 0;
 export async function showScenario(scenario: Scenario) {
@@ -75,7 +78,8 @@ export async function showScenario(scenario: Scenario) {
   for (const id of ['timeline-solid', 'timeline-possible', 'timeline-banks', 'timeline-extra']) map.setLayoutProperty(id, 'visibility', 'none');
   cancelAnimationFrame(animation);
   if (waterLayer) waterLayer.enabled = scenario === '1910';
-  view3d?.setWater(datasets.ppri_aleas.features as Parameters<View3D['setWater']>[0], scenario === '1910' ? REFERENCE_LEVEL : null, scenario);
+  const footprint = scenarioFootprints(scenario, footprints);
+  view3d?.setWater(footprint.features, footprint.level, scenario);
   map.setLayoutProperty('flood-3d', 'visibility', scenario === '1910' && !waterLayer ? 'visible' : 'none');
   for (const id of ['extreme-fill', 'extreme-outline']) map.setLayoutProperty(id, 'visibility', scenario === 'pire' ? 'visible' : 'none');
   if (scenario !== '1910') { waterProgress = 0; map.setLayoutProperty('caves-outline', 'visibility', 'none'); return; }
@@ -106,7 +110,7 @@ export async function showFloodLevel(level: number) {
   const bands = timelineBands(level);
   (map.getSource('timeline-depths') as maplibregl.GeoJSONSource).setData({ type: 'FeatureCollection', features: datasets.ppri_aleas.features.map(feature => ({ ...feature, properties: { ...feature.properties, ...bands[feature.properties?.classe as FloodClass] } })) });
   for (const id of ['timeline-solid', 'timeline-possible']) map.setLayoutProperty(id, 'visibility', 'visible');
-  view3d?.setWater(datasets.ppri_aleas.features.filter(feature => bands[feature.properties?.classe as FloodClass]?.status !== 'dry') as Parameters<View3D['setWater']>[0], level, 'timeline');
+  view3d?.setWater(timelineFootprints(level, bands, footprints), level, 'timeline');
   map.setLayoutProperty('timeline-banks', 'visibility', level >= 3.2 && level < BANKS_ONLY_BELOW ? 'visible' : 'none');
   map.setLayoutProperty('timeline-extra', 'visibility', level > REFERENCE_LEVEL ? 'visible' : 'none');
 }

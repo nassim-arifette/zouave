@@ -14,6 +14,18 @@ export function headingTo(from: { lat: number; lng: number }, to: { lat: number;
   const y = Math.sin(dLng) * Math.cos(to.lat * r), x = Math.cos(from.lat * r) * Math.sin(to.lat * r) - Math.sin(from.lat * r) * Math.cos(to.lat * r) * Math.cos(dLng);
   return ((Math.atan2(y, x) / r) + 360) % 360;
 }
+/** Great-circle distance in metres between two coordinates (no Maps JS geometry library needed). */
+export function distanceM(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+  const r = Math.PI / 180, dLat = (b.lat - a.lat) * r, dLng = (b.lng - a.lng) * r;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dLng / 2) ** 2;
+  return 2 * 6371008.8 * Math.asin(Math.sqrt(h));
+}
+/** Above CAMERA_HEIGHT_M the camera is under the surface: the plane is seen from below (double-sided) and the view is tinted. */
+export function waterAppearance(heightM: number, cameraHeight = CAMERA_HEIGHT_M) {
+  const level = Math.min(MAX_LEVEL, Math.max(0, heightM));
+  const submerged = level > cameraHeight;
+  return { visible: level > 0, submerged, tintAlpha: submerged ? Math.min(0.75, 0.45 + (level - cameraHeight) * 0.6) : 0 };
+}
 /** Vertical position of the water plane relative to the camera for a water height above the ground (m). */
 export function waterPlaneY(heightM: number, cameraHeight = CAMERA_HEIGHT_M) { return Math.min(MAX_LEVEL, Math.max(0, heightM)) - cameraHeight; }
 
@@ -23,7 +35,7 @@ export function createWaterOverlay(canvas: HTMLCanvasElement) {
   renderer.setClearColor(0x000000, 0);
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(90, 16 / 9, 0.1, 500);
-  const material = new THREE.MeshStandardMaterial({ color: 0x6b5a3a, transparent: true, opacity: 0.82, roughness: 0.25, metalness: 0.05 });
+  const material = new THREE.MeshStandardMaterial({ color: 0x6b5a3a, transparent: true, opacity: 0.82, roughness: 0.25, metalness: 0.05, side: THREE.DoubleSide });
   const water = new THREE.Mesh(new THREE.PlaneGeometry(600, 600, 64, 64), material);
   water.rotation.x = -Math.PI / 2; water.position.y = waterPlaneY(0);
   scene.add(water, new THREE.HemisphereLight(0xcfe3ec, 0x3a2f20, 1.2), new THREE.DirectionalLight(0xfff4e0, 0.8));
@@ -39,7 +51,9 @@ export function createWaterOverlay(canvas: HTMLCanvasElement) {
     camera.fov = 2 * Math.atan(Math.tan(fovForZoom(pov.zoom) * Math.PI / 360) / camera.aspect) * 180 / Math.PI;
     camera.rotation.set(pov.pitch * Math.PI / 180, -pov.heading * Math.PI / 180, 0, 'YXZ');
     camera.updateProjectionMatrix();
-    water.visible = level > 0;
+    const look = waterAppearance(level);
+    water.visible = look.visible;
+    renderer.setClearColor(0x3b2f1c, look.tintAlpha);
     renderer.render(scene, camera);
   };
   resize(); frame = requestAnimationFrame(tick);
@@ -79,5 +93,5 @@ export async function openStreetView(elements: { panorama: HTMLElement; canvas: 
   const sync = () => { const pov = panorama.getPov(); overlay.setPov({ heading: pov.heading, pitch: pov.pitch, zoom: panorama.getZoom() ?? 1 }); };
   panorama.addListener('pov_changed', sync); panorama.addListener('zoom_changed', sync); sync();
   elements.status.hidden = true;
-  return { panorama, overlay, distance_m: Math.round(google.maps.geometry?.spherical?.computeDistanceBetween?.(camera, new google.maps.LatLng(address)) ?? 0), copyright: String(data.copyright ?? '© Google'), close() { overlay.dispose(); panorama.setVisible(false); } };
+  return { panorama, overlay, distance_m: Math.round(distanceM(from, address)), copyright: String(data.copyright ?? '© Google'), close() { overlay.dispose(); panorama.setVisible(false); } };
 }

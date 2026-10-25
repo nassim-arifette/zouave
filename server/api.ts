@@ -3,7 +3,7 @@ import OpenAI from 'openai';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { instructions, liveTools, realtimeTools } from './tools.ts';
-import { googleStatus, proxyTile, type GoogleOptions } from './google.ts';
+import { googleStatus, proxyTile, TilePathError, type GoogleOptions } from './google.ts';
 
 export const publicDir = fileURLToPath(new URL('../web/public/', import.meta.url));
 export const levelURL = 'https://hubeau.eaufrance.fr/api/v2/hydrometrie/observations_tr?code_entite=F700000103&grandeur_hydro=H&size=1&sort=desc';
@@ -45,7 +45,9 @@ export function createApp(options: { fetcher?: typeof fetch; photosPath?: string
       res.status(tile.status).type(tile.contentType);
       if (tile.cacheControl) res.setHeader('cache-control', tile.cacheControl);
       res.send(tile.body);
-    } catch (error) { res.status(502).json({ error: 'Tuiles 3D Google indisponibles.', detail: error instanceof Error ? error.message : String(error) }); }
+    } catch (error) {
+      if (error instanceof TilePathError) { res.status(400).json({ error: error.message }); return; }
+      res.status(502).json({ error: 'Tuiles 3D Google indisponibles.', detail: error instanceof Error ? error.message : String(error) }); }
   });
   const key = options.apiKey ?? process.env.OPENAI_API_KEY;
   const mode = options.mode ?? process.env.ZOUAVE_VOICE ?? 'live';

@@ -2,15 +2,13 @@
 // with our flood water drawn as a flat surface at the Seine's absolute level over the PPRI / timeline polygons.
 // MapLibre stays the default (offline) mode; this view is exclusive (the MapLibre map is hidden while it is active),
 // is key-gated by the server (/api/google/status, tiles proxied by /api/google/3d/*) and shows Google + data attributions.
-import type { Feature, Polygon, MultiPolygon } from 'geojson';
 import { config } from './config.ts';
 import { seineAltitude, type FloodClass } from './flood-level.ts';
-
-type WaterFeature = Feature<Polygon | MultiPolygon, Record<string, unknown>>;
+import { flattenFootprints, type WaterFeature, type WaterPolygon } from './water-footprints.ts';
 interface ViewState { longitude: number; latitude: number; zoom: number; pitch: number; bearing: number }
 interface Water { features: WaterFeature[]; altitude: number; label: string }
 
-const classColour: Record<string, [number, number, number]> = { '0-1': [112, 196, 214], '1-2': [58, 141, 190], '2+': [34, 87, 158], possible: [120, 170, 200] };
+const classColour: Record<string, [number, number, number]> = { '0-1': [112, 196, 214], '1-2': [58, 141, 190], '2+': [34, 87, 158], possible: [120, 170, 200], banks: [124, 210, 223] };
 
 export function createView3D(elements: { container: HTMLElement; toggle: HTMLButtonElement; status: HTMLElement; attribution: HTMLElement; body: HTMLElement }) {
   let active = false, deck: { setProps: (props: Record<string, unknown>) => void; finalize: () => void } | undefined;
@@ -24,7 +22,7 @@ export function createView3D(elements: { container: HTMLElement; toggle: HTMLBut
     const { Tile3DLayer, SolidPolygonLayer } = classes;
     deck.setProps({ viewState, layers: [
       new Tile3DLayer({ id: 'google-3d-tiles', data: '/api/google/3d/v1/3dtiles/root.json', onTileLoad: (tile: { content?: { gltf?: { asset?: { copyright?: string } } } }) => { for (const part of tile.content?.gltf?.asset?.copyright?.split(';') ?? []) if (part.trim()) credits.add(part.trim()); elements.attribution.textContent = `Données cartographiques © Google · ${[...credits].join(' · ')}`; }, onTilesetLoad: () => { elements.status.hidden = true; } }),
-      new SolidPolygonLayer({ id: 'flood-water', data: water.features, extruded: true, filled: true, material: { ambient: 0.6, diffuse: 0.5, shininess: 60, specularColor: [200, 220, 230] }, getPolygon: (f: WaterFeature) => f.geometry.type === 'Polygon' ? f.geometry.coordinates[0] : f.geometry.coordinates[0][0], getElevation: () => water.altitude, getFillColor: (f: WaterFeature) => [...classColour[String(f.properties.classe ?? f.properties.status ?? '1-2')] ?? classColour['1-2'], 190], opacity: 0.8, updateTriggers: { getElevation: water.altitude, getFillColor: water.label } }),
+      new SolidPolygonLayer({ id: 'flood-water', data: flattenFootprints(water.features), extruded: true, filled: true, material: { ambient: 0.6, diffuse: 0.5, shininess: 60, specularColor: [200, 220, 230] }, getPolygon: (d: WaterPolygon) => d.polygon, getElevation: () => water.altitude, getFillColor: (d: WaterPolygon) => [...classColour[String(d.properties.classe ?? d.properties.status ?? '1-2')] ?? classColour['1-2'], 190], opacity: 0.8, updateTriggers: { getElevation: water.altitude, getFillColor: water.label } }),
     ] });
   };
 
