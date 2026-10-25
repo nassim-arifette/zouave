@@ -1,0 +1,6 @@
+[
+  {"aliases":["4 rue traversiere paris","4 rue traversiere 75012 paris","4 rue traversiere"],"feature":{"type":"Feature","geometry":{"type":"Point","coordinates":[2.369632,48.844929]},"properties":{"label":"4 Rue Traversière 75012 Paris","type":"housenumber"}}},
+  {"aliases":["20 quai de la rapee paris","20 quai de la rapee 75012 paris"],"feature":{"type":"Feature","geometry":{"type":"Point","coordinates":[2.374491,48.840482]},"properties":{"label":"20 Quai de la Rapée 75012 Paris","type":"housenumber"}}},
+  {"aliases":["24 quai de la rapee paris","24 quai de la rapee 75012 paris"],"feature":{"type":"Feature","geometry":{"type":"Point","coordinates":[2.374334,48.840616]},"properties":{"label":"24 Quai de la Rapée 75012 Paris","type":"housenumber"}}},
+  {"aliases":["230 rue de bercy paris","230 rue de bercy 75012 paris"],"feature":{"type":"Feature","geometry":{"type":"Point","coordinates":[2.370073,48.846486]},"properties":{"label":"230 Rue de Bercy 75012 Paris","type":"housenumber"}}}
+]
