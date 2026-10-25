@@ -17,7 +17,7 @@ const protocol = new Protocol();
 maplibregl.setWorkerUrl(workerUrl);
 maplibregl.addProtocol('pmtiles', protocol.tile);
 const flavor = { ...namedFlavor('dark'), water: '#243f4e', earth: '#26353d', background: '#1d2d37', buildings: '#425354', park_a: '#263f3b', park_b: '#293f3b' };
-const baseLayers = (layers('basemap', flavor, { lang: 'fr' }) as LayerSpecification[]).filter(layer => layer.type !== 'symbol' || /water|places|roads/.test(layer.id));
+const baseLayers = (layers('basemap', flavor, { lang: 'en' }) as LayerSpecification[]).filter(layer => layer.type !== 'symbol' || /water|places|roads/.test(layer.id));
 for (const layer of baseLayers) {
   if (layer.type === 'symbol' && layer.paint) { layer.paint['text-color'] = '#91a6a8'; layer.paint['text-halo-color'] = '#20343c'; layer.paint['text-opacity'] = 0.65; }
 }

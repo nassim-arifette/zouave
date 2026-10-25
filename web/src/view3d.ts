@@ -21,19 +21,19 @@ export function createView3D(elements: { container: HTMLElement; toggle: HTMLBut
     const { Tile3DLayer, SolidPolygonLayer } = classes;
     const polygons = flattenFootprints(water.features);
     deck.setProps({ viewState, layers: [
-      new Tile3DLayer({ id: 'google-3d-tiles', data: '/api/google/3d/v1/3dtiles/root.json', onTileLoad: (tile: { content?: { gltf?: { asset?: { copyright?: string } } } }) => { for (const part of tile.content?.gltf?.asset?.copyright?.split(';') ?? []) if (part.trim()) credits.add(part.trim()); elements.attribution.textContent = `Données cartographiques © Google · ${[...credits].join(' · ')}`; }, onTilesetLoad: () => { elements.status.hidden = true; } }),
+      new Tile3DLayer({ id: 'google-3d-tiles', data: '/api/google/3d/v1/3dtiles/root.json', onTileLoad: (tile: { content?: { gltf?: { asset?: { copyright?: string } } } }) => { for (const part of tile.content?.gltf?.asset?.copyright?.split(';') ?? []) if (part.trim()) credits.add(part.trim()); elements.attribution.textContent = `Map data © Google · ${[...credits].join(' · ')}`; }, onTilesetLoad: () => { elements.status.hidden = true; } }),
       new SolidPolygonLayer({ id: 'flood-water', data: polygons.filter(d => footprintStyle(d.properties).status === 'flooded'), extruded: true, filled: true, material: { ambient: 0.6, diffuse: 0.5, shininess: 60, specularColor: [200, 220, 230] }, getPolygon: (d: WaterPolygon) => d.polygon, getElevation: () => water.altitude, getFillColor: (d: WaterPolygon) => footprintStyle(d.properties).colour, opacity: 0.8, updateTriggers: { getElevation: water.altitude, getFillColor: water.label } }),
       new SolidPolygonLayer({ id: 'flood-water-possible', data: polygons.filter(d => footprintStyle(d.properties).status === 'possible'), extruded: true, wireframe: true, filled: true, getPolygon: (d: WaterPolygon) => d.polygon, getElevation: () => water.altitude, getFillColor: (d: WaterPolygon) => footprintStyle(d.properties).colour, getLineColor: [200, 225, 240, 230], opacity: 0.8, updateTriggers: { getElevation: water.altitude, getFillColor: water.label } }),
     ] });
   };
 
   async function activate() {
-    elements.status.hidden = false; elements.status.textContent = 'Chargement des tuiles 3D Google…';
+    elements.status.hidden = false; elements.status.textContent = 'Loading Google 3D tiles…';
     const status = await fetch('/api/google/status').then(r => r.json()).catch(() => ({ tiles3d: false }));
-    if (!status.tiles3d) { elements.status.textContent = 'Clé Google manquante : définissez GOOGLE_MAPS_API_KEY sur le serveur pour activer la vue 3D photoréaliste.'; return; }
+    if (!status.tiles3d) { elements.status.textContent = 'Google key missing: set GOOGLE_MAPS_API_KEY on the server to enable the photorealistic 3D view.'; return; }
     const [{ Deck, MapView, FlyToInterpolator }, { Tile3DLayer }, { SolidPolygonLayer }] = await Promise.all([import('@deck.gl/core'), import('@deck.gl/geo-layers'), import('@deck.gl/layers')]);
     classes = { Tile3DLayer, SolidPolygonLayer, FlyToInterpolator };
-    deck ??= new Deck({ parent: elements.container as HTMLDivElement, views: new MapView({ repeat: false, farZMultiplier: 3 }), controller: { touchRotate: true, inertia: true }, viewState, onViewStateChange: ({ viewState: next }: { viewState: unknown }) => { viewState = next as ViewState; render(); }, layers: [], onError: (error: Error) => { elements.status.hidden = false; elements.status.textContent = `Tuiles 3D indisponibles : ${error.message}`; } });
+    deck ??= new Deck({ parent: elements.container as HTMLDivElement, views: new MapView({ repeat: false, farZMultiplier: 3 }), controller: { touchRotate: true, inertia: true }, viewState, onViewStateChange: ({ viewState: next }: { viewState: unknown }) => { viewState = next as ViewState; render(); }, layers: [], onError: (error: Error) => { elements.status.hidden = false; elements.status.textContent = `3D tiles unavailable: ${error.message}`; } });
     render();
   }
 
@@ -42,7 +42,7 @@ export function createView3D(elements: { container: HTMLElement; toggle: HTMLBut
     async toggle(on = !active) {
       active = on;
       elements.toggle.setAttribute('aria-pressed', String(on));
-      elements.toggle.textContent = on ? 'Carte' : '3D photoréaliste';
+      elements.toggle.textContent = on ? 'Map' : 'Photorealistic 3D';
       elements.container.classList.toggle('active', on);
       elements.body.classList.toggle('view-google', on);
       if (on) await activate();
@@ -58,7 +58,7 @@ export function createView3D(elements: { container: HTMLElement; toggle: HTMLBut
       water = { features: level === null ? [] : features, altitude: level === null ? 0 : seineAltitude(level), label: `${label}:${level}` };
       const statuses = new Set(water.features.map(feature => footprintStyle(feature.properties ?? {}).status));
       elements.legend.hidden = statuses.size === 0;
-      elements.legend.textContent = [statuses.has('flooded') ? 'Aplat : inondé' : '', statuses.has('possible') ? 'Contour translucide : peut-être' : ''].filter(Boolean).join(' · ');
+      elements.legend.textContent = [statuses.has('flooded') ? 'Solid: flooded' : '', statuses.has('possible') ? 'Translucent outline: possibly' : ''].filter(Boolean).join(' · ');
       render();
     },
     isFloodClass: (value: unknown): value is FloodClass => value === '0-1' || value === '1-2' || value === '2+',

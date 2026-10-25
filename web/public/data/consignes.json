@@ -1,15 +1,15 @@
 {
   "sources": [
-    {"label":"Ville de Paris · Que faire en cas de crue ?","url":"https://www.paris.fr/pages/crues-5472"},
-    {"label":"Géorisques · Que faire en cas d’inondation ?","url":"https://www.georisques.gouv.fr/me-preparer-me-proteger/que-faire-en-cas-d-inondation"},
-    {"label":"Préfecture de Police · DICRIM de Paris","url":"https://www.georisques.gouv.fr/DICRIM/75056"}
+    {"label":"City of Paris · What to do in a flood (FR)","url":"https://www.paris.fr/pages/crues-5472"},
+    {"label":"Géorisques · What to do in a flood (FR)","url":"https://www.georisques.gouv.fr/me-preparer-me-proteger/que-faire-en-cas-d-inondation"},
+    {"label":"Paris Police Prefecture · DICRIM (FR)","url":"https://www.georisques.gouv.fr/DICRIM/75056"}
   ],
   "instructions": [
-    {"id":"refuge","condition":"rez_de_chaussee","title":"Prévoyez un refuge en hauteur","text":"Identifiez un étage ou un lieu de refuge proche. En cas d’inondation, mettez-vous en hauteur et n’évacuez que sur ordre des autorités.","source":1},
-    {"id":"cave","condition":"cave","title":"N’entrez pas dans la cave","text":"Anticipez la mise à l’abri des objets avant la crue. Quand l’eau monte, ne descendez jamais dans les sous-sols ni les parkings.","source":0},
-    {"id":"enfants","condition":"enfants","title":"Vos enfants restent à l’école","text":"Pendant l’alerte, n’allez pas chercher les enfants à l’école ou à la crèche : les équipes appliquent leur plan de mise en sûreté.","source":2},
-    {"id":"informer","condition":"always","title":"Suivez les autorités","text":"Consultez Vigicrues et les consignes de la mairie et de la préfecture. Reportez vos déplacements.","source":1},
-    {"id":"kit","condition":"always","title":"Préparez votre kit d’urgence","text":"Rassemblez eau, nourriture, médicaments, radio, lampe et documents essentiels dans un sac accessible.","source":1},
-    {"id":"reseaux","condition":"always","title":"Protégez-vous sans vous exposer","text":"Coupez le gaz et l’électricité uniquement si vous pouvez le faire sans danger. Ne vous engagez jamais dans une voie inondée.","source":1}
+    {"id":"refuge","condition":"rez_de_chaussee","title":"Plan a refuge up high","text":"Identify an upper floor or a nearby refuge. If the water comes in, move up and only evacuate when the authorities tell you to.","source":1},
+    {"id":"cave","condition":"cave","title":"Stay out of the cellar","text":"Move your belongings to safety before the flood. Once the water is rising, never go down into basements or underground car parks.","source":0},
+    {"id":"enfants","condition":"enfants","title":"Your children stay at school","text":"During an alert, do not go and collect your children from school or nursery: staff follow their own safety plan.","source":2},
+    {"id":"informer","condition":"always","title":"Follow the authorities","text":"Check Vigicrues and the instructions from the city hall and the prefecture. Postpone your trips.","source":1},
+    {"id":"kit","condition":"always","title":"Prepare your emergency kit","text":"Pack water, food, medicines, a radio, a torch and key documents in a bag you can grab.","source":1},
+    {"id":"reseaux","condition":"always","title":"Protect yourself without taking risks","text":"Cut the gas and electricity only if you can do it safely. Never walk or drive into a flooded street.","source":1}
   ]
 }

@@ -81,7 +81,7 @@ function loadMapsJs(key: string) {
 
 /** Opens the official panorama nearest to `address` (≤ radius m), facing the façade, with the water overlay. */
 export async function openStreetView(elements: { panorama: HTMLElement; canvas: HTMLCanvasElement; status: HTMLElement }, address: { lat: number; lng: number }, options: { key: string; radius?: number; level: number }) {
-  elements.status.hidden = false; elements.status.textContent = 'Chargement de Street View…';
+  elements.status.hidden = false; elements.status.textContent = 'Loading Street View…';
   await loadMapsJs(options.key);
   const service = new google.maps.StreetViewService();
   const { data } = await service.getPanorama({ location: address, radius: options.radius ?? 60, source: google.maps.StreetViewSource.OUTDOOR, preference: google.maps.StreetViewPreference.NEAREST });

@@ -50,7 +50,7 @@ test('1910 still selects the classic reference scenario', async () => {
 });
 
 test('empty or unrelated queries do not call address or flood tools', async () => {
-  for (const [message, reply] of [['', /je sais montrer/], ['bonjour', /^Bonjour/], ['qui es-tu ?', /Zouave du pont de l’Alma/], ['merci', /Avec plaisir/], ['au revoir', /À bientôt/]]) assert.match(await routeIntent(message), reply);
+  for (const [message, reply] of [['', /I can show the 1910 flood/], ['hello', /^Bonjour!/], ['bonjour', /^Bonjour!/], ['Who are you?', /Zouave of the Pont de l’Alma/], ['thanks!', /With pleasure/], ['goodbye', /À bientôt/]]) assert.match(await routeIntent(message), reply);
   assert.equal(aller_a.mock.callCount(), 0);
   assert.equal(afficher_crue.mock.callCount(), 0);
 });
@@ -60,4 +60,15 @@ test('geocoding errors propagate without falling through to flood selection', as
   await assert.rejects(routeIntent('115 rue X'), /Adresse introuvable/);
   assert.equal(afficher_crue.mock.callCount(), 0);
   assert.equal(exposition.mock.callCount(), 0);
+});
+
+test('English demo chips reach the same tools', async () => {
+  await routeIntent('What about my home?');
+  assert.equal(aller_a.mock.callCount(), 1);
+  assert.equal(exposition.mock.callCount(), 1);
+  await routeIntent('Show me 1910');
+  assert.deepEqual(afficher_scenario.mock.calls.at(-1).arguments, [{ scenario: '1910' }]);
+  await routeIntent('And the worst case?');
+  assert.deepEqual(afficher_scenario.mock.calls.at(-1).arguments, [{ scenario: 'pire' }]);
+  assert.equal(afficher_crue.mock.callCount(), 0);
 });

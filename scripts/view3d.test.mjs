@@ -68,13 +68,13 @@ test('the actual 3D layers separate uncertain and flooded footprints and preserv
   assert.notEqual(solid.wireframe, true);
   assert.ok(possible.getFillColor(possible.data[0])[3] < solid.getFillColor(solid.data[0])[3], 'uncertain water is more translucent');
   assert.equal(h.legend.hidden, false);
-  assert.match(h.legend.textContent, /Aplat : inondé/);
-  assert.match(h.legend.textContent, /Contour translucide : peut-être/);
+  assert.match(h.legend.textContent, /Solid: flooded/);
+  assert.match(h.legend.textContent, /Translucent outline: possibly/);
 
   h.view.setWater(atLevel(8.62), 8.62, 'timeline');
   assert.equal(h.layer('flood-water-possible').data.length, 0, 'raising the level migrates the uncertain class to confirmed water');
   assert.equal(h.layer('flood-water').data.length, 3);
-  assert.equal(h.legend.textContent, 'Aplat : inondé');
+  assert.equal(h.legend.textContent, 'Solid: flooded');
 });
 
 test('clearing the water also clears both layers and hides the 3D legend', async t => {
@@ -87,7 +87,7 @@ test('clearing the water also clears both layers and hides the 3D legend', async
     assert.equal(h.layer('flood-water').data.length, 0);
     assert.equal(h.layer('flood-water-possible').data.length, 0);
     assert.equal(h.legend.hidden, true);
-    assert.equal(h.legend.textContent, '', 'no stale inondé/peut-être labels remain');
+    assert.equal(h.legend.textContent, '', 'no stale flooded/possibly labels remain');
   }
 });
 
@@ -103,7 +103,7 @@ test('the rendered extreme scenario keeps the exact SDRIF geometry and excludes 
   const renderedPolygons = possible.data.map(possible.getPolygon);
   assert.deepEqual(renderedPolygons, sdrif.flatMap(f => f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates));
   assert.equal(h.layer('flood-water').data.length, 0);
-  assert.equal(h.legend.textContent, 'Contour translucide : peut-être');
+  assert.equal(h.legend.textContent, 'Translucent outline: possibly');
   const point = [2.297125230468744, 48.8616845];
   assert.equal(aleas.some(f => booleanPointInPolygon(point, f)), true, 'this point would expose the old SDRIF/PPRI union');
   assert.equal(renderedPolygons.some(coordinates => booleanPointInPolygon(point, { type: 'Polygon', coordinates })), false);

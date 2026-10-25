@@ -98,7 +98,7 @@ test('/api/rue renders, caches and attributes the nearest panorama, and reports 
     assert.equal(scene.live, true);
     assert.match(scene.url_clean, /^\/cache\/street\/near\/photo_\d+_v\d+\.jpg$/);
     assert.match(scene.url_depth, /^\/cache\/street\/near\/depth_\d+_v\d+\.png$/);
-    assert.equal(scene.credit, 'Photo : contributeur Panoramax / Panoramax, CC-BY-SA-4.0');
+    assert.equal(scene.credit, 'Photo: Panoramax contributor / Panoramax, CC-BY-SA-4.0');
     assert.equal(scene.license_url, 'https://creativecommons.org/licenses/by-sa/4.0/');
     assert.equal(scene.source_url, 'https://api.panoramax.xyz/#focus=pic&pic=near');
     assert.deepEqual(scene.view, { fov: 80, pitch: -4, camera_height_m: 2 });

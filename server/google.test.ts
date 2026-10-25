@@ -21,7 +21,7 @@ test('/api/google/status reports what is configured without exposing the tiles k
     assert.deepEqual(await (await fetch(`${url}/api/google/status`)).json(), { tiles3d: false, streetview: false, browser_key: null });
     const missing = await fetch(`${url}/api/google/3d/v1/3dtiles/root.json`);
     assert.equal(missing.status, 404);
-    assert.match((await missing.json()).error, /Clé Google manquante/);
+    assert.match((await missing.json()).error, /Google key missing/);
   });
   await withApp({ google: { tilesKey: 'SERVER-KEY', browserKey: 'BROWSER-KEY' } }, async url => {
     const status = await (await fetch(`${url}/api/google/status`)).json();

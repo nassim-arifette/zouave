@@ -18,7 +18,7 @@ audio.addEventListener('playing', () => setSpeaking(true));
 audio.addEventListener('pause', () => setSpeaking(false));
 audio.addEventListener('ended', () => setSpeaking(false));
 function send(event: object) { if (channel?.readyState === 'open') channel.send(JSON.stringify(event)); }
-function resetIdle() { clearTimeout(idleTimer); idleTimer = setTimeout(() => { notify('La session vocale a été fermée après une période d’inactivité.'); void stopVoice(); }, 120_000); }
+function resetIdle() { clearTimeout(idleTimer); idleTimer = setTimeout(() => { notify('The voice session was closed after a period of inactivity.'); void stopVoice(); }, 120_000); }
 const seen = new Set<string>();
 let queue = Promise.resolve();
 async function runCalls(calls: ToolCall[]) {
@@ -27,7 +27,7 @@ async function runCalls(calls: ToolCall[]) {
     seen.add(call.call_id);
     let result: unknown;
     try { result = await executeTool(call.name, JSON.parse(call.arguments)); }
-    catch (error) { result = { error: error instanceof Error ? error.message : 'Échec de l’outil.' }; }
+    catch (error) { result = { error: error instanceof Error ? error.message : 'Tool failed.' }; }
     send({ type: mode === 'live' ? 'response.item.create' : 'conversation.item.create', item: { type: 'function_call_output', call_id: call.call_id, output: JSON.stringify(result) } });
     window.dispatchEvent(new CustomEvent('zouave:tool', { detail: { name: call.name, call_id: call.call_id, result, mode } }));
   }
@@ -38,7 +38,7 @@ function handleMessage(raw: string) {
   try { envelope = JSON.parse(raw); } catch { return; }
   window.dispatchEvent(new CustomEvent('zouave:voice-event', { detail: envelope }));
   if (envelope.type === 'session.closed') { cleanup(); return; }
-  if (envelope.type === 'error') { notify(envelope.error?.message ?? 'Une erreur vocale est survenue.'); return; }
+  if (envelope.type === 'error') { notify(envelope.error?.message ?? 'A voice error occurred.'); return; }
   const event = envelope.type === 'response.event' ? envelope.event : envelope;
   if (mode === 'live' && event.type === 'response.output_item.done' && event.item?.type === 'function_call') {
     queue = queue.then(() => runCalls([event.item])).catch(error => notify(error.message));
@@ -60,7 +60,7 @@ function cleanup() {
   stopped = true; clearTimeout(idleTimer); stream?.getTracks().forEach(track => track.stop()); stream = undefined;
   channel?.close(); channel = undefined; pc?.close(); pc = undefined; audio.pause(); audio.srcObject = null;
   $('avatar-ring').classList.remove('listening', 'speaking'); setSpeaking(false);
-  $('mic').setAttribute('aria-pressed', 'false'); $('mic').setAttribute('aria-label', 'Activer la voix'); $('voice-state').textContent = 'Votre vigie parisienne';
+  $('mic').setAttribute('aria-pressed', 'false'); $('mic').setAttribute('aria-label', 'Turn on voice'); $('voice-state').textContent = 'Your Paris flood watchman';
 }
 export async function stopVoice() {
   if (mode === 'live' && channel?.readyState === 'open') {
@@ -75,23 +75,23 @@ export async function stopVoice() {
 }
 async function startVoice() {
   stopped = false;
-  $('voice-state').textContent = 'Connexion au fleuve…';
+  $('voice-state').textContent = 'Connecting to the river…';
   try {
     const settings = await api('/api/config');
-    if (!settings.voice) throw new Error('La voix n’est pas configurée. Les boutons et le texte restent disponibles.');
+    if (!settings.voice) throw new Error('Voice is not configured. The buttons and text input still work.');
     mode = settings.mode;
     stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     pc = new RTCPeerConnection();
-    pc.ontrack = event => { audio.srcObject = event.streams[0]; void audio.play().catch(() => notify('Autorisez la lecture audio dans votre navigateur.')); };
+    pc.ontrack = event => { audio.srcObject = event.streams[0]; void audio.play().catch(() => notify('Allow audio playback in your browser.')); };
     for (const track of stream.getTracks()) pc.addTrack(track, stream);
     channel = pc.createDataChannel(mode === 'live' ? 'live-events' : 'oai-events');
     seen.clear(); queue = Promise.resolve();
     channel.onmessage = event => handleMessage(event.data);
     channel.onopen = () => {
-      $('voice-state').textContent = 'À votre écoute'; $('avatar-ring').classList.add('listening'); $('mic').setAttribute('aria-pressed', 'true'); $('mic').setAttribute('aria-label', 'Arrêter la voix');
+      $('voice-state').textContent = 'Listening to you'; $('avatar-ring').classList.add('listening'); $('mic').setAttribute('aria-pressed', 'true'); $('mic').setAttribute('aria-label', 'Turn off voice');
       resetIdle();
     };
-    pc.onconnectionstatechange = () => { if (pc?.connectionState === 'failed' || pc?.connectionState === 'disconnected') { notify('La connexion vocale a été interrompue. Continuez avec les boutons.'); cleanup(); } };
+    pc.onconnectionstatechange = () => { if (pc?.connectionState === 'failed' || pc?.connectionState === 'disconnected') { notify('The voice connection dropped. Carry on with the buttons.'); cleanup(); } };
     const offer = await pc.createOffer(); await pc.setLocalDescription(offer);
     const result = await api('/api/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sdp: offer.sdp }) });
     if (stopped || !pc) return;
@@ -102,12 +102,12 @@ function toggleBrowserVoice() {
   if (isListening()) { stopListening(); return; }
   const ring = $('avatar-ring');
   listen({
-    onInterim: text => { const el = $('input-caption'); el.hidden = false; el.textContent = `Vous · ${text}…`; },
+    onInterim: text => { const el = $('input-caption'); el.hidden = false; el.textContent = `You · ${text}…`; },
     onText: text => { $('input-caption').hidden = true; window.dispatchEvent(new CustomEvent('zouave:heard', { detail: text })); },
     onError: message => notify(message),
-    onEnd: () => { ring.classList.remove('listening'); $('mic').setAttribute('aria-pressed', 'false'); $('mic').setAttribute('aria-label', 'Parler au Zouave'); $('voice-state').textContent = 'Votre vigie parisienne'; },
+    onEnd: () => { ring.classList.remove('listening'); $('mic').setAttribute('aria-pressed', 'false'); $('mic').setAttribute('aria-label', 'Talk to the Zouave'); $('voice-state').textContent = 'Your Paris flood watchman'; },
   });
-  if (isListening()) { ring.classList.add('listening'); $('mic').setAttribute('aria-pressed', 'true'); $('mic').setAttribute('aria-label', 'Arrêter l’écoute'); $('voice-state').textContent = 'Je vous écoute…'; }
+  if (isListening()) { ring.classList.add('listening'); $('mic').setAttribute('aria-pressed', 'true'); $('mic').setAttribute('aria-label', 'Stop listening'); $('voice-state').textContent = 'I am listening…'; }
 }
 export async function toggleVoice() {
   if (browserMode) { toggleBrowserVoice(); return; }
@@ -118,8 +118,8 @@ export async function toggleVoice() {
 export async function initializeVoice() {
   try {
     const result = await api('/api/config');
-    if (!result.voice && browserVoice.canListen) { browserMode = true; $('mic').setAttribute('aria-label', 'Parler au Zouave'); $('connection-label').innerHTML = '<i></i> Voix du navigateur · parlez ou écrivez'; }
-    else if (!result.voice) { $('mic').setAttribute('disabled', ''); $('voice-state').textContent = 'Mode texte · sans micro'; $('connection-label').textContent = browserVoice.canSpeak ? 'Il vous répond à voix haute' : 'Mode texte · toutes les fonctions'; }
-  } catch { $('voice-state').textContent = 'Mode texte disponible'; }
+    if (!result.voice && browserVoice.canListen) { browserMode = true; $('mic').setAttribute('aria-label', 'Talk to the Zouave'); $('connection-label').innerHTML = '<i></i> Browser voice · talk or type'; }
+    else if (!result.voice) { $('mic').setAttribute('disabled', ''); $('voice-state').textContent = 'Text mode · no microphone'; $('connection-label').textContent = browserVoice.canSpeak ? 'He answers out loud' : 'Text mode · every feature works'; }
+  } catch { $('voice-state').textContent = 'Text mode available'; }
   window.addEventListener('pagehide', cleanup);
 }

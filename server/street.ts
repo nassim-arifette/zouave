@@ -35,7 +35,7 @@ export async function findNearestPicture(lat: number, lon: number, radius: numbe
     const d = distance(lat, lon, { lat: plat, lon: plon });
     if (d > radius) return [];
     const licenseLink = (feature.links ?? []).find((l: { rel: string }) => l.rel === 'license');
-    return [{ id: String(feature.id), lat: plat, lon: plon, azimuth: Number(p['view:azimuth'] ?? 0), pitch: Number(p['pers:pitch'] ?? 0), roll: Number(p['pers:roll'] ?? 0), hd: feature.assets.hd.href, sd: feature.assets.sd?.href, producer: String(p['geovisio:producer'] ?? 'contributeur Panoramax'), license: String(p.license ?? 'CC-BY-SA-4.0'), license_url: licenseLink?.href ?? 'https://creativecommons.org/licenses/by-sa/4.0/', datetime: String(p.datetime ?? ''), distance_m: Math.round(d) } satisfies Picture];
+    return [{ id: String(feature.id), lat: plat, lon: plon, azimuth: Number(p['view:azimuth'] ?? 0), pitch: Number(p['pers:pitch'] ?? 0), roll: Number(p['pers:roll'] ?? 0), hd: feature.assets.hd.href, sd: feature.assets.sd?.href, producer: String(p['geovisio:producer'] ?? 'Panoramax contributor'), license: String(p.license ?? 'CC-BY-SA-4.0'), license_url: licenseLink?.href ?? 'https://creativecommons.org/licenses/by-sa/4.0/', datetime: String(p.datetime ?? ''), distance_m: Math.round(d) } satisfies Picture];
   });
   return pictures.sort((a, b) => a.distance_m - b.distance_m)[0] ?? null;
 }
@@ -138,7 +138,7 @@ export function defaultDepthEstimator(load: () => Promise<Transformers> = () => 
 
 export interface StreetScene { id: string; url_clean: string; url_depth: string; view: { fov: number; pitch: number; camera_height_m: number }; credit: string; license: string; license_url: string; source_url: string; author: string; datetime: string; distance_m: number; yaw: number }
 
-const anonymize = (value: string) => value.replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, 'contributeur Panoramax');
+const anonymize = (value: string) => value.replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, 'Panoramax contributor');
 const inflight = new Map<string, Promise<StreetScene>>();
 
 /** Download, reproject towards the address and estimate depth; results are cached under `.cache/street/<picture id>/`. */
@@ -148,7 +148,7 @@ export function renderStreet(picture: Picture, lat: number, lon: number, options
   // Version in the file names too, so browsers (and CDNs) never reuse a render from an older pipeline.
   const stem = `${yaw}_v${RENDER_VERSION}`;
   const key = `${picture.id}:${stem}`;
-  const credit = `Photo : ${anonymize(picture.producer)} / Panoramax, ${picture.license}`;
+  const credit = `Photo: ${anonymize(picture.producer)} / Panoramax, ${picture.license}`;
   const scene = (): StreetScene => ({ id: picture.id, url_clean: `/cache/street/${picture.id}/photo_${stem}.jpg`, url_depth: `/cache/street/${picture.id}/depth_${stem}.png`, view: { fov: FOV, pitch: PITCH, camera_height_m: CAMERA_HEIGHT }, credit, license: picture.license, license_url: picture.license_url, source_url: `https://api.panoramax.xyz/#focus=pic&pic=${picture.id}`, author: anonymize(picture.producer), datetime: picture.datetime, distance_m: picture.distance_m, yaw });
   const pending = inflight.get(key);
   if (pending) return pending;

@@ -39,8 +39,8 @@ for (const scenario of ['1910', 'pire']) {
     }
     assert.equal(elements.get('legend-depths').hidden, scenario !== '1910');
     assert.equal(elements.get('legend-note').hidden, scenario === '1910');
-    assert.match(elements.get('legend-title').textContent, scenario === '1910' ? /COMPRENDRE/ : /AU-DELÀ/);
-    if (scenario === 'pire') assert.match(elements.get('legend-note').textContent, /hauteurs non publiées/);
+    assert.match(elements.get('legend-title').textContent, scenario === '1910' ? /UNDERSTANDING/ : /BEYOND/);
+    if (scenario === 'pire') assert.match(elements.get('legend-note').textContent, /depths not published/);
     await exposition({ ...point, scenario });
     assert.equal(showScenario.mock.callCount(), 1);
     await afficher_scenario({ scenario });
@@ -49,8 +49,8 @@ for (const scenario of ['1910', 'pire']) {
 }
 test('invalid exposure arguments do not change scenario or layers', async () => {
   reset();
-  await assert.rejects(exposition({ lat: NaN, lon: 2.37, scenario: '1910' }), /invalides/);
-  await assert.rejects(exposition({ lat: 48.84, lon: 2.37, scenario: 'unknown' }), /invalides/);
+  await assert.rejects(exposition({ lat: NaN, lon: 2.37, scenario: '1910' }), /Invalid/);
+  await assert.rejects(exposition({ lat: 48.84, lon: 2.37, scenario: 'unknown' }), /Invalid/);
   assert.equal(state.scenario, 'aujourdhui');
   assert.equal(showScenario.mock.callCount(), 0);
 });
@@ -65,7 +65,7 @@ test('outside all footprints keeps one dry-view card whose button opens the orig
   const exposureCard = document.getElementById('exposure-card');
   assert.equal(exposureCard.htmlWrites.length, 1, 'render the exposure card once so an older variant cannot replace the dry-view button');
   const card = exposureCard.innerHTML;
-  assert.match(card, /id="show-photo"[^<]*au sec/, 'the Panoramax street button stays available outside the PPRI');
+  assert.match(card, /id="show-photo"[^<]*dry/, 'the Panoramax street button stays available outside the PPRI');
   assert.doesNotMatch(card, /show-streetview/, 'no Street View button without a browser key');
   const requestedPhotos = [];
   globalThis.fetch = async url => {
@@ -80,7 +80,7 @@ test('outside all footprints keeps one dry-view card whose button opens the orig
   assert.deepEqual(requestedPhotos, ['0']);
   assert.equal(document.getElementById('photo-dialog').open, true);
   assert.equal(document.getElementById('photo-image').src, '/photos/original.jpg');
-  assert.match(document.getElementById('photo-label').textContent, /Vue originale/);
+  assert.match(document.getElementById('photo-label').textContent, /Original view/);
 });
 test('voice timeline tool returns derived numbers and updates the renderer and exposure', async () => {
   reset();

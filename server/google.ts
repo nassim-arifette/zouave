@@ -19,9 +19,9 @@ export class TilePathError extends Error {}
  * tiles origin, are accepted (absolute URLs, other schemes/hosts, `..` escapes and odd characters are rejected). */
 export function upstreamTileURL(path: string, query: URLSearchParams, key: string) {
   const relative = path.replace(/^\/+/, '');
-  if (/^[a-z][a-z0-9+.-]*:/i.test(relative) || relative.startsWith('/') || relative.includes('\\')) throw new TilePathError('Chemin de tuile non autorisé.');
+  if (/^[a-z][a-z0-9+.-]*:/i.test(relative) || relative.startsWith('/') || relative.includes('\\')) throw new TilePathError('Tile path not allowed.');
   const url = new URL(relative, tilesOrigin);
-  if (url.origin !== new URL(tilesOrigin).origin || url.protocol !== 'https:' || !allowedPath.test(url.pathname) || url.username || url.password || url.hash) throw new TilePathError('Chemin de tuile non autorisé.');
+  if (url.origin !== new URL(tilesOrigin).origin || url.protocol !== 'https:' || !allowedPath.test(url.pathname) || url.username || url.password || url.hash) throw new TilePathError('Tile path not allowed.');
   url.search = '';
   for (const [name, value] of query) if (name !== 'key') url.searchParams.append(name, value);
   url.searchParams.set('key', key);
@@ -50,7 +50,7 @@ export function rewriteTileset(tileset: unknown, prefix = proxyPrefix): unknown 
 
 export async function proxyTile(path: string, query: URLSearchParams, options: Required<Pick<GoogleOptions, 'tilesKey' | 'fetcher'>>) {
   const upstream = await options.fetcher(upstreamTileURL(path, query, options.tilesKey), { signal: AbortSignal.timeout(20_000), redirect: 'manual' });
-  if (upstream.status >= 300 && upstream.status < 400) return { status: 502, contentType: 'application/json', cacheControl: null, body: Buffer.from(JSON.stringify({ error: 'Redirection upstream refusée.' })) };
+  if (upstream.status >= 300 && upstream.status < 400) return { status: 502, contentType: 'application/json', cacheControl: null, body: Buffer.from(JSON.stringify({ error: 'Upstream redirect refused.' })) };
   const contentType = upstream.headers.get('content-type') ?? 'application/octet-stream';
   let body = Buffer.from(await upstream.arrayBuffer());
   if (upstream.ok && /json/i.test(contentType)) { try { body = Buffer.from(JSON.stringify(rewriteTileset(JSON.parse(body.toString('utf8'))))); } catch { /* not a tileset: pass through */ } }

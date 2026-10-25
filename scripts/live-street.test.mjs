@@ -52,7 +52,7 @@ test('an older live answer arriving after a newer one is ignored', async () => {
   rue.get(String(A.lat)).resolve(liveAnswer('a'));
   assert.equal((await first).affichee, false);
   assert.deepEqual(shows, ['/cache/street/b/photo_90.jpg']);
-  assert.match($('hero-label').innerHTML, /Rue B · photo à 42 m/);
+  assert.match($('hero-label').innerHTML, /Rue B · photo 42 m away/);
   assert.equal($('hero-dialog').open, true);
   $('hero-dialog').close();
 });
@@ -69,7 +69,7 @@ test('a valid live answer followed by a WebGL failure falls back to the live ori
   assert.equal($('hero-dialog').open, false, 'loading dialog closed');
   assert.equal($('photo-dialog').open, true);
   assert.equal($('photo-image').src, '/cache/street/b/photo_90.jpg');
-  assert.equal($('photo-label').textContent, 'Rue B · Vue originale');
+  assert.equal($('photo-label').textContent, 'Rue B · Original view');
   assert.match($('photo-credit').innerHTML, /Panoramax, CC-BY-SA-4.0/);
   showImpl = async () => true;
 });

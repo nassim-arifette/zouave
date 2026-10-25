@@ -41,7 +41,7 @@ test('geocoding empty response is not an invented location', async () => {
 });
 test('photo absent manifest and invalid input return useful errors', async () => {
   await withApp({ photosPath: '/nonexistent/zouave-manifest.json' }, async url => {
-    const response = await fetch(`${url}/api/photo?lat=48.84&lon=2.36&h=2`); assert.equal(response.status, 404); assert.match((await response.json()).error, /pas encore/);
+    const response = await fetch(`${url}/api/photo?lat=48.84&lon=2.36&h=2`); assert.equal(response.status, 404); assert.match((await response.json()).error, /not available yet/);
     assert.equal((await fetch(`${url}/api/photo`)).status, 400); assert.equal((await fetch(`${url}/api/photo?lat=100&lon=2&h=2`)).status, 400);
   });
 });
@@ -71,11 +71,11 @@ test('bundled photos never expose an email and credits use each original photo l
     assert.equal(selectPhoto([{ ...entry, license: 'Incorrect license', license_url: 'https://example.org/wrong', credit: 'Incorrect credit' }], entry.lat, entry.lon, 1.5)?.credit, result?.credit);
   }
   const photo = selectPhoto(manifest, 48.846486, 2.370073, 1.5);
-  assert.equal(photo?.credit, 'Photo : contributeur Panoramax, Etalab Open Licence 2.0');
+  assert.equal(photo?.credit, 'Photo: Panoramax contributor, Etalab Open Licence 2.0');
   assert.equal(photo?.license, 'Etalab Open Licence 2.0');
   assert.equal(photo?.source_url, 'https://api.panoramax.xyz/#focus=pic&pic=36b6c9a3-afa5-495b-93f5-f1fba410d144');
   const legacy = selectPhoto([{ lat: 48, lon: 2, heights: { '1': '/photos/example.jpg' }, credit: 'Photo: author@example.org' }], 48, 2, 1);
-  assert.equal(legacy?.credit, 'Photo: contributeur Panoramax');
+  assert.equal(legacy?.credit, 'Photo: Panoramax contributor');
 });
 test('session validates SDP and explicitly disables voice without a key', async () => {
   await withApp({ apiKey: '' }, async url => {

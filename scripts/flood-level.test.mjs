@@ -2,13 +2,13 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { depthAtLevel, photoHeight, outsidePpri, timelineBands, floodPresets } from '../web/src/flood-level.ts';
 for (const [level, status, label, photo] of [
-  [8.62, 'flooded', '1 à 2 m', 1.5],
-  [8.96, 'flooded', '1,3 à 2,3 m', 1.5],
-  [8.05, 'flooded', '0,4 à 1,4 m', 0.5],
-  [7.12, 'possible', 'au sec ou jusqu’à 0,5 m', 0.5],
-  [6.10, 'dry', 'Au sec (estimation)', 0],
-  [3.54, 'dry', 'Au sec (estimation)', 0],
-  [9.10, 'flooded', '1,5 à 2,5 m', 2.5],
+  [8.62, 'flooded', '1 to 2 m', 1.5],
+  [8.96, 'flooded', '1.3 to 2.3 m', 1.5],
+  [8.05, 'flooded', '0.4 to 1.4 m', 0.5],
+  [7.12, 'possible', 'dry or up to 0.5 m', 0.5],
+  [6.10, 'dry', 'Dry (estimate)', 0],
+  [3.54, 'dry', 'Dry (estimate)', 0],
+  [9.10, 'flooded', '1.5 to 2.5 m', 2.5],
 ]) test(`Traversière table at ${level} m`, () => {
   const band = depthAtLevel('1-2', level);
   assert.equal(band.status, status); assert.equal(band.label, label); assert.equal(photoHeight(band, level), photo);
@@ -25,7 +25,7 @@ test('open-ended class stays open; exact zero is not positive, official referenc
 });
 test('extra footprint is possible shallow water only above reference and inside SDRIF', () => {
   assert.equal(outsidePpri(8.62, true).status, 'dry');
-  assert.equal(outsidePpri(9.1, true).label, 'moins de 50 cm (estimation)');
+  assert.equal(outsidePpri(9.1, true).label, 'under 50 cm (estimate)');
   assert.equal(outsidePpri(9.1, false).status, 'dry');
 });
 test('empty/invalid input never produces a depth', () => {
@@ -37,7 +37,7 @@ test('presets match exactly the eight requested entries, in order', () => {
     ['1658', 8.96], ['1740', 8.05], ['1910', 8.62], ['1955', 7.12],
     ['2016', 6.10], ['2026', 3.54], ['today', null], ['115', 9.10],
   ]);
-  assert.equal(floodPresets.find(p => p.id === 'today').label, 'Direct');
+  assert.equal(floodPresets.find(p => p.id === 'today').label, 'Live');
   for (const preset of floodPresets) if (preset.id !== 'today') assert.ok(preset.source);
 });
 
