@@ -11,6 +11,12 @@ Scenarios are educational, not forecasts or building-level diagnoses.
 - **Immersion** (key **H**): hide the panels and let the camera drift over the city.
 - **Under the hood** (key **U**): the architecture for the jury, with a QR code to open Zouave on a phone (same network).
 - `npm run record-demo`: records the Story mode as a silent backup video (`zouave-story.webm`).
+- **Memory of 1910**: `npm run fetch-1910` (needs internet) downloads real photographs of the January 1910 flood near the
+  demo addresses from Wikimedia Commons — public domain only, per Commons metadata — into `web/public/memoire/` with a
+  credited manifest. They appear as "1910" pins on the map, next to today's street and our simulation, and in the Story.
+- **HTTPS for phones**: `ZOUAVE_HTTPS=1` adds a self-signed HTTPS listener on `HTTPS_PORT` (3443) for this machine's LAN
+  addresses; the QR code then points to it, so phones get a secure context and the microphone works after accepting
+  the certificate warning once.
 - Pitch, demo script and Q&A notes: [`docs/PITCH.md`](docs/PITCH.md).
 
 ## Run
@@ -35,7 +41,8 @@ Environment variables (optional gitignored `.env`, see `.env.example`):
 | `PORT` | `3000` | Production/Express port; dev proxy targets 3000 |
 | `ZOUAVE_TTS` | on with a key | `off` disables the narrated OpenAI voice (`/api/tts`) |
 | `ZOUAVE_TTS_MODEL` | `gpt-4o-mini-tts` | OpenAI text-to-speech model for the Zouave's narration |
-| `ZOUAVE_TTS_VOICE` | `ash` | OpenAI voice name |
+| `ZOUAVE_TTS_VOICE` | `marin` | OpenAI voice name (same as the Realtime agent) |
+| `ZOUAVE_HTTPS` / `HTTPS_PORT` | off / `3443` | Self-signed HTTPS listener for phones (QR code) |
 | `ZOUAVE_PUBLIC_URL` | LAN address | URL encoded in the "try it on your phone" QR code |
 
 Without a key, every map, address, exposure and safety feature works via the four

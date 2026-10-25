@@ -1,6 +1,8 @@
 import express from 'express';
 import { fileURLToPath } from 'node:url';
+import { createServer } from 'node:https';
 import { createApp } from './api.ts';
+import { httpsEnabled, httpsPort, lanCertificate } from './https.ts';
 const app = createApp();
 const dist = fileURLToPath(new URL('../web/dist/', import.meta.url));
 app.use('/cache/street', express.static(fileURLToPath(new URL('../.cache/street/', import.meta.url)), { maxAge: '1d' }));
@@ -8,3 +10,7 @@ app.use(express.static(dist));
 app.get('/{*path}', (_req, res) => { res.sendFile(`${dist}index.html`); });
 const port = Number(process.env.PORT ?? 3000);
 app.listen(port, '0.0.0.0', () => console.log(`Zouave listening on http://localhost:${port} (voice: ${process.env.OPENAI_API_KEY ? process.env.ZOUAVE_VOICE ?? 'live' : 'disabled'})`));
+if (httpsEnabled()) {
+  const { key, cert, names } = await lanCertificate();
+  createServer({ key, cert }, app).listen(httpsPort(), '0.0.0.0', () => console.log(`Zouave HTTPS (self-signed, for phones) on port ${httpsPort()} · ${names}`));
+}

@@ -28,7 +28,7 @@ Backup: if anything stalls during recording, press **Esc**, reload, and press **
   This is how we check quality: the answer can only repeat what a tool returned.
 - **OpenAI Images (edits)**: the flooded versions of the demo street photos were generated from Panoramax pictures and
   are labelled *Estimated*; the live 3D street scene uses a depth map (Depth Anything V2 Small) instead.
-- **OpenAI text-to-speech** (`gpt-4o-mini-tts`, voice `ash`, with acting instructions: a stone soldier with a light
+- **OpenAI text-to-speech** (`gpt-4o-mini-tts`, voice `marin` like the Realtime agent, with acting instructions: a stone soldier with a light
   French accent) narrates the answers and the Story mode; every line is cached on disk, so a rehearsed demo replays
   even if the venue's network fails.
 - **Without a key**, the demo still runs: the browser's speech synthesis gives the Zouave a voice and typed intents
@@ -62,9 +62,12 @@ Backup: if anything stalls during recording, press **Esc**, reload, and press **
 - One person talks, one drives: **D** story · **Space** pause · **→** next step · **Esc** stop · **U** under the hood ·
   **H** immersion · **1–4** demo questions.
 - End on the QR code (end card or **U**): the jury scans it and checks their own address (laptop and phones on the
-  same Wi-Fi). Over plain HTTP phones get text mode only (browsers allow the microphone on HTTPS); for voice on
-  phones, or if the venue isolates Wi-Fi clients, expose the server through an HTTPS tunnel (cloudflared or ngrok)
-  and set `ZOUAVE_PUBLIC_URL` to it.
+  same Wi-Fi). Over plain HTTP phones get text mode only (browsers allow the microphone on HTTPS):
+  start with `ZOUAVE_HTTPS=1 npm start` and the QR code points to `https://<laptop IP>:3443` (self-signed: phones
+  accept the warning once, then voice works). If the venue isolates Wi-Fi clients, use an HTTPS tunnel (cloudflared
+  or ngrok) and set `ZOUAVE_PUBLIC_URL` to it.
+- Before leaving home: `npm run fetch-1910` downloads the real 1910 photographs (public domain) shown as "1910" pins
+  and in the Story ("This is not a simulation"). Commit `web/public/memoire/` so the demo works offline.
 - Backup: `npm run record-demo` (silent video of the Story mode), plus your submitted 2-minute video.
 
 ## Submission checklist

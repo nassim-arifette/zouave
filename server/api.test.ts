@@ -101,9 +101,10 @@ test('narrated voice calls OpenAI speech once, then replays from the disk cache,
   const cache = `${await mkdtemp(`${tmpdir()}/zouave-tts-`)}/`;
   let calls = 0;
   const fetcher = (async (url, init) => {
-    assert.equal(url, 'https://api.openai.com/v1/audio/speech');
+    assert.equal(String(url), 'https://api.openai.com/v1/audio/speech');
+    assert.equal(new Headers(init?.headers).get('authorization'), 'Bearer test-not-a-key');
     const body = JSON.parse(String(init?.body));
-    assert.equal(body.input, 'Bonjour, Paris.'); assert.equal(body.model, 'gpt-4o-mini-tts'); assert.equal(body.response_format, 'mp3'); assert.match(body.instructions, /Zouave/);
+    assert.equal(body.input, 'Bonjour, Paris.'); assert.equal(body.model, 'gpt-4o-mini-tts'); assert.equal(body.voice, 'marin'); assert.equal(body.response_format, 'mp3'); assert.match(body.instructions, /Zouave/);
     calls++;
     return new Response(new Uint8Array([73, 68, 51, 1]), { headers: { 'content-type': 'audio/mpeg' } });
   }) as typeof fetch;
@@ -120,4 +121,16 @@ test('narrated voice calls OpenAI speech once, then replays from the disk cache,
     assert.equal((await post(url, 'Bonjour, Paris.')).status, 200, 'a cached line still plays without a key');
     assert.equal((await post(url, 'Something new.')).status, 404);
   });
+});
+test('self-signed LAN certificate covers the given addresses and is reused', async () => {
+  const { mkdtemp } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const { X509Certificate } = await import('node:crypto');
+  const { lanCertificate } = await import('./https.ts');
+  const dir = `${await mkdtemp(`${tmpdir()}/zouave-https-`)}/`;
+  const first = await lanCertificate(['192.168.1.42'], dir);
+  const san = new X509Certificate(first.cert).subjectAltName ?? '';
+  assert.match(san, /IP Address:192\.168\.1\.42/); assert.match(san, /DNS:localhost/);
+  assert.equal((await lanCertificate(['192.168.1.42'], dir)).cert, first.cert);
+  assert.notEqual((await lanCertificate(['10.0.0.7'], dir)).cert, first.cert, 'a new address gets a new certificate');
 });

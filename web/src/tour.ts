@@ -13,6 +13,7 @@ import { floodPresets, consequences, timelineBands, sceneHeight, BANKS_ONLY_BELO
 import { flattenFootprints, timelineFootprints, type WaterFeature } from './water-footprints.ts';
 import { isSpeaking, pauseSpeaking, resumeSpeaking, speak, speakEnabled, stopListening, stopSpeaking } from './speech.ts';
 import { isVoiceSessionActive, stopVoice } from './voice.ts';
+import { closeMemory, openMemory, storyMemory } from './memoire.ts';
 import { animateAnswer, setSpeaking } from './avatar.ts';
 
 const OECD = 'https://www.oecd.org/fr/publications/mieux-prevenir-les-inondations-de-la-seine-en-ile-de-france_9789264290082-fr';
@@ -371,6 +372,14 @@ const steps: Array<() => Promise<void>> = [
     await capped(pending, 6000);
     await wait(2500);
   },
+  // 5b · A real photograph of 1910 near here (only when scripts/fetch-1910.mjs found one): this is not a simulation.
+  async () => {
+    const memory = storyMemory();
+    if (!memory) return;
+    void openMemory(memory);
+    await say(`This is not a simulation. ${memory.label}, near here, in January 1910.`, 6000);
+    closeMemory();
+  },
   // 6 · And your home?
   async () => {
     document.body.classList.add('tour-home');
@@ -476,6 +485,7 @@ function finish(completed: boolean) {
   run = null;
   stopAudio();
   if (!completed) { stopSpeaking(); closeDialogs(); endCard.hidden = true; }
+  closeMemory();
   hook.hidden = true; hud.hidden = true; progressBar.hidden = true;
   resetMeter();
   document.body.classList.remove('tour-active', 'tour-hooked', 'tour-home', 'tour-paused');

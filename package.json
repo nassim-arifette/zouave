@@ -10,8 +10,9 @@
     "dev": "concurrently -k \"node --env-file-if-exists=.env --experimental-strip-types server/index.ts\" \"vite --config web/vite.config.ts\"",
     "build": "tsc --noEmit && vite build --config web/vite.config.ts",
     "start": "npm run build && node --env-file-if-exists=.env --experimental-strip-types server/index.ts",
-    "test": "node --experimental-strip-types --test server/api.test.ts server/google.test.ts server/street.test.ts scripts/flood-level.test.mjs && node --experimental-strip-types --experimental-test-module-mocks --test scripts/tools.test.mjs scripts/intent.test.mjs scripts/hero-address.test.mjs scripts/hero-lifecycle.test.mjs scripts/live-street.test.mjs scripts/view3d.test.mjs && node --experimental-strip-types --test scripts/hero.test.mjs && node --experimental-strip-types --test scripts/streetview.test.mjs scripts/water-footprints.test.mjs",
-    "record-demo": "node scripts/record-demo.mjs"
+    "test": "node --experimental-strip-types --test server/api.test.ts server/google.test.ts server/street.test.ts scripts/flood-level.test.mjs && node --experimental-strip-types --experimental-test-module-mocks --test scripts/tools.test.mjs scripts/intent.test.mjs scripts/hero-address.test.mjs scripts/hero-lifecycle.test.mjs scripts/live-street.test.mjs scripts/view3d.test.mjs && node --experimental-strip-types --test scripts/hero.test.mjs && node --experimental-strip-types --test scripts/streetview.test.mjs scripts/water-footprints.test.mjs scripts/memoire.test.mjs",
+    "record-demo": "node scripts/record-demo.mjs",
+    "fetch-1910": "node scripts/fetch-1910.mjs"
   },
   "dependencies": {
     "@deck.gl/core": "^9.4.0",
@@ -26,6 +27,7 @@
     "openai": "^7.43.0",
     "pmtiles": "^4.4.0",
     "qrcode": "^1.5.4",
+    "selfsigned": "^5.5.0",
     "sharp": "^0.35.5",
     "three": "^0.186.1"
   },

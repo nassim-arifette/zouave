@@ -276,6 +276,20 @@ body:not(.ui-hidden) .immersion-exit{display:none}
 @media(max-width:1100px){.hood-flow{grid-template-columns:1fr 1fr}.hood-flow>i{display:none}.hood-grid{grid-template-columns:1fr}.hood-toggle span{display:none}}
 @media(max-width:900px){.hood-toggle{display:none}.hood-panel{padding:22px 18px}.hood-flow{grid-template-columns:1fr}}
 
+/* ── Memory of 1910: real photographs pinned on the map ─────────────────── */
+.memoire-pin{font:700 10px/1 Manrope,Arial,sans-serif;letter-spacing:.6px;color:#2b1d0e;background:#e8d4a8;border:2px solid #fff6e2;border-radius:6px 6px 6px 0;padding:5px 7px;box-shadow:0 0 0 5px #e8d4a830,0 6px 18px #0008;cursor:pointer;transition:transform .2s}
+.memoire-pin:hover{transform:translateY(-2px) scale(1.06)}
+.memoire{position:fixed;inset:0;z-index:61;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at center,#06101add,#020609f4);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);animation:card-in .35s var(--ease)}
+.memoire-panel{position:relative;width:min(1240px,100%);max-height:100%;overflow:auto;border-radius:22px;border:1px solid var(--line-strong);background:var(--glass-strong);box-shadow:0 40px 120px #000a;padding:28px 30px 20px}
+.memoire h2{font-family:Georgia,serif;font-weight:400;font-size:clamp(24px,2.8vw,34px);margin:10px 0 18px}
+.memoire-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.memoire figure{margin:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#050c11}
+.memoire figure img{display:block;width:100%;height:clamp(200px,34vh,360px);object-fit:cover}
+.memoire figure:first-child img{filter:sepia(.25) contrast(1.05)}
+.memoire figcaption{padding:10px 12px;font-size:11px;line-height:1.5;color:#b9cac7}
+.memoire figcaption b{color:#eef4f0;font-weight:600;margin-right:4px}
+.memoire figcaption .memoire-credit{display:block;margin-top:4px;color:#8fa6aa;font-size:10px}
+
 /* ── Map controls / attribution ─────────────────────────────────────────── */
 .maplibregl-ctrl-top-right{top:calc(var(--top) + 6px);right:calc(var(--gutter) - 10px);transition:right .5s var(--ease),opacity .6s var(--ease),visibility .6s}
 body:has(.card:not([hidden])) .maplibregl-ctrl-top-right{right:calc(var(--gutter)*2 + var(--right-w) - 10px)}
