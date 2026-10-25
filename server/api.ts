@@ -1,11 +1,13 @@
 import express from 'express';
+import { setTimeout as delay } from 'node:timers/promises';
+import { allowDemo, createDemoLimiter, type DemoLimiter } from './demo-limits.ts';
 import OpenAI from 'openai';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { httpsEnabled, httpsPort, lanAddresses } from './https.ts';
 import { fileURLToPath } from 'node:url';
 import { instructions, liveTools, realtimeTools } from './tools.ts';
-import { googleStatus, proxyTile, TilePathError, type GoogleOptions } from './google.ts';
+import { googleStatus, proxyTile, upstreamTileURL, TilePathError, type GoogleOptions } from './google.ts';
 import { findNearestPicture, renderStreet, defaultDepthEstimator, cacheDir, type DepthEstimator } from './street.ts';
 
 export const publicDir = fileURLToPath(new URL('../web/public/', import.meta.url));
@@ -43,18 +45,26 @@ export const ttsInstructions = 'You are the Zouave, the 19th-century stone statu
 /** Address other devices on the same network can open (QR code at the end of the story); ZOUAVE_PUBLIC_URL wins. */
 export function shareURL(port = Number(process.env.PORT ?? 3000)) {
   if (process.env.ZOUAVE_PUBLIC_URL) return process.env.ZOUAVE_PUBLIC_URL;
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
   const lan = lanAddresses()[0];
   // With ZOUAVE_HTTPS=1 phones get the secure (self-signed) address, so the microphone works there too.
   return lan ? httpsEnabled() ? `https://${lan}:${httpsPort()}` : `http://${lan}:${port}` : null;
 }
-export function createApp(options: { fetcher?: typeof fetch; photosPath?: string; apiKey?: string; mode?: string; google?: GoogleOptions; street?: { enabled?: boolean; radius_m?: number; estimateDepth?: DepthEstimator; cache?: string }; tts?: { enabled?: boolean; cache?: string; model?: string; voice?: string }; eleven?: { key?: string; voice?: string; model?: string; expressiveModel?: string } } = {}) {
+export function createApp(options: { demo?: DemoLimiter; background?: (task: Promise<unknown>) => void; fetcher?: typeof fetch; photosPath?: string; apiKey?: string; mode?: string; google?: GoogleOptions; street?: { enabled?: boolean; radius_m?: number; estimateDepth?: DepthEstimator; cache?: string }; tts?: { enabled?: boolean; cache?: string; model?: string; voice?: string }; eleven?: { key?: string; voice?: string; model?: string; expressiveModel?: string } } = {}) {
   const app = express();
+  const demo = options.demo ?? createDemoLimiter();
+  const background = options.background ?? ((task: Promise<unknown>) => { void task.catch(() => console.error('Background session close failed.')); });
   const fetcher = options.fetcher ?? fetch;
   const google = { tilesKey: options.google?.tilesKey ?? (process.env.GOOGLE_MAPS_API_KEY || undefined), browserKey: options.google?.browserKey ?? (process.env.GOOGLE_MAPS_BROWSER_KEY || undefined) };
-  app.get('/api/google/status', (_req, res) => { res.json(googleStatus(google)); });
+  app.get('/api/google/status', (_req, res) => { res.setHeader('Cache-Control', 'no-store'); res.json(googleStatus({ tilesKey: demo.available() ? google.tilesKey : undefined, browserKey: !demo.enabled ? google.browserKey : undefined })); });
   // Photorealistic 3D Tiles proxy: root tileset and child tiles (session token in the query) with the server-side key.
   app.get(/^\/api\/google\/3d\/(.+)$/, async (req, res) => {
     if (!google.tilesKey) { res.status(404).json({ error: 'Google key missing: set GOOGLE_MAPS_API_KEY on the server.' }); return; }
+    let rootTile: boolean;
+    try { rootTile = upstreamTileURL(req.params[0], new URL(req.url, 'http://localhost').searchParams, google.tilesKey).pathname === '/v1/3dtiles/root.json'; }
+    catch { res.status(400).json({ error: 'Tile path not allowed.' }); return; }
+    if (rootTile && !await allowDemo(demo, 'google_session', req, res)) return;
+    if (!await allowDemo(demo, 'google', req, res)) return;
     try {
       const tile = await proxyTile(req.params[0], new URL(req.url, 'http://localhost').searchParams, { tilesKey: google.tilesKey, fetcher });
       res.status(tile.status).type(tile.contentType);
@@ -73,12 +83,12 @@ export function createApp(options: { fetcher?: typeof fetch; photosPath?: string
   const geocodes = new Map<string, { value: unknown; expires: number }>();
   app.disable('x-powered-by');
   app.use(express.json({ limit: '128kb' }));
-  const tts = { enabled: Boolean(key) && (options.tts?.enabled ?? process.env.ZOUAVE_TTS !== 'off'), cache: options.tts?.cache ?? fileURLToPath(new URL('../.cache/tts/', import.meta.url)), model: options.tts?.model ?? process.env.ZOUAVE_TTS_MODEL ?? 'gpt-4o-mini-tts', voice: options.tts?.voice ?? process.env.ZOUAVE_TTS_VOICE ?? 'marin' };
+  const tts = { enabled: Boolean(key) && (options.tts?.enabled ?? process.env.ZOUAVE_TTS !== 'off'), cache: options.tts?.cache ?? (process.env.VERCEL ? '/tmp/zouave/tts/' : fileURLToPath(new URL('../.cache/tts/', import.meta.url))), model: options.tts?.model ?? process.env.ZOUAVE_TTS_MODEL ?? 'gpt-4o-mini-tts', voice: options.tts?.voice ?? process.env.ZOUAVE_TTS_VOICE ?? 'marin' };
   // ElevenLabs gives the Zouave his French accent in English (shared voice "Jamie - French Accent & Charismatic");
   // it is preferred when its key is set, OpenAI text-to-speech is the fallback.
   const eleven = { key: options.eleven?.key ?? process.env.ELEVENLABS_API_KEY ?? '', voice: options.eleven?.voice ?? process.env.ZOUAVE_ELEVEN_VOICE ?? 'K8nDX2f6wjv6bCh5UeZi', model: options.eleven?.model ?? process.env.ZOUAVE_ELEVEN_MODEL ?? 'eleven_multilingual_v2', expressiveModel: options.eleven?.expressiveModel ?? process.env.ZOUAVE_ELEVEN_EXPRESSIVE_MODEL ?? 'eleven_v3' };
   const elevenEnabled = Boolean(eleven.key) && (options.tts?.enabled ?? process.env.ZOUAVE_TTS !== 'off');
-  app.get('/api/config', (_req, res) => { res.json({ voice: Boolean(key), mode, tts: elevenEnabled || tts.enabled, tts_provider: elevenEnabled ? 'elevenlabs' : tts.enabled ? 'openai' : null, share_url: shareURL() }); });
+  app.get('/api/config', (_req, res) => { res.setHeader('Cache-Control', 'no-store'); res.json({ voice: Boolean(key) && demo.available(), mode, tts: (elevenEnabled || tts.enabled) && demo.available(), tts_provider: elevenEnabled ? 'elevenlabs' : tts.enabled ? 'openai' : null, share_url: shareURL(), demo_until: demo.enabled ? new Date(demo.until).toISOString() : null }); });
   app.get('/api/niveau', async (_req, res) => {
     if (levelCache && levelCache.expires > Date.now()) { res.json(levelCache.value); return; }
     try {
@@ -130,6 +140,7 @@ export function createApp(options: { fetcher?: typeof fetch; photosPath?: string
       const curated = selectPhoto(manifest, lat, lon, 1.5);
       if (curated?.url_depth && curated.distance_m <= 30) { res.json({ ...curated, live: false }); return; }
     } catch { /* no curated catalogue: continue with the live path */ }
+    if (!await allowDemo(demo, 'street', req, res)) return;
     if (streetJobs >= 2) { res.status(429).json({ error: 'Too many street scenes are being computed. Try again in a few seconds.' }); return; }
     streetJobs++;
     try {
@@ -161,11 +172,23 @@ export function createApp(options: { fetcher?: typeof fetch; photosPath?: string
     const sdp = req.body?.sdp;
     if (typeof sdp !== 'string' || !sdp.startsWith('v=0') || !sdp.includes('m=audio') || !sdp.includes('a=ice-ufrag:') || sdp.length > 100_000) { res.status(400).json({ error: 'A valid WebRTC audio SDP offer is required.' }); return; }
     if (!key) { res.status(503).json({ error: 'Voice is disabled: OPENAI_API_KEY is missing on the server.' }); return; }
+    if (demo.enabled && mode !== 'live') { res.status(503).json({ error: 'The demo uses bounded Live voice sessions.' }); return; }
+    if (!await allowDemo(demo, 'session', req, res)) return;
     try {
       if (mode === 'live') {
-        const client = new OpenAI({ apiKey: key, timeout: 30_000, maxRetries: 0 });
-        const result = await client.live.create({ session: { model: 'gpt-live-1', instructions, delegation: { type: 'responses', responses: { model: 'gpt-6-luna', instructions, tools: liveTools, tool_choice: 'auto', parallel_tool_calls: false } } }, transport: { type: 'webrtc', sdp } });
-        res.json({ sdp: result.transport.sdp, id: result.session.id, mode });
+        const client = new OpenAI({ apiKey: key, fetch: fetcher, timeout: 30_000, maxRetries: 0 });
+        const result = await client.live.create({ session: { model: 'gpt-live-1', instructions, ...(demo.enabled ? { client: { data_channel: { allowed_client_events: ['response.item.create', 'response.create', 'session.close'] } } } : {}), delegation: { type: 'responses', responses: { model: 'gpt-6-luna', instructions, tools: liveTools, tool_choice: 'auto', parallel_tool_calls: false, ...(demo.enabled ? { max_output_tokens: 256, reasoning: { effort: 'low' as const } } : {}) } } }, transport: { type: 'webrtc', sdp } });
+        const maxDurationMs = demo.enabled ? Math.max(0, Math.min(demo.sessionSeconds * 1000, demo.until - Date.now())) : undefined;
+        if (maxDurationMs !== undefined) {
+          const id = result.session.id;
+          background((async () => {
+            await delay(maxDurationMs);
+            const closer = new OpenAI({ apiKey: key, fetch: fetcher, timeout: 5000, maxRetries: 1 });
+            try { await closer.live.sessions.hangup(id); }
+            catch { console.error('The bounded voice session could not be closed; check the OpenAI project hard limit.'); }
+          })());
+        }
+        res.json({ sdp: result.transport.sdp, id: result.session.id, mode, max_duration_ms: maxDurationMs });
       } else if (mode === 'realtime') {
         const body = new FormData();
         body.set('sdp', sdp);
@@ -217,7 +240,9 @@ export function createApp(options: { fetcher?: typeof fetch; photosPath?: string
     for (const job of available) {
       let pending = speaking.get(job.id);
       if (!pending) {
-        pending = job.run().then(async audio => { await mkdir(tts.cache, { recursive: true }); await writeFile(`${tts.cache}${job.id}.mp3`, audio); return audio; }).finally(() => speaking.delete(job.id));
+        if (!await allowDemo(demo, 'tts', req, res)) return;
+        if (!await allowDemo(demo, 'tts_chars', req, res, job.provider === 'elevenlabs' ? elevenText.length : plain.length)) return;
+        pending = speaking.get(job.id) ?? job.run().then(async audio => { await mkdir(tts.cache, { recursive: true }); await writeFile(`${tts.cache}${job.id}.mp3`, audio); return audio; }).finally(() => speaking.delete(job.id));
         speaking.set(job.id, pending);
       }
       try { send(await pending, job.provider); return; }

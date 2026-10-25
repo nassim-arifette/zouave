@@ -1,0 +1,11 @@
+﻿.env
+.env.*
+.vercel
+.git
+node_modules
+video
+docs
+data
+dbg.png
+scripts
+server/*.test.ts

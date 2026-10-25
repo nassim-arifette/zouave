@@ -13,6 +13,7 @@ let stopped = true;
 let browserMode = false;
 export const isVoiceSessionActive = () => Boolean(pc);
 let idleTimer: ReturnType<typeof setTimeout>;
+let durationTimer: ReturnType<typeof setTimeout>;
 const audio = new Audio();
 audio.autoplay = true;
 audio.addEventListener('playing', () => setSpeaking(true));
@@ -61,7 +62,7 @@ function handleMessage(raw: string) {
   if (event.type === 'input_audio_buffer.speech_started') { $('input-caption').textContent = ''; setSpeaking(false); resetIdle(); }
 }
 function cleanup() {
-  stopped = true; clearTimeout(idleTimer); stream?.getTracks().forEach(track => track.stop()); stream = undefined;
+  stopped = true; clearTimeout(idleTimer); clearTimeout(durationTimer); stream?.getTracks().forEach(track => track.stop()); stream = undefined;
   channel?.close(); channel = undefined; pc?.close(); pc = undefined; audio.pause(); audio.srcObject = null;
   $('avatar-ring').classList.remove('listening', 'speaking'); setSpeaking(false);
   $('mic').setAttribute('aria-pressed', 'false'); $('mic').setAttribute('aria-label', 'Turn on voice'); $('voice-state').textContent = 'Your Paris flood watchman';
@@ -99,6 +100,9 @@ async function startVoice() {
     const offer = await pc.createOffer(); await pc.setLocalDescription(offer);
     const result = await api('/api/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sdp: offer.sdp }) });
     if (stopped || !pc) return;
+    if (typeof result.max_duration_ms === 'number') {
+      durationTimer = setTimeout(() => { notify('Your demo voice session has ended. You can continue with the map and text tools.'); void stopVoice(); }, Math.max(0, result.max_duration_ms));
+    }
     await pc.setRemoteDescription({ type: 'answer', sdp: result.sdp });
   } catch (error) { cleanup(); notify(error instanceof Error ? error.message : 'Microphone unavailable.'); }
 }

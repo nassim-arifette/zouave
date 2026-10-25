@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { distance } from './api.ts';
 
 export const panoramaxURL = 'https://api.panoramax.xyz/api';
-export const cacheDir = fileURLToPath(new URL('../.cache/street/', import.meta.url));
+export const cacheDir = process.env.VERCEL ? '/tmp/zouave/street/' : fileURLToPath(new URL('../.cache/street/', import.meta.url));
 export const OUT_W = 1600, OUT_H = 896, FOV = 80, PITCH = -4, CAMERA_HEIGHT = 2;
 export const DEPTH_MODEL = 'onnx-community/depth-anything-v2-small';
 /** Bump when the projection or depth pipeline changes: cached renders with another version are recomputed. */
@@ -123,7 +123,7 @@ type Transformers = Pick<typeof import('@huggingface/transformers'), 'pipeline' 
 export function defaultDepthEstimator(load: () => Promise<Transformers> = () => import('@huggingface/transformers')): DepthEstimator {
   return async jpeg => {
     estimatorPromise ??= load().then(async ({ pipeline, RawImage }) => {
-      const estimator = await pipeline('depth-estimation', DEPTH_MODEL, { dtype: 'fp32' });
+      const estimator = await pipeline('depth-estimation', DEPTH_MODEL, { dtype: 'fp32', ...(process.env.VERCEL ? { cache_dir: '/tmp/zouave/models' } : {}) });
       return async (buffer: Buffer) => {
         const sharp = (await import('sharp')).default;
         const { data, info } = await sharp(buffer).removeAlpha().raw().toBuffer({ resolveWithObject: true });

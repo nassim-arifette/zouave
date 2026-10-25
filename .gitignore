@@ -15,3 +15,5 @@ video/renders/
 video/.hyperframes/
 video/assets/shots/*.png
 docs/google-compare/index.html
+.vercel
+.env*
