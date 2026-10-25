@@ -1,0 +1,46 @@
+# Real OpenAI checks (billable, a few cents): the Zouave's narrated voice (text-to-speech) and a Live and a Realtime
+# voice session with a tool round trip. Needs the OPENAI_API_KEY repository secret. Run it manually from the Actions tab.
+name: OpenAI voice smoke test
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  voice:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      CHROME_PATH: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Check the secret
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then echo "::error::Add the OPENAI_API_KEY repository secret (Settings → Secrets and variables → Actions)."; exit 1; fi
+      - run: npm ci
+      - name: Narrated voice (OpenAI text-to-speech through /api/tts)
+        run: node --experimental-strip-types scripts/voice-smoke.mjs
+      - run: npm run build
+      - name: Live voice session with a tool round trip
+        run: |
+          ZOUAVE_VOICE=live node --experimental-strip-types server/index.ts > server-live.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:3000/api/config && break; sleep 1; done
+          ZOUAVE_TEST_MODE=live node scripts/verify_voice.mjs
+          kill %1 || true
+      - name: Realtime voice session with a tool round trip
+        run: |
+          ZOUAVE_VOICE=realtime node --experimental-strip-types server/index.ts > server-realtime.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:3000/api/config && break; sleep 1; done
+          ZOUAVE_TEST_MODE=realtime node scripts/verify_voice.mjs
+          kill %1 || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: voice-smoke
+          path: |
+            voice-smoke.mp3
+            server-*.log
+            ~/zouave-notes/
