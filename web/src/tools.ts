@@ -143,7 +143,7 @@ export async function timelineExposure(lat: number, lon: number) {
   const requestedPhoto = photoHeight(band, selected.level);
   if (hero && heroScene && $<HTMLDialogElement>('hero-dialog').open) {
     // Only the scene of this very address may be animated in place; after an address change reload the right photo and relief.
-    if (Math.abs(heroScene.lat - lat) < 1e-6 && Math.abs(heroScene.lon - lon) < 1e-6) { hero.animateTo(sceneHeight(band)); $('hero-label').innerHTML = `${escape(state.address.label)} · ${escape(selected.label)} · Eau à ${sceneHeight(band).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m ${badge(band.evidence)}`; }
+    if (Math.abs(heroScene.lat - lat) < 1e-6 && Math.abs(heroScene.lon - lon) < 1e-6) { ++heroReload; hero.animateTo(sceneHeight(band)); $('hero-label').innerHTML = `${escape(state.address.label)} · ${escape(selected.label)} · Eau à ${sceneHeight(band).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m ${badge(band.evidence)}`; }
     else { const ticket = ++heroReload; void photo_inondee({ hauteur: sceneHeight(band) }, { lat, lon, ticket }).then(photo => { if (!photo.affichee && ticket === heroReload) { heroScene = undefined; $<HTMLDialogElement>('hero-dialog').close(); } }); }
   }
   let photo;
