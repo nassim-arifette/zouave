@@ -2,7 +2,7 @@ export const instructions = `Tu es le Zouave du pont de l'Alma, gardien bienveil
 
 const scenario = { type: 'string', enum: ['aujourdhui', '1910', 'pire'] };
 const definitions = [
-  ['afficher_crue', 'Piloter le curseur historique ou choisir un niveau à Austerlitz. Les profondeurs dérivées sont estimées ; tous les nombres viennent du résultat.', { annee: { type: ['string', 'null'], enum: ['1658', '1740', '1799', '1802', '1910', '1924', '1945', '1955', '1959', '1982', '2001', '2016', '2018', '2026', 'today', '115', null] }, niveau_m: { type: ['number', 'null'], minimum: 0, maximum: 12 } }, ['annee', 'niveau_m']],
+  ['afficher_crue', 'Piloter le curseur historique ou choisir un niveau à Austerlitz. Les profondeurs dérivées sont estimées ; tous les nombres viennent du résultat.', { annee: { type: ['string', 'null'], enum: ['1658', '1740', '1910', '1955', '2016', '2026', 'today', '115', null] }, niveau_m: { type: ['number', 'null'], minimum: 0, maximum: 12 } }, ['annee', 'niveau_m']],
   ['afficher_scenario', 'Afficher une simulation de crue sur la carte.', { scenario }, ['scenario']],
   ['aller_a', 'Localiser une adresse via la Géoplateforme IGN.', { adresse: { type: 'string' } }, ['adresse']],
   ['exposition', 'Consulter les couches officielles locales pour un point.', { lat: { type: 'number' }, lon: { type: 'number' }, scenario }, ['lat', 'lon', 'scenario']],

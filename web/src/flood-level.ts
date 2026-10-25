@@ -14,15 +14,13 @@ export const levelSources = {
 };
 export interface FloodPreset { id: string; label: string; level: number | null; evidence: Evidence; source?: string; note?: string; }
 const historic = (id: string, level: number): FloodPreset => ({ id, label: id, level, evidence: 'Mesuré', source: levelSources.history, note: 'DRIEE reproduite par la Ville de Draveil ; référence rapportée à Austerlitz pour les crues anciennes.' });
-const unchecked = (id: string, level: number): FloodPreset => ({ id, label: id, level, evidence: 'Mesuré', note: 'Valeur fournie pour la démo ; source primaire non retrouvée, à vérifier.' });
 export const floodPresets: FloodPreset[] = [
-  historic('1658', 8.96), historic('1740', 8.05), historic('1799', 7.65), historic('1802', 7.62),
+  historic('1658', 8.96), historic('1740', 8.05),
   { id: '1910', label: '1910', level: 8.62, evidence: 'Mesuré', source: levelSources.reference },
-  historic('1924', 7.32), unchecked('1945', 6.83), historic('1955', 7.12), unchecked('1959', 6.20), historic('1982', 6.16), historic('2001', 5.21),
+  historic('1955', 7.12),
   { id: '2016', label: '2016', level: 6.10, evidence: 'Mesuré', source: levelSources.recent },
-  unchecked('2018', 5.84),
   { id: '2026', label: 'Février 2026', level: 3.54, evidence: 'Mesuré', source: levelSources.february, note: 'Relevé du 17 février relayé par France 3 ; archive primaire non retrouvée. Pas un maximum annuel.' },
-  { id: 'today', label: 'Aujourd’hui', level: null, evidence: 'Mesuré' },
+  { id: 'today', label: 'Direct', level: null, evidence: 'Mesuré' },
   { id: '115', label: 'Scénario 115 %', level: 9.10, evidence: 'Officiel', source: levelSources.extreme, note: 'Scénario de débit, sans date future. Ce niveau au fleuve n’est pas une hauteur locale.' },
 ];
 export const consequences = [

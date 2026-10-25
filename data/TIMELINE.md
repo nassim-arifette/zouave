@@ -21,8 +21,11 @@ implementation intact for the classic scenarios and a later renderer rework.
 
 ## Levels and sources
 
-- 1658 8.96, 1740 8.05, 1799 7.65, 1802 7.62, 1924 7.32, 1955 7.12,
-  1982 6.16 and 2001 5.21 m: DRIEE information reproduced by the Ville de Draveil:
+The presets are exactly 1658, 1740, 1910, 1955, 2016, February 2026,
+Direct (Hub'Eau), and the 115% scenario, in that order. No other historical
+entries are included.
+
+- 1658 8.96, 1740 8.05 and 1955 7.12 m: DRIEE information reproduced by the Ville de Draveil:
   https://www.draveil.fr/fileadmin/draveil/MEDIA/Habitat_et_environnement/Urbanisme/crues_PPRI_urbanisme.pdf
   This is a municipal republication, not the original DRIEE archive. Old levels
   are referenced to the later Austerlitz scale, not literally measured there then.
@@ -34,13 +37,9 @@ implementation intact for the classic scenarios and a later renderer rework.
   https://france3-regions.franceinfo.fr/paris-ile-de-france/paris/crue-de-la-seine-pres-d-une-vingtaine-de-voies-fermees-a-la-circulation-a-paris-ce-jeudi-jusqu-a-nouvel-ordre-3301782.html
   A primary archive was not located. The UI explicitly flags this and does not
   claim that reading is the maximum for the year.
-- 1945 6.83, 1959 6.20, 2018 5.84 m: owner-supplied values, **primary sources not
-  located**. Included as requested but visibly flagged “à vérifier”. Alternative
-  accounts differ (notably for 2018); these values must not be silently promoted
-  to verified measurements.
 - 115% scenario 9.10 m: DRIEAT strategy p.3 footnote 1, already verified:
   https://www.drieat.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/strategie_inondation_idf_v231121.pdf
-- Today: live Hub'Eau station F700000103; any stale/offline fallback is explicitly
+- Direct: live Hub'Eau station F700000103; any stale/offline fallback is explicitly
   labelled with its observation date, never silently called live.
 
 ## Consequence thresholds
@@ -63,6 +62,9 @@ photographs or a claim of measured water at that building. The extreme preset us
 the upper illustration rather than understating the band; 1955 is labelled
 “peut-être”; dry presets show the original. Missing images fail independently of
 the data. Source-photo attribution is retained; no parallax is added.
+Photo captions contain only the water height and its estimated badge (or “Vue
+originale”), plus the source credit. The address verdict disclaimer stays with
+the address result, above the photo; it is not a photo caption.
 
 The future has no calendar date. The annual centennial probability of 1/100 gives
 1 − 0.99^30 ≈ 26% over 30 years under a stationary independent-year assumption.

@@ -32,6 +32,11 @@ test('empty/invalid input never produces a depth', () => {
   for (const level of [undefined, NaN, Infinity, -1, 13]) assert.throws(() => depthAtLevel('1-2', level));
   assert.throws(() => depthAtLevel('unknown', 8.62));
 });
-test('all preset values are owner-provided; unverified sources are visibly flagged', () => {
-  for (const preset of floodPresets) if (preset.id !== 'today') assert.ok(preset.source || /vérifier/.test(preset.note));
+test('presets match exactly the eight requested entries, in order', () => {
+  assert.deepEqual(floodPresets.map(({ id, level }) => [id, level]), [
+    ['1658', 8.96], ['1740', 8.05], ['1910', 8.62], ['1955', 7.12],
+    ['2016', 6.10], ['2026', 3.54], ['today', null], ['115', 9.10],
+  ]);
+  assert.equal(floodPresets.find(p => p.id === 'today').label, 'Direct');
+  for (const preset of floodPresets) if (preset.id !== 'today') assert.ok(preset.source);
 });

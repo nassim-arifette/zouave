@@ -9,7 +9,7 @@ try {
   await page.locator('#exposure-card').waitFor({ state: 'visible' });
   await page.locator('#photo-dialog').waitFor({ state: 'visible' });
   await page.waitForFunction(() => document.querySelector('#photo-image').naturalWidth > 0);
-  assert.match(await page.locator('#photo-label').innerText(), /4 Rue Traversière.*1.5 m simulés/);
+  assert.match(await page.locator('#photo-label').innerText(), /4 Rue Traversière.*Eau à 1,5 m/);
   assert.match(await page.locator('#photo-credit').innerText(), /Lejun.*CC BY-SA 4.0/);
   assert.equal(await page.locator('.photo-header span').count(), 0);
   assert.doesNotMatch(await page.locator('.photo-header').innerText(), /SIMULATION|IMAGE RETOUCHÉE/);
@@ -22,7 +22,7 @@ try {
   await page.locator('#photo-dialog').waitFor({ state: 'visible' });
   await page.waitForFunction(() => document.querySelector('#photo-image').naturalWidth > 0 && document.querySelector('#photo-image').src.includes('230-rue-de-bercy'));
   await page.waitForFunction(() => !document.querySelector('#caption').textContent.includes('Je consulte'));
-  assert.match(await page.locator('#photo-label').innerText(), /230 Rue de Bercy.*1.5 m simulés/);
+  assert.match(await page.locator('#photo-label').innerText(), /230 Rue de Bercy.*Eau à 1,5 m/);
   assert.equal((await page.locator('#photo-credit').innerText()).split(' · Photo originale')[0], 'Photo : contributeur Panoramax, Etalab Open Licence 2.0');
   assert.equal(await page.locator('#photo-credit a').getAttribute('href'), 'https://api.panoramax.xyz/#focus=pic&pic=36b6c9a3-afa5-495b-93f5-f1fba410d144');
   assert.doesNotMatch(await page.locator('body').innerText(), /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);

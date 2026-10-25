@@ -8,7 +8,7 @@ import { initializeAvatar, animateAnswer, setSpeaking } from './avatar.ts';
 let running = false;
 async function routeIntent(message: string) {
   const intent = message.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-  const historical = intent.match(/\b(1658|1740|1799|1802|1924|1945|1955|1959|1982|2001|2016|2018|2026|115)\b/);
+  const historical = intent.match(/\b(1658|1740|1955|2016|2026|115)\b/);
   if (historical) return (await afficher_crue({ annee: historical[1] })).description;
   if (/pire|extreme/.test(intent)) { const result = await afficher_scenario({ scenario: 'pire' }); return result.description; }
   if (/aujourd|actuel/.test(intent)) { const result = await afficher_scenario({ scenario: 'aujourdhui' }); return result.description; }
