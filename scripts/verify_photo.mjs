@@ -11,13 +11,22 @@ try {
   await page.waitForFunction(() => document.querySelector('#photo-image').naturalWidth > 0);
   assert.match(await page.locator('#photo-label').innerText(), /4 Rue Traversière.*1.5 m simulés/);
   assert.match(await page.locator('#photo-credit').innerText(), /Lejun.*CC BY-SA 4.0/);
-  const badge = await page.locator('.photo-header span').boundingBox();
-  const photo = await page.locator('#photo-image').boundingBox();
-  assert.ok(badge.y >= photo.y && badge.y + badge.height <= photo.y + photo.height);
-  assert.match(await page.locator('.photo-header span').innerText(), /SIMULATION/);
+  assert.equal(await page.locator('.photo-header span').count(), 0);
+  assert.doesNotMatch(await page.locator('.photo-header').innerText(), /SIMULATION|IMAGE RETOUCHÉE/);
+  assert.doesNotMatch(await page.locator('.photo-footer').innerText(), /Illustration pédagogique|pas une prévision/);
   await page.screenshot({ path: `${homedir()}/zouave-notes/shots/06-photo-simulation.png` });
   await page.getByRole('button', { name: 'Fermer la photo' }).click();
   await page.locator('#photo-dialog').waitFor({ state: 'hidden' });
-  console.log('PASS photo: real manifest, nearest available 1.5 m image, visible HTML SIMULATION overlay, Lejun credit + CC BY-SA 4.0, modal close.');
+  await page.locator('#chat').fill('230 Rue de Bercy, 75012 Paris');
+  await page.locator('#chat').press('Enter');
+  await page.locator('#photo-dialog').waitFor({ state: 'visible' });
+  await page.waitForFunction(() => document.querySelector('#photo-image').naturalWidth > 0 && document.querySelector('#photo-image').src.includes('230-rue-de-bercy'));
+  await page.waitForFunction(() => !document.querySelector('#caption').textContent.includes('Je consulte'));
+  assert.match(await page.locator('#photo-label').innerText(), /230 Rue de Bercy.*1.5 m simulés/);
+  assert.equal((await page.locator('#photo-credit').innerText()).split(' · Photo originale')[0], 'Photo : contributeur Panoramax, CC BY-SA 4.0');
+  assert.equal(await page.locator('#photo-credit a').getAttribute('href'), 'https://api.panoramax.xyz/#focus=pic&pic=36b6c9a3-afa5-495b-93f5-f1fba410d144');
+  assert.doesNotMatch(await page.locator('body').innerText(), /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+  await page.screenshot({ path: `${homedir()}/zouave-notes/shots/08-bercy-photo.png` });
+  console.log('PASS photo: actual images, true 1.5 m height, no badge/disclaimer, address + credit retained, anonymous Bercy credit/license + original Panoramax link, no email in UI, modal close.');
   console.log(`Screenshot: ${homedir()}/zouave-notes/shots/06-photo-simulation.png`);
 } finally { await browser.close(); }

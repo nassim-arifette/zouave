@@ -17,6 +17,5 @@
 @keyframes mouth-talk{0%,46%,82%{opacity:0}20%,60%{opacity:1}}
 @keyframes avatar-breathe{50%{transform:scale(1.035);box-shadow:0 0 30px #a4d6bc66}}
 @media(prefers-reduced-motion:reduce){.avatar-ring,.avatar-ring .avatar-mouth{animation:none!important}}
-.photo-header{position:absolute;inset:0 0 auto;background:linear-gradient(#07131bdd,transparent);color:#ecf5ed;z-index:1}
-.photo-header span{background:#b3d2bc;color:#152d2e;border-radius:4px;padding:8px 12px}
+.photo-header{position:absolute;top:0;right:0;background:transparent;color:#ecf5ed;z-index:1}
 .photo-header button{color:#fff;text-shadow:0 1px 4px #000}

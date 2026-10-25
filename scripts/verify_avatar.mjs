@@ -6,7 +6,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
-  for (const [query, expected] of [['', 'stone'], ['?avatar=living-stone', 'living-stone'], ['?avatar=bronze-flood', 'bronze-flood'], ['?avatar=', 'stone'], ['?avatar=unknown', 'stone']]) {
+  for (const [query, expected] of [['', 'living-stone'], ['?avatar=stone', 'stone'], ['?avatar=living-stone', 'living-stone'], ['?avatar=bronze-flood', 'bronze-flood'], ['?avatar=', 'living-stone'], ['?avatar=unknown', 'living-stone']]) {
     await page.goto(`http://localhost:3000/${query}`, { waitUntil: 'networkidle' });
     await page.waitForFunction(() => [...document.querySelectorAll('#avatar-ring img')].every(img => img.complete && img.naturalWidth > 0));
     assert.match(await page.locator('#avatar').getAttribute('src'), new RegExp(`/${expected}/avatar@2x.webp$`));

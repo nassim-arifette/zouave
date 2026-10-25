@@ -18,8 +18,7 @@ export function showCard(id: string, body: string, sources: string) {
   card.querySelector('button')!.addEventListener('click', () => { card.hidden = true; });
 }
 const scenarioSchema = new Set(['aujourdhui', '1910', 'pire']);
-export async function afficher_scenario({ scenario }: { scenario: Scenario }) {
-  if (!scenarioSchema.has(scenario)) throw new Error('Scénario inconnu.');
+async function syncScenario(scenario: Scenario) {
   await showScenario(scenario);
   state.scenario = scenario;
   document.querySelectorAll<HTMLButtonElement>('[data-scenario]').forEach(button => { const selected = button.dataset.scenario === scenario; button.classList.toggle('active', selected); button.setAttribute('aria-pressed', String(selected)); });
@@ -28,6 +27,10 @@ export async function afficher_scenario({ scenario }: { scenario: Scenario }) {
   $('legend-title').textContent = scenario === '1910' ? 'COMPRENDRE LA CRUE DE 1910' : scenario === 'pire' ? 'AU-DELÀ DU SCÉNARIO DE RÉFÉRENCE' : 'LA VILLE, AUJOURD’HUI';
   $('legend-note').textContent = scenario === 'pire' ? 'Emprise seulement — hauteurs non publiées.' : 'Explorez les scénarios, sans prévision de crue.';
   $('cave-key').hidden = true;
+}
+export async function afficher_scenario({ scenario }: { scenario: Scenario }) {
+  if (!scenarioSchema.has(scenario)) throw new Error('Scénario inconnu.');
+  await syncScenario(scenario);
   const result = scenario === '1910' ? { scenario, description: 'Crue de référence de type 1910 : 8,62 m à l’échelle d’Austerlitz. Les classes locales du PPRI ne sont pas le niveau du fleuve. Simulation, pas une prévision.', source: 'PPRI de Paris / DRIEAT', source_url: config.sources.ppri, reference_m: 8.62, reference_source_url: config.sources.reference, hauteurs_disponibles: true } : scenario === 'pire' ? { scenario, description: 'Scénario extrême : emprise seulement — hauteurs non publiées. La stratégie francilienne décrit le scénario à 115 % des débits de 1910, soit 9,1 m à Austerlitz ; ce n’est pas une hauteur à votre adresse.', source: 'Institut Paris Région · SDRIF-E / DRIEAT', source_url: config.sources.sdrif, reference_m: 9.1, reference_source_url: config.sources.extremeReference, hauteurs_disponibles: false } : { scenario, description: 'Situation actuelle : aucune couche d’inondation simulée. Le niveau observé à Austerlitz n’est pas une hauteur d’eau à votre adresse.', source: "Hub'Eau / Vigicrues", source_url: 'https://hubeau.eaufrance.fr/', hauteurs_disponibles: false, observation: await niveau_seine() };
   if (scenario === 'aujourdhui') $('scenario-card').hidden = true;
   else showCard('scenario-card', `<div class="card-eyebrow"><i></i>${scenario === '1910' ? 'SCÉNARIO DE RÉFÉRENCE' : 'SCÉNARIO EXTRÊME'}</div><h2>${scenario === '1910' ? 'La Seine se souvient.' : 'Et si l’eau allait plus loin ?'}</h2><div class="scenario-depth">${scenario === '1910' ? '8,62 m' : '9,1 m'} <small>à Austerlitz</small></div><p class="scenario-description">${scenario === '1910' ? 'L’emprise et les hauteurs du PPRI, pour une crue de type 1910.' : 'Emprise seulement — hauteurs non publiées à l’adresse.'}</p><p class="disclaimer">${scenario === '1910' ? 'L’eau monte sur la carte. Ce scénario n’est pas une prévision.' : 'Scénario à 115 % des débits de 1910. Ne pas lire une profondeur dans cette surface.'}</p>`, source(result.source, result.source_url) + source('Repère à Austerlitz · DRIEAT', scenario === '1910' ? config.sources.reference : config.sources.extremeReference));
@@ -48,6 +51,7 @@ export async function aller_a({ adresse }: { adresse: string }) {
 export async function exposition({ lat, lon, scenario }: { lat: number; lon: number; scenario: Scenario }) {
   if (!Number.isFinite(lat) || Math.abs(lat) > 90 || !Number.isFinite(lon) || Math.abs(lon) > 180 || !scenarioSchema.has(scenario)) throw new Error('Coordonnées ou scénario invalides.');
   await mapReady;
+  if (state.scenario !== scenario) await syncScenario(scenario);
   const contains = (name: string) => datasets[name].features.filter(feature => booleanPointInPolygon([lon, lat], feature));
   const hazards = contains('ppri_aleas').sort((a, b) => Number(b.properties?.h_min) - Number(a.properties?.h_min));
   const classe = (hazards[0]?.properties?.classe ?? null) as '0-1' | '1-2' | '2+' | null;
@@ -80,7 +84,7 @@ export async function photo_inondee({ hauteur }: { hauteur: number }) {
     const result = await api(`/api/photo?${new URLSearchParams({ lat: String(state.address.lat), lon: String(state.address.lon), h: String(hauteur) })}`);
     const image = $<HTMLImageElement>('photo-image'); image.src = result.url;
     $('photo-label').textContent = `${result.address_label} · ${result.hauteur_m} m simulés`;
-    $('photo-credit').textContent = `${result.credit} · ${result.license}`;
+    $('photo-credit').innerHTML = `${escape(result.credit)}${result.credit.includes(result.license) ? '' : ` · ${escape(result.license)}`}${result.source_url ? ` · ${source('Photo originale · Panoramax', result.source_url)}` : ''}`;
     image.onerror = () => { $<HTMLDialogElement>('photo-dialog').close(); notify('Image indisponible. La simulation ne peut pas être affichée.'); };
     $<HTMLDialogElement>('photo-dialog').showModal();
     return { affichee: true, ...result };

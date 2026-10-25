@@ -16,7 +16,7 @@ export function animateAnswer(text: string) {
 
 export function initializeAvatar() {
   const requested = new URLSearchParams(location.search).get('avatar');
-  const variant = requested === 'living-stone' || requested === 'bronze-flood' ? requested : 'stone';
+  const variant = requested === 'stone' || requested === 'bronze-flood' ? requested : 'living-stone';
   const closed = document.getElementById('avatar') as HTMLImageElement;
   closed.src = `/zouave/${variant}/avatar@2x.webp`;
   const open = new Image();
