@@ -3,6 +3,8 @@ import { map, mapReady } from './map.ts';
 import { $, niveau_seine, notify } from './tools.ts';
 import { routeIntent } from './intent.ts';
 import { initializeTimeline } from './timeline.ts';
+import { attachView3D } from './map.ts';
+import { createView3D } from './view3d.ts';
 import { initializeVoice, toggleVoice } from './voice.ts';
 import { initializeAvatar, animateAnswer, setSpeaking } from './avatar.ts';
 let running = false;
@@ -29,3 +31,7 @@ void niveau_seine().catch(error => notify(error.message));
 setInterval(() => { void niveau_seine().catch(error => notify(error.message)); }, 15 * 60_000);
 void mapReady.catch(error => notify(`${error.message} — rechargez la page pour réessayer.`));
 map.on('error', event => { console.warn('Map data error:', event.error.message); });
+
+const view3d = createView3D({ container: $('google-3d'), toggle: $<HTMLButtonElement>('view-3d-toggle'), status: $('google-3d-status'), attribution: $('google-3d-attribution'), body: document.body });
+attachView3D(view3d);
+$('view-3d-toggle').addEventListener('click', () => { void view3d.toggle(); });

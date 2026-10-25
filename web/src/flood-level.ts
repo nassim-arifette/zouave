@@ -56,4 +56,8 @@ export function photoHeight(band: DepthBand, level: number) {
   if (level > 8.96) return Math.min(2.5, Math.ceil(band.max - 0.5) + 0.5);
   return [0.5, 1.5, 2.5].sort((a, b) => Math.abs(a - midpoint) - Math.abs(b - midpoint))[0];
 }
+/** Ellipsoidal altitude (m, WGS84) of a flat water surface at `level` metres on the Austerlitz gauge — what Photorealistic 3D Tiles use as height. */
+export function seineAltitude(level: number, seine = { austerlitzZeroNgf: 26.0, geoidUndulationM: 44.5 }) {
+  return seine.austerlitzZeroNgf + level + seine.geoidUndulationM;
+}
 export function timelineBands(level: number) { return Object.fromEntries((['0-1', '1-2', '2+'] as const).map(classe => [classe, depthAtLevel(classe, level)])) as Record<FloodClass, DepthBand>; }

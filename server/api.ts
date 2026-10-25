@@ -3,6 +3,7 @@ import OpenAI from 'openai';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { instructions, liveTools, realtimeTools } from './tools.ts';
+import { googleStatus, proxyTile, type GoogleOptions } from './google.ts';
 
 export const publicDir = fileURLToPath(new URL('../web/public/', import.meta.url));
 export const levelURL = 'https://hubeau.eaufrance.fr/api/v2/hydrometrie/observations_tr?code_entite=F700000103&grandeur_hydro=H&size=1&sort=desc';
@@ -31,9 +32,21 @@ export function selectPhoto(manifest: Record<string, PhotoEntry> | { photos: Pho
   const credit = author ? `Photo : ${author}${entry.photo?.source && !author.includes(entry.photo.source) ? ` / ${entry.photo.source}` : ''}, ${license}` : anonymize(entry.credit ?? '');
   return { url: photoPath(url), url_clean: photoPath(entry.files?.original ?? entry.url_clean ?? entry.clean), hauteur_m: Number(key), address_label: entry.label ?? entry.address_label ?? entry.address ?? '', credit, license, license_url: entry.photo?.license_url ?? entry.license_url ?? null, source_url: entry.photo?.page_url ?? null, simulation: true };
 }
-export function createApp(options: { fetcher?: typeof fetch; photosPath?: string; apiKey?: string; mode?: string } = {}) {
+export function createApp(options: { fetcher?: typeof fetch; photosPath?: string; apiKey?: string; mode?: string; google?: GoogleOptions } = {}) {
   const app = express();
   const fetcher = options.fetcher ?? fetch;
+  const google = { tilesKey: options.google?.tilesKey ?? (process.env.GOOGLE_MAPS_API_KEY || undefined), browserKey: options.google?.browserKey ?? (process.env.GOOGLE_MAPS_BROWSER_KEY || undefined) };
+  app.get('/api/google/status', (_req, res) => { res.json(googleStatus(google)); });
+  // Photorealistic 3D Tiles proxy: root tileset and child tiles (session token in the query) with the server-side key.
+  app.get(/^\/api\/google\/3d\/(.+)$/, async (req, res) => {
+    if (!google.tilesKey) { res.status(404).json({ error: 'Clé Google manquante : définissez GOOGLE_MAPS_API_KEY côté serveur.' }); return; }
+    try {
+      const tile = await proxyTile(req.params[0], new URL(req.url, 'http://localhost').searchParams, { tilesKey: google.tilesKey, fetcher });
+      res.status(tile.status).type(tile.contentType);
+      if (tile.cacheControl) res.setHeader('cache-control', tile.cacheControl);
+      res.send(tile.body);
+    } catch (error) { res.status(502).json({ error: 'Tuiles 3D Google indisponibles.', detail: error instanceof Error ? error.message : String(error) }); }
+  });
   const key = options.apiKey ?? process.env.OPENAI_API_KEY;
   const mode = options.mode ?? process.env.ZOUAVE_VOICE ?? 'live';
   let levelCache: { value: Record<string, unknown>; expires: number } | undefined;
