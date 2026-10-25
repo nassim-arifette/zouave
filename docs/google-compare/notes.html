@@ -37,3 +37,12 @@
 
 <h2>If Google is kept for the final</h2>
 <p>Three app changes, in this order: clear the loading banner when the tileset is reused, move the attribution line and add the Google logo where nothing covers them, then switch the Story to the Google view at the neighbourhood step. Leave the Street View button out until its water plane renders.</p>
+
+<h2>Update, 25 October, after the decision</h2>
+<p>Decision: Google as an option. The captures and figures above predate the changes below.</p>
+<ul>
+  <li>The loading banner clears when Google is switched on again (c6872d7).</li>
+  <li>The attribution is the official Google Maps logo and the credits of the tiles on screen, most frequent first, on one line at the bottom right, above every panel (73ac632).</li>
+  <li>The Story now plays over Google 3D when the server has the key, and falls back to the map if the tileset has not loaded within 8 s (44a9428). <code>?google=0</code> keeps the map.</li>
+  <li>Street View is unchanged.</li>
+</ul>
