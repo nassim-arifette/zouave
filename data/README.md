@@ -5,6 +5,17 @@ regulatory, evacuation or building-level risk assessment. All delivered geometri
 are 2D WGS84 **EPSG:4326**, in GeoJSON longitude/latitude order. No frontend or
 runtime API client is included.
 
+## Street photos & depth maps
+
+`web/public/photos/*/depth.png` were produced by `scripts/photo/depth.py` with
+`depth-anything/Depth-Anything-V2-Metric-Outdoor-Small-hf`. The Hugging Face card of
+that checkpoint carries no licence field; the upstream project states that the
+**Small** models are **Apache-2.0** (Base/Large/Giant are CC-BY-NC-4.0), and the
+metric Small checkpoint is a fine-tune of that Small model. The live street mode
+(`server/street.ts`) uses `onnx-community/depth-anything-v2-small`, declared
+**Apache-2.0**, through transformers.js on the CPU. Photos keep their Panoramax
+licence (CC BY-SA 4.0 or Licence Ouverte 2.0) and credit.
+
 ## Reproduce
 
 Python 3.12 and Node 24 were used. Node may need adding to PATH:

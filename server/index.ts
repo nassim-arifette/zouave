@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { createApp } from './api.ts';
 const app = createApp();
 const dist = fileURLToPath(new URL('../web/dist/', import.meta.url));
+app.use('/cache/street', express.static(fileURLToPath(new URL('../.cache/street/', import.meta.url)), { maxAge: '1d' }));
 app.use(express.static(dist));
 app.get('/{*path}', (_req, res) => { res.sendFile(`${dist}index.html`); });
 const port = Number(process.env.PORT ?? 3000);
