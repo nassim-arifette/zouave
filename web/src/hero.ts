@@ -47,6 +47,8 @@ export function createLifecycle() {
     isCurrent(ticket: number) { return ticket === generation; },
     commit(ticket: number, handle: { stop: () => void }) { if (ticket !== generation) { handle.stop(); return false; } active = handle; return true; },
     stop() { generation++; release(); },
+    /** Invalidates a load still in flight without touching a scene that is already rendering. */
+    cancelPending() { if (active === undefined) generation++; },
     get running() { return active !== undefined; },
   };
 }
@@ -247,6 +249,7 @@ export function createHero(container: HTMLElement, adapters: HeroAdapters = brow
 
   return {
     show, stop,
+    cancelPending() { lifecycle.cancelPending(); },
     setLevel,
     animateTo(level: number) { state.from = state.level; state.target = Math.max(0, Math.min(MAX_LEVEL, level)); state.start = performance.now(); },
     get level() { return state.level; },
