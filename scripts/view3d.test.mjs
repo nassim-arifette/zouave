@@ -120,3 +120,22 @@ test('turning the Google view back on clears the loading status (the tileset doe
   await view.view.toggle(true);
   assert.equal(view.status.hidden, true, 'no stale "Loading Google 3D tiles…" after switching back');
 });
+
+test('ready() reports whether the Google tileset loaded in time, so the Story can fall back to the map', async t => {
+  const view = harness(t);
+  await view.activate();
+  assert.equal(await view.view.ready(20), false);
+  view.layer('google-3d-tiles').onTilesetLoad();
+  assert.equal(await view.view.ready(20), true);
+});
+
+test('following the map camera drops an earlier fly-to transition (no 2.4 s lag on every frame)', async t => {
+  const view = harness(t);
+  await view.activate();
+  view.view.setCamera({ longitude: 2.37, latitude: 48.84, zoom: 17.5 }, true);
+  assert.equal(decks.at(-1).props.viewState.transitionDuration, 2400);
+  view.view.setCamera({ longitude: 2.371, latitude: 48.841, zoom: 17.4 });
+  const { viewState } = decks.at(-1).props;
+  assert.equal(viewState.transitionDuration, undefined);
+  assert.equal(viewState.longitude, 2.371);
+});

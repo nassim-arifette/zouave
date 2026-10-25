@@ -457,3 +457,8 @@ dialog::backdrop{background:radial-gradient(ellipse at center,#06101acc,#020609f
 .here-button img{width:30px;height:30px;border-radius:50%;object-fit:cover;object-position:50% 15%;background:#12303a}
 .here-button b{color:var(--water)}
 @media (prefers-reduced-motion:reduce){.avatar-ring>img{animation:none!important;transform:none}.avatar-ring.pose-thinking:after{animation:none}}
+
+/* Google Maps attribution for the photorealistic view: on its own line, above every panel, never covered. */
+.google-attribution{display:none;position:fixed;left:50%;bottom:4px;transform:translateX(-50%);z-index:60;max-width:96vw;margin:0;text-align:center;font-size:10px;line-height:1.3;color:#f2f6f4;text-shadow:0 1px 2px #000,0 0 6px rgba(0,0,0,.85);pointer-events:none}
+body.view-google .google-attribution{display:block}
+@media(max-width:900px){.google-attribution{top:calc(var(--top) + 4px);bottom:auto;left:14px;transform:none;max-width:calc(100vw - 170px);text-align:left}}

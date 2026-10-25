@@ -29,7 +29,10 @@ let waterLayer: ReturnType<typeof createWaterLayer> | undefined;
 export let view3d: View3D | undefined;
 export function attachView3D(view: View3D) {
   view3d = view;
-  map.on('moveend', () => { const c = map.getCenter(); view.setCamera({ longitude: c.lng, latitude: c.lat, zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing() }); });
+  const follow = () => { const c = map.getCenter(); view.setCamera({ longitude: c.lng, latitude: c.lat, zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing() }); };
+  map.on('moveend', follow);
+  // While the Google view is on screen it follows every frame, so the Story's flights and slow orbit stay smooth.
+  map.on('move', () => { if (view.active) follow(); });
 }
 export const mapReady = new Promise<void>((resolve, reject) => { resolveReady = resolve; rejectReady = reject; });
 void mapReady.catch(() => {});

@@ -13,6 +13,8 @@ export function createView3D(elements: { container: HTMLElement; toggle: HTMLBut
   let active = false, deck: { setProps: (props: Record<string, unknown>) => void; finalize: () => void } | undefined;
   // The tileset loads once per Deck: when the view comes back, there is no new load event to clear the status.
   let tilesetLoaded = false;
+  let markReady: (() => void) | undefined;
+  const tilesetReady = new Promise<void>(resolve => { markReady = resolve; });
   let viewState: ViewState = { longitude: config.initialCenter[0], latitude: config.initialCenter[1], zoom: 15.5, pitch: 60, bearing: -24 };
   let water: Water = { features: [], altitude: 0, label: '' };
   const credits = new Set<string>();
@@ -23,7 +25,7 @@ export function createView3D(elements: { container: HTMLElement; toggle: HTMLBut
     const { Tile3DLayer, SolidPolygonLayer } = classes;
     const polygons = flattenFootprints(water.features);
     deck.setProps({ viewState, layers: [
-      new Tile3DLayer({ id: 'google-3d-tiles', data: '/api/google/3d/v1/3dtiles/root.json', onTileLoad: (tile: { content?: { gltf?: { asset?: { copyright?: string } } } }) => { for (const part of tile.content?.gltf?.asset?.copyright?.split(';') ?? []) if (part.trim()) credits.add(part.trim()); elements.attribution.textContent = `Map data © Google · ${[...credits].join(' · ')}`; }, onTilesetLoad: () => { tilesetLoaded = true; elements.status.hidden = true; } }),
+      new Tile3DLayer({ id: 'google-3d-tiles', data: '/api/google/3d/v1/3dtiles/root.json', onTileLoad: (tile: { content?: { gltf?: { asset?: { copyright?: string } } } }) => { for (const part of tile.content?.gltf?.asset?.copyright?.split(';') ?? []) if (part.trim()) credits.add(part.trim()); elements.attribution.textContent = `Google Maps · Map data ©Google · ${[...credits].join(' · ')}`; }, onTilesetLoad: () => { tilesetLoaded = true; markReady?.(); elements.status.hidden = true; } }),
       new SolidPolygonLayer({ id: 'flood-water', data: polygons.filter(d => footprintStyle(d.properties).status === 'flooded'), extruded: true, filled: true, material: { ambient: 0.6, diffuse: 0.5, shininess: 60, specularColor: [200, 220, 230] }, getPolygon: (d: WaterPolygon) => d.polygon, getElevation: () => water.altitude, getFillColor: (d: WaterPolygon) => footprintStyle(d.properties).colour, opacity: 0.8, updateTriggers: { getElevation: water.altitude, getFillColor: water.label } }),
       new SolidPolygonLayer({ id: 'flood-water-possible', data: polygons.filter(d => footprintStyle(d.properties).status === 'possible'), extruded: true, wireframe: true, filled: true, getPolygon: (d: WaterPolygon) => d.polygon, getElevation: () => water.altitude, getFillColor: (d: WaterPolygon) => footprintStyle(d.properties).colour, getLineColor: [200, 225, 240, 230], opacity: 0.8, updateTriggers: { getElevation: water.altitude, getFillColor: water.label } }),
     ] });
@@ -42,6 +44,8 @@ export function createView3D(elements: { container: HTMLElement; toggle: HTMLBut
 
   return {
     get active() { return active; },
+    /** True once the Google tileset has loaded, false if it has not within `ms` (no key, network, quota). */
+    ready(ms: number) { return tilesetLoaded ? Promise.resolve(true) : Promise.race([tilesetReady.then(() => true), new Promise<boolean>(resolve => setTimeout(() => resolve(false), ms))]); },
     async toggle(on = !active) {
       active = on;
       elements.toggle.setAttribute('aria-pressed', String(on));
@@ -52,7 +56,8 @@ export function createView3D(elements: { container: HTMLElement; toggle: HTMLBut
     },
     /** Camera handoff from MapLibre (called when the MapLibre camera moves and when we fly to an address). */
     setCamera(next: Partial<ViewState>, animate = false) {
-      viewState = { ...viewState, ...next };
+      const { transitionDuration: _duration, transitionInterpolator: _interpolator, ...settled } = { ...viewState, ...next } as ViewState & { transitionDuration?: number; transitionInterpolator?: unknown };
+      viewState = settled;
       if (animate && classes) viewState = { ...viewState, transitionDuration: 2400, transitionInterpolator: new classes.FlyToInterpolator({ speed: 1.4 }) } as ViewState;
       render();
     },

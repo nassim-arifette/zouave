@@ -8,7 +8,7 @@ import { setPose } from './mascot.ts';
 import type { Feature, FeatureCollection, Polygon, MultiPolygon, Position } from 'geojson';
 import './tour.css';
 import { config } from './config.ts';
-import { map, mapReady, datasets } from './map.ts';
+import { map, mapReady, datasets, view3d } from './map.ts';
 import { afficher_crue, aller_a, exposition, photo_inondee, consignes, state } from './tools.ts';
 import { floodPresets, consequences, timelineBands, sceneHeight, BANKS_ONLY_BELOW, REFERENCE_LEVEL, type DepthBand } from './flood-level.ts';
 import { flattenFootprints, timelineFootprints, type WaterFeature } from './water-footprints.ts';
@@ -466,6 +466,17 @@ function closeHood() {
   return true;
 }
 
+let googleWasOn = false;
+/** The Story plays over Google Photorealistic 3D when the server has the key (?google=0 keeps the map), and falls
+ * back to the MapLibre map if the tileset has not loaded within 8 s (room network, quota). */
+async function storyInGoogle() {
+  if (!view3d || view3d.active || new URLSearchParams(location.search).get('google') === '0') return;
+  const status = await fetch('/api/google/status').then(response => response.json()).catch(() => null);
+  if (!status?.tiles3d || !run) return;
+  await view3d.toggle(true);
+  if (!(await view3d.ready(8000)) && view3d.active) await view3d.toggle(false);
+}
+
 function begin() {
   if (document.body.classList.contains('ui-hidden')) el('immersion-exit')?.click();
   closeHood();
@@ -483,6 +494,8 @@ function begin() {
   stopSpeaking(); setSpeaking(false);
   startAudio();
   startButton.setAttribute('aria-pressed', 'true');
+  googleWasOn = view3d?.active ?? false;
+  void storyInGoogle();
   // Warm what later steps need: building centroids and counts, and the live street scene of the demo address.
   for (const id of ['2016', '1955', '1910']) void countAt(presetLevel(id)).catch(() => {});
   void fetch(`/api/rue?${new URLSearchParams({ lat: String(config.demoPosition.lat), lon: String(config.demoPosition.lon) })}`).catch(() => {});
@@ -497,6 +510,7 @@ function finish(completed: boolean) {
   hook.hidden = true; hud.hidden = true; progressBar.hidden = true;
   resetMeter();
   document.body.classList.remove('tour-active', 'tour-hooked', 'tour-home', 'tour-paused');
+  if (!googleWasOn && view3d?.active) void view3d.toggle(false);
   startButton.setAttribute('aria-pressed', 'false');
 }
 

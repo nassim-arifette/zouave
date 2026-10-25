@@ -4,7 +4,8 @@
   <body>
     <div id="map" aria-label="3D map of Paris flood scenarios"></div>
     <div class="atmosphere" aria-hidden="true"></div>
-    <div id="google-3d" aria-label="Photorealistic 3D view (Google)"><div id="google-3d-hud"><p id="google-3d-status" role="status" hidden></p><p id="google-3d-legend" hidden></p><p id="google-3d-attribution">Map data © Google</p></div></div>
+    <div id="google-3d" aria-label="Photorealistic 3D view (Google)"><div id="google-3d-hud"><p id="google-3d-status" role="status" hidden></p><p id="google-3d-legend" hidden></p></div></div>
+    <p id="google-3d-attribution" class="google-attribution">Google Maps · Map data ©Google</p>
     <header class="topbar">
       <a class="brand" href="/" aria-label="Zouave, home"><img class="brand-mark" src="/zouave/living-stone/icon-192.png" alt="" width="44" height="44"><span>ZOUAVE<span class="brand-sub">GUARDIAN OF THE SEINE</span></span></a>
       <div class="river-status"><div class="status-label"><i class="live-dot"></i><span id="level-status">LIVE READING · AUSTERLITZ</span></div><div class="level-line"><strong id="level-value">—</strong><span id="level-date">Connecting to Hub’Eau…</span></div><a id="level-source" href="https://hubeau.eaufrance.fr/" target="_blank" rel="noreferrer">Hub’Eau / Vigicrues ↗</a></div>
@@ -34,7 +35,7 @@
     </main>
     <div id="toast" role="status" hidden></div>
     <button id="immersion-exit" class="immersion-exit" type="button">Show the interface <kbd>H</kbd></button>
-    <button id="view-3d-toggle" type="button" class="view-toggle" aria-pressed="false" title="Switch between the map and Google photorealistic 3D">Photorealistic 3D</button>
+    <button id="view-3d-toggle" type="button" class="view-toggle" aria-pressed="false" title="Switch between the map and Google photorealistic 3D (key G)">Photorealistic 3D</button>
     <dialog id="streetview-dialog"><div class="photo-header"><button id="streetview-close" aria-label="Close Street View">×</button></div><div id="streetview-view"><div id="streetview-panorama"></div><canvas id="streetview-water"></canvas><p id="streetview-status" role="status" hidden></p></div><div class="hero-controls"><strong id="streetview-level">0.00 m</strong><label class="sr-only" for="streetview-slider">Water depth</label><input id="streetview-slider" type="range" min="0" max="3" step="0.01" value="0"></div><div class="photo-footer"><strong id="streetview-label"></strong><p id="streetview-credit"></p></div></dialog>
     <dialog id="photo-dialog"><div class="photo-header"><button id="photo-close" aria-label="Close the photo">×</button></div><img id="photo-image" alt="Street view"><div class="photo-footer"><strong id="photo-label"></strong><p id="photo-credit"></p></div></dialog>
     <dialog id="hero-dialog"><div class="photo-header"><button id="hero-close" aria-label="Close the simulation">×</button></div><div id="hero-view"></div><p id="hero-status" role="status" hidden></p><div class="hero-controls"><strong id="hero-level">0.00 m</strong><label class="sr-only" for="hero-slider">Water depth</label><input id="hero-slider" type="range" min="0" max="3" step="0.01" value="0"><button id="hero-replay" type="button">Replay the rise</button></div><div class="photo-footer"><strong id="hero-label"></strong><p id="hero-credit"></p></div></dialog>
