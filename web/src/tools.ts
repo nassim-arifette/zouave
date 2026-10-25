@@ -69,8 +69,8 @@ export async function exposition({ lat, lon, scenario }: { lat: number; lon: num
   showCaves(scenario === '1910');
   $('cave-key').hidden = scenario !== '1910';
   const shownHeight = scenario === '1910' ? height : scenario === 'pire' ? 'Emprise seulement' : 'Aucune simulation';
-  showCard('exposure-card', `<div class="card-eyebrow"><i></i>CHEZ VOUS · ${scenario === '1910' ? 'SCÉNARIO 1910' : scenario === 'pire' ? 'SCÉNARIO EXTRÊME' : 'AUJOURD’HUI'}</div><h2>Votre adresse,<br>face à la crue.</h2><p class="address">${escape(state.address.label)}</p><div class="exposure-depth">${escape(shownHeight)}</div>${scenario === '1910' && classe ? `<div class="exposure-tag">Hauteur de submersion · classe ${escape(classe)}</div>` : ''}<div class="exposure-row"><span>Emprise ${scenario === 'pire' ? 'SDRIF-E' : 'PPRI 1910'}</span><strong>${(scenario === 'pire' ? extreme : classe) ? 'Dans la zone' : 'Hors zone cartographiée'}</strong></div><div class="exposure-row"><span>Caves · scénario 1910</span><strong>${cave ? 'Secteur exposé' : 'Hors secteur cartographié'}</strong></div><p class="disclaimer">${scenario === 'pire' ? 'Hauteurs locales non publiées. ' : ''}La carte ne mesure pas votre logement. L’absence de zone n’exclut pas un risque ni des coupures de réseaux.</p>${scenario === '1910' && classe ? '<button class="photo-button" id="show-photo">Voir ma rue en simulation ↗</button>' : ''}`, result.sources.map(s => source(s.label, s.url)).join(''));
-  $('show-photo')?.addEventListener('click', () => { void photo_inondee({ hauteur: result.hauteur_visuelle_m! }).then(photo => { if (!photo.affichee) notify(photo.error!); }).catch(error => notify(error.message)); });
+  showCard('exposure-card', `<div class="card-eyebrow"><i></i>CHEZ VOUS · ${scenario === '1910' ? 'SCÉNARIO 1910' : scenario === 'pire' ? 'SCÉNARIO EXTRÊME' : 'AUJOURD’HUI'}</div><h2>Votre adresse,<br>face à la crue.</h2><p class="address">${escape(state.address.label)}</p><div class="exposure-depth">${escape(shownHeight)}</div>${scenario === '1910' && classe ? `<div class="exposure-tag">Hauteur de submersion · classe ${escape(classe)}</div>` : ''}<div class="exposure-row"><span>Emprise ${scenario === 'pire' ? 'SDRIF-E' : 'PPRI 1910'}</span><strong>${(scenario === 'pire' ? extreme : classe) ? 'Dans la zone' : 'Hors zone cartographiée'}</strong></div><div class="exposure-row"><span>Caves · scénario 1910</span><strong>${cave ? 'Secteur exposé' : 'Hors secteur cartographié'}</strong></div><p class="disclaimer">${scenario === 'pire' ? 'Hauteurs locales non publiées. ' : ''}La carte ne mesure pas votre logement. L’absence de zone n’exclut pas un risque ni des coupures de réseaux.</p>${scenario === '1910' ? `<button class="photo-button" id="show-photo">${classe ? 'Voir ma rue en simulation ↗' : 'Voir ma rue (au sec, à vous de régler l’eau) ↗'}</button>` : ''}`, result.sources.map(s => source(s.label, s.url)).join(''));
+  $('show-photo')?.addEventListener('click', () => { void photo_inondee({ hauteur: result.hauteur_visuelle_m ?? 0 }).then(photo => { if (!photo.affichee) notify(photo.error!); }).catch(error => notify(error.message)); });
   return result;
 }
 export async function niveau_seine() {
@@ -86,7 +86,8 @@ export async function niveau_seine() {
 export async function photo_inondee({ hauteur }: { hauteur: number }) {
   if (!Number.isFinite(hauteur) || hauteur < 0 || hauteur > 10) throw new Error('Hauteur de simulation invalide.');
   try {
-    const result = await api(`/api/photo?${new URLSearchParams({ lat: String(state.address.lat), lon: String(state.address.lon), h: String(hauteur) })}`);
+    const live = await liveStreet(state.address.lat, state.address.lon);
+    const result = live ?? await api(`/api/photo?${new URLSearchParams({ lat: String(state.address.lat), lon: String(state.address.lon), h: String(hauteur) })}`);
     const credit = `${escape(result.credit)}${result.credit.includes(result.license) ? '' : ` · ${escape(result.license)}`}${result.source_url ? ` · ${source('Photo originale · Panoramax', result.source_url)}` : ''}`;
     if (result.url_depth && await showHero({ ...result, hauteur_m: hauteur }, credit)) return { affichee: true, ...result, hauteur_m: hauteur, rendu: 'relief-3d' };
     const image = $<HTMLImageElement>('photo-image'); image.src = hauteur === 0 ? result.url_clean ?? result.url : result.url;
@@ -108,7 +109,21 @@ export async function consignes(args: { rez_de_chaussee: boolean; cave: boolean;
   return { consignes: selected, profil: args, source: 'Consignes officielles de prévention' };
 }
 let hero: ReturnType<typeof createHero> | undefined;
-async function showHero(result: { url_clean: string; url_depth: string; address_label: string; hauteur_m: number; view: { fov: number; pitch: number; camera_height_m: number } }, credit: string) {
+/** Nearest Panoramax panorama of the address, reprojected and depth-mapped by the server (≤ 10 s, cached). `null` → use the curated catalogue. */
+async function liveStreet(lat: number, lon: number) {
+  const dialog = $<HTMLDialogElement>('hero-dialog'), status = $('hero-status');
+  status.textContent = 'Recherche d’une photo de votre rue…'; status.hidden = false;
+  if (!dialog.open) dialog.showModal();
+  try {
+    const response = await fetch(`/api/rue?${new URLSearchParams({ lat: String(lat), lon: String(lon) })}`, { signal: AbortSignal.timeout(10_000) });
+    const data = await response.json();
+    if (!response.ok || !data.url_depth) { status.textContent = data.error ?? 'Photo de rue indisponible.'; return null; }
+    status.hidden = true;
+    return data as { url: string; url_clean: string; url_depth: string; address_label?: string; hauteur_m?: number; credit: string; license: string; source_url: string | null; view: { fov: number; pitch: number; camera_height_m: number }; live: boolean; distance_m?: number };
+  } catch { status.textContent = 'Photo de rue indisponible (délai dépassé).'; return null; }
+  finally { if (!status.hidden) setTimeout(() => { if (!hero?.level && status.textContent !== 'Recherche d’une photo de votre rue…') { status.hidden = true; if (dialog.open && !$('hero-view').querySelector('canvas')) dialog.close(); } }, 1500); }
+}
+async function showHero(result: { url_clean: string; url_depth: string; address_label?: string; hauteur_m: number; view: { fov: number; pitch: number; camera_height_m: number }; live?: boolean; distance_m?: number }, credit: string) {
   const dialog = $<HTMLDialogElement>('hero-dialog');
   const slider = $<HTMLInputElement>('hero-slider');
   const format = (level: number) => `${level.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m`;
@@ -117,7 +132,8 @@ async function showHero(result: { url_clean: string; url_depth: string; address_
     const shown = await hero.show({ photoUrl: result.url_clean, depthUrl: result.url_depth, fov: result.view.fov, pitch: result.view.pitch, cameraHeight: result.view.camera_height_m, target: result.hauteur_m, onLevel: level => { slider.value = String(level); $('hero-level').textContent = format(level); } });
     if (!shown) return true; // superseded by a newer opening, which owns the dialog
   } catch (error) { console.warn('3D street scene unavailable, falling back to the photo:', error); hero?.stop(); return false; }
-  $('hero-label').innerHTML = `${escape(result.address_label)} · Eau à ${format(result.hauteur_m)} ${badge('Estimé')}`;
+  $('hero-status').hidden = true;
+  $('hero-label').innerHTML = `${escape(result.address_label || state.address.label)}${result.live ? ` · photo à ${result.distance_m} m` : ''} · Eau à ${format(result.hauteur_m)} ${badge('Estimé')}`;
   $('hero-credit').innerHTML = credit;
   slider.oninput = () => hero?.setLevel(Number(slider.value));
   $('hero-replay').onclick = () => { hero?.setLevel(0); hero?.animateTo(result.hauteur_m); };

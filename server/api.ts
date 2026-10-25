@@ -3,6 +3,7 @@ import OpenAI from 'openai';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { instructions, liveTools, realtimeTools } from './tools.ts';
+import { findNearestPicture, renderStreet, defaultDepthEstimator, cacheDir, type DepthEstimator } from './street.ts';
 
 export const publicDir = fileURLToPath(new URL('../web/public/', import.meta.url));
 export const levelURL = 'https://hubeau.eaufrance.fr/api/v2/hydrometrie/observations_tr?code_entite=F700000103&grandeur_hydro=H&size=1&sort=desc';
@@ -29,11 +30,14 @@ export function selectPhoto(manifest: Record<string, PhotoEntry> | { photos: Pho
   const license = entry.photo?.license ?? entry.license ?? '';
   const author = anonymize(entry.photo?.author ?? '');
   const credit = author ? `Photo : ${author}${entry.photo?.source && !author.includes(entry.photo.source) ? ` / ${entry.photo.source}` : ''}, ${license}` : anonymize(entry.credit ?? '');
-  return { url: photoPath(url), url_clean: photoPath(entry.files?.original ?? entry.url_clean ?? entry.clean), hauteur_m: Number(key), address_label: entry.label ?? entry.address_label ?? entry.address ?? '', credit, license, license_url: entry.photo?.license_url ?? entry.license_url ?? null, source_url: entry.photo?.page_url ?? null, simulation: true, url_depth: photoPath(entry.files?.depth), view: { fov: entry.photo?.view?.fov ?? 80, pitch: entry.photo?.view?.pitch ?? 0, camera_height_m: entry.depth?.camera_height_m ?? 2 } };
+  return { url: photoPath(url), url_clean: photoPath(entry.files?.original ?? entry.url_clean ?? entry.clean), hauteur_m: Number(key), address_label: entry.label ?? entry.address_label ?? entry.address ?? '', credit, license, license_url: entry.photo?.license_url ?? entry.license_url ?? null, source_url: entry.photo?.page_url ?? null, simulation: true, distance_m: Math.round(distance(lat, lon, entry)), url_depth: photoPath(entry.files?.depth), view: { fov: entry.photo?.view?.fov ?? 80, pitch: entry.photo?.view?.pitch ?? 0, camera_height_m: entry.depth?.camera_height_m ?? 2 } };
 }
-export function createApp(options: { fetcher?: typeof fetch; photosPath?: string; apiKey?: string; mode?: string } = {}) {
+export function createApp(options: { fetcher?: typeof fetch; photosPath?: string; apiKey?: string; mode?: string; street?: { enabled?: boolean; radius_m?: number; estimateDepth?: DepthEstimator; cache?: string } } = {}) {
   const app = express();
   const fetcher = options.fetcher ?? fetch;
+  const street = { enabled: options.street?.enabled ?? process.env.ZOUAVE_STREET !== 'off', radius: options.street?.radius_m ?? Number(process.env.ZOUAVE_STREET_RADIUS_M ?? 80), estimateDepth: options.street?.estimateDepth ?? defaultDepthEstimator(), cache: options.street?.cache ?? cacheDir };
+  const streetScenes = new Map<string, { value: unknown; expires: number }>();
+  let streetJobs = 0;
   const key = options.apiKey ?? process.env.OPENAI_API_KEY;
   const mode = options.mode ?? process.env.ZOUAVE_VOICE ?? 'live';
   let levelCache: { value: Record<string, unknown>; expires: number } | undefined;
@@ -78,6 +82,33 @@ export function createApp(options: { fetcher?: typeof fetch; photosPath?: string
       if (!found) { res.status(503).json({ error: 'Géocodage indisponible. Essayez 4 Rue Traversière, Paris (adresse de démonstration).' }); return; }
       res.json({ type: 'FeatureCollection', features: [found.feature], source: 'Géoplateforme IGN', source_url: geocodeURL, offline: true });
     }
+  });
+  // Live street scene for any address: nearest Panoramax panorama (≤ radius), reprojected towards the façade, depth on CPU.
+  app.get('/api/rue', async (req, res) => {
+    const lat = Number(req.query.lat), lon = Number(req.query.lon);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) { res.status(400).json({ error: 'Coordonnées invalides.' }); return; }
+    if (!street.enabled) { res.status(404).json({ error: 'Mode rue en direct désactivé.' }); return; }
+    const key = `${lat.toFixed(5)},${lon.toFixed(5)}`;
+    const cached = streetScenes.get(key);
+    if (cached && cached.expires > Date.now()) { res.json(cached.value); return; }
+    try {
+      const manifest = JSON.parse(await readFile(options.photosPath ?? `${publicDir}photos/manifest.json`, 'utf8'));
+      const curated = selectPhoto(manifest, lat, lon, 1.5);
+      if (curated?.url_depth && curated.distance_m <= 30) { res.json({ ...curated, live: false }); return; }
+    } catch { /* no curated catalogue: continue with the live path */ }
+    if (streetJobs >= 2) { res.status(429).json({ error: 'Trop de scènes en cours de calcul. Réessayez dans quelques secondes.' }); return; }
+    streetJobs++;
+    try {
+      const picture = await findNearestPicture(lat, lon, street.radius, fetcher);
+      if (!picture) { res.status(404).json({ error: `Aucune photo Panoramax à moins de ${street.radius} m.`, radius_m: street.radius }); return; }
+      const scene = await renderStreet(picture, lat, lon, { fetcher, estimateDepth: street.estimateDepth, cache: street.cache });
+      const value = { ...scene, simulation: true, live: true, source: 'Panoramax' };
+      if (streetScenes.size > 200) streetScenes.clear();
+      streetScenes.set(key, { value, expires: Date.now() + 6 * 3600_000 });
+      res.json(value);
+    } catch (error) {
+      res.status(503).json({ error: 'Photo de rue indisponible pour le moment.', detail: error instanceof Error ? error.message : String(error) });
+    } finally { streetJobs--; }
   });
   app.get('/api/photo', async (req, res) => {
     const lat = Number(req.query.lat), lon = Number(req.query.lon), h = Number(req.query.h);
