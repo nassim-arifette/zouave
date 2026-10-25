@@ -50,6 +50,7 @@ a{color:inherit;text-decoration:none}a:hover{text-decoration:underline}
 .level-line strong{font-size:24px;font-weight:500;letter-spacing:-1px;font-variant-numeric:tabular-nums}
 .level-line>span{font-size:10px;color:var(--muted)}
 #level-source{font-size:9px;color:#9eafb1;position:absolute;right:24px;bottom:2px}
+@media(max-width:1640px){#level-source{display:none}}
 .reference{display:flex;flex-direction:column;gap:3px;border-left:1px solid var(--line);padding-left:28px;min-width:180px}
 .reference>span{font-size:8px;letter-spacing:1.6px;color:var(--muted)}
 .reference strong{font-size:19px;font-weight:500}

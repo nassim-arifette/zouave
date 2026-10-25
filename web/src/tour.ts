@@ -11,7 +11,7 @@ import { map, mapReady, datasets } from './map.ts';
 import { afficher_crue, aller_a, exposition, photo_inondee, consignes, state } from './tools.ts';
 import { floodPresets, consequences, timelineBands, sceneHeight, REFERENCE_LEVEL, type DepthBand } from './flood-level.ts';
 import { flattenFootprints, timelineFootprints, type WaterFeature } from './water-footprints.ts';
-import { speak, speakEnabled, stopSpeaking } from './speech.ts';
+import { isSpeaking, pauseSpeaking, resumeSpeaking, speak, speakEnabled, stopSpeaking } from './speech.ts';
 import { animateAnswer, setSpeaking } from './avatar.ts';
 
 const OECD = 'https://www.oecd.org/fr/publications/mieux-prevenir-les-inondations-de-la-seine-en-ile-de-france_9789264290082-fr';
@@ -59,9 +59,11 @@ async function say(text: string, minMs = 0) {
     await wait(150);
     elapsed += 150;
     if (run!.skip) return;
-    const talking = voiced && typeof speechSynthesis !== 'undefined' && (speechSynthesis.speaking || speechSynthesis.pending);
-    if (elapsed >= Math.max(minMs, voiced ? estimate * 0.5 : estimate) && !talking) return;
-    if (elapsed >= Math.max(minMs, estimate * 1.8)) return;
+    // isSpeaking() covers narrated audio still loading from the server as well as the browser voice talking;
+    // the 1.5 s floor tolerates audio that has not started yet, the cap guards against a voice that never ends.
+    const talking = voiced && isSpeaking();
+    if (elapsed >= Math.max(minMs, voiced ? Math.max(1500, estimate * 0.5) : estimate) && !talking) return;
+    if (elapsed >= Math.max(minMs, estimate * 1.8 + 1500)) return;
   }
 }
 
@@ -401,7 +403,7 @@ function onKey(event: KeyboardEvent) {
     run.paused = !run.paused;
     pausedBadge.hidden = !run.paused;
     document.body.classList.toggle('tour-paused', run.paused);
-    if (typeof speechSynthesis !== 'undefined') { if (run.paused) speechSynthesis.pause(); else speechSynthesis.resume(); }
+    if (run.paused) pauseSpeaking(); else resumeSpeaking();
     if (audio) void (run.paused ? audio.ctx.suspend() : audio.ctx.resume());
   } else if (event.key === 'ArrowRight') {
     event.preventDefault(); event.stopPropagation();
