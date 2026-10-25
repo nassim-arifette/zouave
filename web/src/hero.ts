@@ -151,7 +151,9 @@ export function createHero(container: HTMLElement, adapters: HeroAdapters = brow
     scene.add(backdrop);
     // Street level under the relief so the water has a consistent bed right up to the camera.
     const bed = new THREE.Mesh(new THREE.PlaneGeometry(800, 800), new THREE.MeshBasicMaterial({ color: adapters.roadColour(texture) }));
-    bed.rotation.x = -Math.PI / 2; bed.position.y = -0.02; bed.renderOrder = -1;
+    // Sit the bed just under the lowest relief so estimated kerbs and road further away are not clipped.
+    const heights = Array.from({ length: 512 }, (_, k) => positions[Math.floor(k * count / 512) * 3 + 1]).sort((x, y) => x - y);
+    bed.rotation.x = -Math.PI / 2; bed.position.y = Math.max(-1.5, Math.min(-0.02, heights[Math.floor(heights.length * 0.03)] - 0.05)); bed.renderOrder = -1;
     scene.add(bed);
 
     // Water: planar reflection (Reflector) + screen-space refraction of a colour/depth prepass, Beer–Lambert silt, foam at walls.
