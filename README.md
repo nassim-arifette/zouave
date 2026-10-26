@@ -1,4 +1,4 @@
-# Zouave · see your flood before it comes
+# Zouave · See your flood before it comes
 
 ![Paris under a 1910-type flood, in Google Photorealistic 3D with the official flood footprint](docs/img/paris-1910-google-3d.jpg)
 
